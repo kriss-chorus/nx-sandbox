@@ -7,9 +7,6 @@
       "path": "./packages/api"
     },
     {
-      "path": "./packages/client-e2e"
-    },
-    {
       "path": "./packages/client"
     },
     {
