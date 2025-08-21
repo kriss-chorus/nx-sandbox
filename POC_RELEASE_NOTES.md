@@ -49,7 +49,7 @@
 
 ## Questions for discussion
 
-- Do we want release groups (e.g., backend = `common+api`, frontend = `client`), or per‑project only?
+- Do we want to release all or per‑project only?
 - Which conventional‑commit customizations should we adopt (e.g., refactor → patch, docs section title, hide chores)?
 - What image tagging standard do we want (package versions?), and how do we promote across dev/staging/prod?
 - Deployment strategy preference: single‑app vs deploy‑all, and how to handle dependencies?
