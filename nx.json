@@ -103,13 +103,12 @@
   },
   "release": {
     "projects": [
-      "packages/client",
-      "packages/api",
-      "packages/common"
+      "client",
+      "api",
+      "common"
     ],
     "projectsRelationship": "independent",
     "version": {
-      "preVersionCommand": "pnpm nx affected -t build",
       "conventionalCommits": true
     },
     "changelog": {
