@@ -108,6 +108,16 @@
       "common"
     ],
     "projectsRelationship": "independent",
+    "conventionalCommits": {
+      "types": {
+        "chore": { "semverBump": "none" },
+        "refactor": { "semverBump": "patch" },
+        "docs": {
+          "semverBump": "none",
+          "changelog": { "title": "Documentation changes" }
+        }
+      }
+    },
     "version": {
       "conventionalCommits": true
     },
