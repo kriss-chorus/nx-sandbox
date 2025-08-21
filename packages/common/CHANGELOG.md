@@ -1,3 +1,13 @@
+## 0.2.0 (2025-08-21)
+
+### 🚀 Features
+
+- add response utilities to common package and integrate with API ([44a3f75](https://github.com/kriss-chorus/nx-sandbox/commit/44a3f75))
+
+### ❤️ Thank You
+
+- Krissy Do
+
 ## 0.1.0 (2025-08-21)
 
 ### 🚀 Features
