@@ -1,3 +1,21 @@
+## 0.5.0 (2025-08-21)
+
+### 🚀 Features
+
+- add /uptime endpoint returning process uptime in seconds ([7de6fb0](https://github.com/kriss-chorus/nx-sandbox/commit/7de6fb0))
+
+### 💅 Refactors
+
+- centralize response helper and reuse in routes ([d862917](https://github.com/kriss-chorus/nx-sandbox/commit/d862917))
+
+### 🧱 Updated Dependencies
+
+- Updated common to 0.3.1
+
+### ❤️ Thank You
+
+- Krissy Do
+
 ## 0.4.0 (2025-08-21)
 
 ### 🚀 Features

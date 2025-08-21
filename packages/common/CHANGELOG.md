@@ -1,3 +1,17 @@
+## 0.3.1 (2025-08-21)
+
+### 🩹 Fixes
+
+- remove debug version field and allow custom timestamp ([ece994c](https://github.com/kriss-chorus/nx-sandbox/commit/ece994c))
+
+### Documentation changes
+
+- add README with exports and usage ([a7a0dd4](https://github.com/kriss-chorus/nx-sandbox/commit/a7a0dd4))
+
+### ❤️ Thank You
+
+- Krissy Do
+
 ## 0.3.0 (2025-08-21)
 
 ### 🚀 Features
