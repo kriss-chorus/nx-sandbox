@@ -10,6 +10,7 @@ export function createResponse<T>(data: T, status: 'success' | 'error' = 'succes
   return {
     status,
     data,
-    timestamp: formatTimestamp()
+    timestamp: formatTimestamp(),
+    version: '1.0.0'  // Add version for debugging
   };
 }
