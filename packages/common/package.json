@@ -1,7 +1,10 @@
 {
   "name": "@nx-sandbox/common",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
+  "nx": {
+    "name": "common"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",

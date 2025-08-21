@@ -1,3 +1,18 @@
+## 0.3.0 (2025-08-21)
+
+### 🚀 Features
+
+- add response utilities to common package and integrate with API ([44a3f75](https://github.com/kriss-chorus/nx-sandbox/commit/44a3f75))
+- create common project ([6a64083](https://github.com/kriss-chorus/nx-sandbox/commit/6a64083))
+
+### 🩹 Fixes
+
+- add version field to response for debugging ([6b45877](https://github.com/kriss-chorus/nx-sandbox/commit/6b45877))
+
+### ❤️ Thank You
+
+- Krissy Do
+
 ## 0.2.0 (2025-08-21)
 
 ### 🚀 Features

@@ -1,3 +1,19 @@
+## 0.4.0 (2025-08-21)
+
+### 🚀 Features
+
+- add response utilities to common package and integrate with API ([44a3f75](https://github.com/kriss-chorus/nx-sandbox/commit/44a3f75))
+- add health check endpoint to API ([d9bb3f7](https://github.com/kriss-chorus/nx-sandbox/commit/d9bb3f7))
+- create api project ([4d911c7](https://github.com/kriss-chorus/nx-sandbox/commit/4d911c7))
+
+### 🧱 Updated Dependencies
+
+- Updated common to 0.3.0
+
+### ❤️ Thank You
+
+- Krissy Do
+
 ## 0.3.0 (2025-08-21)
 
 ### 🚀 Features
