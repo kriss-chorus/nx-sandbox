@@ -33,7 +33,8 @@ export function App() {
           path="/"
           element={
             <div>
-              This is the generated root route.{' '}
+              <h1>Welcome to Client App!</h1>
+              <p>This is the generated root route.</p>
               <Link to="/page-2">Click here for page 2.</Link>
             </div>
           }
