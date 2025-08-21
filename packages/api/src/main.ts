@@ -9,6 +9,10 @@ app.get('/', (req, res) => {
   res.send({ message: 'Hello API' });
 });
 
+app.get('/health', (req, res) => {
+  res.send({ status: 'healthy', timestamp: new Date().toISOString() });
+});
+
 app.listen(port, host, () => {
   console.log(`[ ready ] http://${host}:${port}`);
 });
