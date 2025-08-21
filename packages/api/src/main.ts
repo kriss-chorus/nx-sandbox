@@ -19,6 +19,11 @@ app.get('/health', (req, res) => {
   sendOk(res, { status: 'healthy' });
 });
 
+// New feature endpoint: report process uptime in seconds
+app.get('/uptime', (req, res) => {
+  sendOk(res, { uptimeSec: Math.floor(process.uptime()) });
+});
+
 app.listen(port, host, () => {
   console.log(`[ ready ] http://${host}:${port}`);
 });
