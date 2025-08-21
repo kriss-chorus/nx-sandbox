@@ -6,12 +6,17 @@ const port = process.env.PORT ? Number(process.env.PORT) : 3000;
 
 const app = express();
 
+// Refactor: centralize standard JSON response shape
+function sendOk<T>(res: express.Response, body: T) {
+  res.send(createResponse(body));
+}
+
 app.get('/', (req, res) => {
-  res.send(createResponse({ message: 'Hello API' }));
+  sendOk(res, { message: 'Hello API' });
 });
 
 app.get('/health', (req, res) => {
-  res.send(createResponse({ status: 'healthy' }));
+  sendOk(res, { status: 'healthy' });
 });
 
 app.listen(port, host, () => {
