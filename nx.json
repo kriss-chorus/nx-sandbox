@@ -100,5 +100,27 @@
         "linter": "eslint"
       }
     }
+  },
+  "release": {
+    "projects": [
+      "packages/client",
+      "packages/api",
+      "packages/common"
+    ],
+    "projectsRelationship": "independent",
+    "version": {
+      "preVersionCommand": "pnpm nx affected -t build",
+      "conventionalCommits": true
+    },
+    "changelog": {
+      "projectChangelogs": {
+        "renderOptions": {
+          "authors": true,
+          "mapAuthorsToGitHubUsernames": true,
+          "commitReferences": true,
+          "versionTitleDate": true
+        }
+      }
+    }
   }
 }
