@@ -1,0 +1,12 @@
+{
+  "name": "@./web",
+  "version": "0.0.1",
+  "private": true,
+  "nx": {
+    "name": "web",
+    "tags": [
+      "scope:github-dashboard",
+      "type:app"
+    ]
+  }
+}

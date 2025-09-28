@@ -40,7 +40,8 @@
       "plugin": "@nx/jest/plugin",
       "options": {
         "targetName": "test"
-      }
+      },
+      "exclude": ["packages/github-dashboard/api-e2e/**/*"]
     },
     {
       "plugin": "@nx/react/router-plugin",
@@ -72,6 +73,17 @@
       "options": {
         "targetName": "e2e"
       }
+    },
+    {
+      "plugin": "@nx/webpack/plugin",
+      "options": {
+        "buildTargetName": "build",
+        "serveTargetName": "serve",
+        "previewTargetName": "preview",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps",
+        "serveStaticTargetName": "serve-static"
+      }
     }
   ],
   "targetDefaults": {
@@ -102,19 +114,21 @@
     }
   },
   "release": {
-    "projects": [
-      "client",
-      "api",
-      "common"
-    ],
+    "projects": ["client", "api", "common"],
     "projectsRelationship": "independent",
     "conventionalCommits": {
       "types": {
-        "chore": { "semverBump": "none" },
-        "refactor": { "semverBump": "patch" },
+        "chore": {
+          "semverBump": "none"
+        },
+        "refactor": {
+          "semverBump": "patch"
+        },
         "docs": {
           "semverBump": "none",
-          "changelog": { "title": "Documentation changes" }
+          "changelog": {
+            "title": "Documentation changes"
+          }
         }
       }
     },

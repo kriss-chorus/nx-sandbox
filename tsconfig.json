@@ -11,6 +11,18 @@
     },
     {
       "path": "./packages/common"
+    },
+    {
+      "path": "./packages/github-dashboard/api-e2e"
+    },
+    {
+      "path": "./packages/github-dashboard/api"
+    },
+    {
+      "path": "./packages/github-dashboard/web-e2e"
+    },
+    {
+      "path": "./packages/github-dashboard/web"
     }
   ]
 }
