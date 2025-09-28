@@ -1,0 +1,8 @@
+{
+  "name": "@nx-sandbox/client",
+  "version": "1.0.0",
+  "private": true,
+  "nx": {
+    "name": "client"
+  }
+}
