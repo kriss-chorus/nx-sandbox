@@ -2,7 +2,10 @@
   "name": "@./source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "tilt:up:github-dashboard": "TILT_PORT=10360 tilt up github-dashboard",
+    "tilt:down": "TILT_PORT=10360 tilt down"
+  },
   "private": true,
   "devDependencies": {
     "@emotion/babel-plugin": "11.11.0",
