@@ -1,0 +1,380 @@
+# Environment Manifest
+# This manifest contains key information about all environments, AWS accounts, and infrastructure details
+# Used by DevOps agent contexts for consistent environment references
+
+metadata:
+  version: '1.0.0'
+  last_updated: '2024-12-19'
+  description: 'Comprehensive environment manifest for Chorus Platform infrastructure'
+
+# AWS Account Information
+aws_accounts:
+  development:
+    account_id: '456106796702'
+    cloud: 'AWS'
+    name: 'Development'
+    alias: 'dev'
+    region: 'us-west-2'
+    vpc_cidr: '10.3.0.0/16'
+    terraform_directory: './packages/infrastructure/development'
+    argocd_hostname: 'ops.development.joinchorus.com'
+    api_hostname: 'lb.dev.joinchorus.com'
+    ops_hostname: 'ops.development.joinchorus.com'
+    status: 'active'
+    infrastructure_type: 'gitops_platform'
+
+  staging:
+    account_id: '730335200388'
+    cloud: 'AWS'
+    name: 'Staging'
+    alias: 'staging'
+    region: 'us-west-2'
+    vpc_cidr: '10.4.0.0/16'
+    terraform_directory: './packages/infrastructure/staging'
+    argocd_hostname: 'ops.staging.joinchorus.com'
+    api_hostname: 'lb.staging.joinchorus.com'
+    ops_hostname: 'ops.staging.joinchorus.com'
+    status: 'active'
+    infrastructure_type: 'gitops_platform'
+
+  production:
+    account_id: '913524910785'
+    cloud: 'AWS'
+    name: 'Production'
+    alias: 'prod'
+    region: 'us-west-2'
+    vpc_cidr: '10.6.0.0/16'
+    terraform_directory: './packages/infrastructure/prod'
+    argocd_hostname: 'ops.prod.joinchorus.com'
+    api_hostname: 'lb.prod.joinchorus.com'
+    ops_hostname: 'ops.prod.joinchorus.com'
+    status: 'active'
+    infrastructure_type: 'gitops_platform'
+
+  production_ajc:
+    account_id: '518221215079'
+    cloud: 'AWS'
+    name: 'Production AJC Legacy'
+    alias: 'prod-ajc'
+    region: 'us-west-2'
+    vpc_cidr: '10.0.0.0/16'
+    terraform_directory: './packages/infrastructure/production-ajc-legacy'
+    argocd_hostname: 'N/A'
+    api_hostname: 'app.joinchorus.com'
+    ops_hostname: 'N/A'
+    status: 'legacy'
+    infrastructure_type: 'legacy_sonata_platform'
+
+  production_chorusplatform:
+    account_id: '187505007626'
+    cloud: 'AWS'
+    name: 'Production ChorusPlatform Legacy'
+    alias: 'prod-chorusplatform'
+    region: 'us-west-2'
+    vpc_cidr: '10.144.168.0/22'
+    terraform_directory: './packages/infrastructure/production-chorusplatform-legacy'
+    argocd_hostname: 'N/A'
+    api_hostname: 'chorusplatform.io'
+    ops_hostname: 'N/A'
+    status: 'legacy'
+    infrastructure_type: 'legacy_sonata_platform'
+
+  staging_chorusplatform:
+    account_id: '187505007626'
+    cloud: 'AWS'
+    name: 'Staging ChorusPlatform Legacy'
+    alias: 'staging-chorusplatform'
+    region: 'us-west-2'
+    vpc_cidr: '10.144.172.0/22'
+    terraform_directory: './packages/infrastructure/production-chorusplatform-legacy'
+    argocd_hostname: 'N/A'
+    api_hostname: 'staging.chorusplatform.io, staging-oc.chorusplatform.io, staging-ajc.chorusplatform.io'
+    ops_hostname: 'N/A'
+    status: 'legacy'
+    infrastructure_type: 'legacy_sonata_platform'
+
+  lab:
+    account_id: 'TBD'
+    cloud: 'AWS'
+    name: 'Lab'
+    alias: 'lab'
+    region: 'us-west-2'
+    vpc_cidr: '10.2.0.0/16'
+    terraform_directory: 'Not configured'
+    argocd_hostname: 'ops.lab.joinchorus.com'
+    api_hostname: 'lb.lab.joinchorus.com'
+    ops_hostname: 'ops.lab.joinchorus.com'
+    status: 'planned'
+    infrastructure_type: 'gitops_platform'
+
+  cares:
+    account_id: '049234207420'
+    cloud: 'AWS'
+    name: 'CARES Development'
+    alias: 'cares'
+    region: 'us-west-2'
+    vpc_cidr: '10.110.0.0/16, 10.111.0.0/16'
+    terraform_directory: 'Not configured'
+    argocd_hostname: 'N/A'
+    api_hostname: '{developer}.chorus.care'
+    ops_hostname: 'N/A'
+    status: 'legacy_manual'
+    infrastructure_type: 'legacy_sonata_platform'
+
+# Terraform Configuration
+terraform:
+  backend:
+    type: 's3'
+    region: 'us-west-2'
+    encryption: true
+    dynamodb_table: 'terraform-state-lock'
+
+  required_version: '~> 1.9'
+
+  providers:
+    aws:
+      version: '~> 5.94'
+    kubernetes:
+      version: '~> 2.29'
+    helm:
+      version: '~> 2.6'
+    kubectl:
+      version: '~> 1.14'
+
+# Kubernetes Configuration
+kubernetes:
+  cluster_type: 'EKS'
+  auto_mode: true
+  karpenter_enabled: true
+
+  # EKS Cluster Names
+  cluster_names:
+    development: 'development-eks-cluster'
+    staging: 'staging-eks-cluster'
+    production: 'prod-eks-cluster'
+
+  # ArgoCD Configuration
+  argocd:
+    namespace: 'argocd'
+    helm_chart: 'argo-cd'
+    repository: 'https://argoproj.github.io/argo-helm'
+
+  # External Secrets Operator
+  external_secrets:
+    namespace: 'external-secrets'
+    helm_chart: 'external-secrets'
+    repository: 'https://charts.external-secrets.io'
+
+# CI/CD Configuration
+cicd:
+  platform: 'GitHub Actions'
+  package_manager: 'pnpm'
+  monorepo_tool: 'nx'
+  cli_tool: 'freedom'
+
+  # GitHub Actions Roles
+  github_roles:
+    development: 'arn:aws:iam::456106796702:role/github-actions-bot-role'
+    staging: 'arn:aws:iam::730335200388:role/gha-role'
+    production: 'arn:aws:iam::913524910785:role/gha-role'
+
+  # Workflow Triggers
+  triggers:
+    - 'push'
+    - 'pull_request'
+    - 'workflow_dispatch'
+    - 'schedule'
+
+# Security & Compliance
+security:
+  compliance_frameworks:
+    - 'HIPAA'
+    - 'SOC2'
+    - 'HITRUST'
+
+  encryption:
+    at_rest: true
+    in_transit: true
+    key_management: 'AWS KMS'
+
+  access_control:
+    iam_principle: 'least_privilege'
+    pod_identity: 'EKS Pod Identity'
+    secrets_management: 'AWS Secrets Manager + External Secrets Operator'
+
+# Network Configuration
+networking:
+  vpc_peering:
+    it_ops_vpc: '10.1.0.0/16'
+    it_ops_account: '211125755886'
+
+  vpn_connections:
+    gcp_ha_vpn:
+      enabled: true
+      interface_0_ip: '34.183.4.245'
+      interface_1_ip: '34.184.5.190'
+      bgp_asn: 64513
+
+  availability_zones:
+    - 'us-west-2a'
+    - 'us-west-2b'
+    - 'us-west-2c'
+
+# Storage Configuration
+storage:
+  s3_buckets:
+    terraform_state: 'chorus-terraform-{environment}'
+    logs: 'chorus-{environment}-logs'
+    static_sites: 'chorus-{environment}-static-sites'
+
+  efs:
+    enabled: true
+    performance_mode: 'generalPurpose'
+    throughput_mode: 'bursting'
+
+  rds:
+    engine: 'postgresql'
+    multi_az: true
+    backup_retention: 7
+    backup_window: '03:00-04:00'
+    maintenance_window: 'sun:04:00-sun:05:00'
+
+# Monitoring & Logging
+monitoring:
+  cloudwatch:
+    enabled: true
+    log_retention: 30
+
+  crowdstrike:
+    enabled: true
+    integration: 'EKS'
+
+  metabase:
+    enabled: true
+    namespace: 'metabase'
+
+# Module Organization
+modules:
+  aws_services:
+    path: './packages/infrastructure/modules/aws-services'
+    examples:
+      - 'aurora'
+      - 'rds'
+      - 'efs'
+      - 'site-to-site-vpn'
+
+  internal_services:
+    path: './packages/infrastructure/modules/internal-services'
+    examples:
+      - 'nhha'
+      - 'pads'
+      - 'digital_signature'
+      - 'eks-service'
+
+  legacy_services:
+    path: './packages/infrastructure/modules/legacy-services'
+    examples:
+      - 'chorus-api'
+      - 'chorus-web'
+
+  thirdparty_services:
+    path: './packages/infrastructure/modules/thirdparty-services'
+    examples:
+      - 'argocd'
+      - 'external-dns'
+      - 'cert-manager'
+      - 'nginx-ingress'
+      - 'metabase'
+      - 'external-secrets-operator'
+
+# Environment Selection Rules
+environment_selection:
+  gitops_platform_infrastructure:
+    preferred: ['development', 'staging', 'production']
+    fallback: ['lab']
+
+  legacy_infrastructure:
+    preferred:
+      [
+        'production_ajc',
+        'production_chorusplatform',
+        'staging_chorusplatform',
+        'cares',
+      ]
+
+  experimental_work:
+    preferred: ['lab']
+    fallback: ['development']
+
+# Common Tags
+common_tags:
+  cost_allocation:
+    application: 'Platform'
+    project: 'CI/CD'
+    client: 'internal'
+    owner: 'Engineering'
+
+  operations:
+    environment: '{environment}'
+    managed_by: 'Terraform'
+    maintenance_window: 'mon-9am-fri-5pm'
+    backup_window: 'mon-9am'
+    lifecycle: 'long-lived'
+    owner: 'DevOps'
+
+  data_classification:
+    classification: 'Private'
+
+  compliance:
+    framework: 'HIPAA'
+
+# Secrets Management
+secrets:
+  naming_convention: '{environment}/{client}/{project}/{secret_name}'
+  external_secrets_tag: 'internal:operations:SecretType = External-Secrets'
+  lifecycle_policy: 'ignore_changes = [secret_string]'
+
+  examples:
+    database_credentials: '{environment}/internal/{project}/credentials'
+    api_keys: '{environment}/{client}/{project}/api-key'
+    encryption_keys: '{environment}/internal/{project}/encryption-key'
+    client_secret: '{environment}/{client}/{project}/encryption-key'
+
+# Deployment Patterns
+deployment:
+  terraform:
+    apply_method: 'GitHub Actions only'
+    manual_apply: 'FORBIDDEN'
+
+  kubernetes:
+    deployment_method: 'ArgoCD GitOps'
+    image_registry: 'ECR'
+
+  containers:
+    deployment_method: 'Github Actions'
+    tool: 'freedom docker build'
+
+  static_sites:
+    deployment_method: 'S3 + CloudFront'
+    tool: 'freedom deploy static-site'
+    invalidation: 'Automatic'
+
+  database_migrations:
+    tool: 'freedom db migrate'
+    method: 'GitHub Actions workflow'
+
+# Troubleshooting
+troubleshooting:
+  common_issues:
+    - 'AWS account not found'
+    - 'Terraform state lock'
+    - 'Kubernetes resource conflicts'
+    - 'ArgoCD sync failures'
+    - 'External Secrets sync issues'
+
+  escalation_paths:
+    - 'Check environment manifest'
+    - 'Verify AWS credentials'
+    - 'Review GitHub Actions logs'
+    - 'Check ArgoCD application status'
+    - 'Validate External Secrets configuration'

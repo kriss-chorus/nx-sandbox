@@ -1,0 +1,34 @@
+---
+description: Always include agent context and use AGENT_README.md as entry point
+alwaysApply: true
+---
+
+# Agent Context Configuration
+
+## Primary Entry Point
+
+Always start with @AGENT_README.md as the main context entry point before proceeding with any task.
+
+## Context Inclusion
+
+Include the @agent_context/ directory in every conversation to ensure access to:
+
+- Frontend patterns (React, MUI, state management)
+- Backend patterns (NestJS, GraphQL, database)
+- DevOps patterns (Terraform, AWS, Kubernetes)
+- Testing patterns and best practices
+
+## Context Selection Process
+
+1. **First**: Read @AGENT_README.md for task-specific guidance
+2. **Then**: Load relevant context files based on the task type
+3. **Finally**: Apply the patterns and rules from the loaded context
+
+## Key Rules to Follow
+
+- Use @platform/signature-component-library over MUI when available
+- Always use runWithContext for database mutations
+- Follow the established patterns in the context files
+- Check existing patterns before creating new ones
+
+@agent_context/
