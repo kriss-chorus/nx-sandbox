@@ -6,11 +6,11 @@ export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../../../node_modules/.vite/packages/github-dashboard/web',
   server: {
-    port: 4201,
+    port: 4202,
     host: 'localhost',
   },
   preview: {
-    port: 4201,
+    port: 4202,
     host: 'localhost',
   },
   plugins: [react()],

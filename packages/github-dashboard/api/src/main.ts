@@ -16,9 +16,11 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
   const port = process.env.PORT || 3001;
   await app.listen(port);
-  Logger.log(
-    `🚀 Application is running on: http://localhost:${port}/${globalPrefix}`
-  );
+
+  Logger.log(`🚀 GitHub Dashboard API is running on: http://localhost:${port}/${globalPrefix}`);
+  Logger.log(`🚀 PostGraphile GraphQL endpoint is available at: http://localhost:5000/graphql`);
+  Logger.log(`🚀 PostGraphile GraphiQL playground is available at: http://localhost:5000/graphiql`);
+  Logger.log(`🚀 React Web App is available at: http://localhost:4202`);
 }
 
 bootstrap();
