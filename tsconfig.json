@@ -4,12 +4,6 @@
   "files": [],
   "references": [
     {
-      "path": "./packages/api"
-    },
-    {
-      "path": "./packages/client"
-    },
-    {
       "path": "./packages/common"
     },
     {

@@ -82,5 +82,18 @@
       "type:app"
     ]
   },
-  "dependencies": {}
+  "dependencies": {
+    "@types/pg": "^8.15.5",
+    "drizzle-orm": "^0.44.5",
+    "postgres": "^3.4.7"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.5"
+  },
+  "scripts": {
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio",
+    "db:push": "drizzle-kit push"
+  }
 }
