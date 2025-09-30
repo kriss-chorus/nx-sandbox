@@ -3,9 +3,9 @@ import type { Config } from 'drizzle-kit';
 export default {
   schema: './src/database/schema.ts',
   out: './src/database/migrations',
-  driver: 'pg',
+  dialect: 'postgresql',
   dbCredentials: {
-    connectionString: process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5432/github_dashboard',
+    url: process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5432/github_dashboard',
   },
 } satisfies Config;
 
