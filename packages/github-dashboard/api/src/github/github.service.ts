@@ -8,11 +8,88 @@ import { RateLimitService } from './rate-limit.service';
 export class GitHubService {
   private readonly logger = new Logger(GitHubService.name);
   private readonly baseUrl = 'https://api.github.com';
+  private readonly githubToken = process.env.GITHUB_TOKEN;
 
   constructor(
     private readonly httpService: HttpService,
     private readonly rateLimitService: RateLimitService
-  ) {}
+  ) {
+    if (this.githubToken) {
+      this.logger.log('GitHub PAT configured - using authenticated requests');
+    } else {
+      this.logger.warn('No GitHub PAT found - using unauthenticated requests (60/hour limit)');
+    }
+  }
+
+  /**
+   * Get authentication status and available scopes
+   */
+  async getAuthStatus(): Promise<{
+    authenticated: boolean;
+    hasToken: boolean;
+    scopes: string[];
+    rateLimit: {
+      limit: number;
+      remaining: number;
+      reset: number;
+    };
+  }> {
+    const hasToken = !!this.githubToken;
+    
+    if (!hasToken) {
+      return {
+        authenticated: false,
+        hasToken: false,
+        scopes: [],
+        rateLimit: {
+          limit: 60,
+          remaining: this.rateLimitService['remaining'],
+          reset: this.rateLimitService['reset']
+        }
+      };
+    }
+
+    try {
+      // Make a test request to get scopes and rate limit info
+      const response = await firstValueFrom(
+        this.httpService.get(`${this.baseUrl}/user`, {
+          headers: {
+            'Authorization': `Bearer ${this.githubToken}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        })
+      );
+
+      // Update rate limit info
+      this.rateLimitService.updateRateLimitInfo(response.headers);
+
+      // Get scopes from response headers
+      const scopes = response.headers['x-oauth-scopes']?.split(', ') || [];
+      
+      return {
+        authenticated: true,
+        hasToken: true,
+        scopes,
+        rateLimit: {
+          limit: this.rateLimitService['limit'],
+          remaining: this.rateLimitService['remaining'],
+          reset: this.rateLimitService['reset']
+        }
+      };
+    } catch (error) {
+      this.logger.error('Failed to get auth status:', error);
+      return {
+        authenticated: false,
+        hasToken: true,
+        scopes: [],
+        rateLimit: {
+          limit: 60,
+          remaining: 0,
+          reset: Date.now() / 1000 + 3600
+        }
+      };
+    }
+  }
 
   /**
    * Make a rate-limited request to GitHub API
@@ -26,7 +103,17 @@ export class GitHubService {
     }
 
     try {
-      const response = await firstValueFrom(this.httpService.get(url));
+      // Add Authorization header if token is available
+      const headers = this.githubToken ? {
+        'Authorization': `Bearer ${this.githubToken}`,
+        'Accept': 'application/vnd.github.v3+json'
+      } : {
+        'Accept': 'application/vnd.github.v3+json'
+      };
+
+      const response = await firstValueFrom(
+        this.httpService.get(url, { headers })
+      );
       
       // Update rate limit info from response headers
       this.rateLimitService.updateRateLimitInfo(response.headers);
@@ -54,15 +141,15 @@ export class GitHubService {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Failed to fetch user ${username}:`, errorMessage);
       
-      // Check for rate limit issues
-      if (error.response?.data?.message?.includes('rate limit exceeded') ||
-          errorMessage.includes('rate limit exceeded')) {
+      // Check for rate limit issues (403 with rate limit message)
+      if (error.response?.status === 403 && 
+          (error.response?.data?.message?.includes('rate limit exceeded') ||
+           errorMessage.includes('rate limit exceeded'))) {
         throw new HttpException('GitHub API rate limit exceeded. Please try again later or add authentication.', HttpStatus.TOO_MANY_REQUESTS);
       }
       
       // Check for various "not found" scenarios
       if (error.response?.status === 404 || 
-          error.response?.status === 403 || 
           errorMessage.includes('404') ||
           errorMessage.includes('Not Found')) {
         throw new HttpException(`User '${username}' not found`, HttpStatus.NOT_FOUND);
@@ -81,15 +168,48 @@ export class GitHubService {
   async getUserRepos(username: string, perPage = 30, page = 1): Promise<GitHubRepo[]> {
     try {
       this.logger.log(`Fetching repos for user: ${username}`);
-      const response = await firstValueFrom(
-        this.httpService.get(`${this.baseUrl}/users/${username}/repos`, {
-          params: { per_page: perPage, page, sort: 'updated' }
-        })
-      );
-      return response.data;
+      
+      // If we have a PAT, try to get all repos (including private ones)
+      if (this.githubToken) {
+        try {
+          // First try to get user's own repos (includes private if PAT has access)
+          const url = `${this.baseUrl}/user/repos?per_page=${perPage}&page=${page}&sort=updated&affiliation=owner`;
+          const userRepos = await this.makeRateLimitedRequest<GitHubRepo[]>(url);
+          
+          // Filter to only repos owned by the requested user
+          const filteredRepos = userRepos.filter(repo => repo.owner.login === username);
+          if (filteredRepos.length > 0) {
+            this.logger.log(`Found ${filteredRepos.length} repos (including private) for user: ${username}`);
+            return filteredRepos;
+          }
+        } catch (error) {
+          this.logger.warn(`Failed to fetch private repos for ${username}, falling back to public repos`);
+        }
+      }
+      
+      // Fallback to public repos only
+      const url = `${this.baseUrl}/users/${username}/repos?per_page=${perPage}&page=${page}&sort=updated`;
+      const publicRepos = await this.makeRateLimitedRequest<GitHubRepo[]>(url);
+      this.logger.log(`Found ${publicRepos.length} public repos for user: ${username}`);
+      return publicRepos;
+      
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Failed to fetch repos for ${username}:`, errorMessage);
+      
+      // Check for rate limit issues
+      if (error.response?.status === 403 && 
+          (error.response?.data?.message?.includes('rate limit exceeded') ||
+           errorMessage.includes('rate limit exceeded'))) {
+        throw new HttpException('GitHub API rate limit exceeded. Please try again later or add authentication.', HttpStatus.TOO_MANY_REQUESTS);
+      }
+      
+      // Check for various "not found" scenarios
+      if (error.response?.status === 404 || 
+          errorMessage.includes('404') ||
+          errorMessage.includes('Not Found')) {
+        throw new HttpException(`User '${username}' not found`, HttpStatus.NOT_FOUND);
+      }
       throw new HttpException('Failed to fetch repositories from GitHub', HttpStatus.BAD_GATEWAY);
     }
   }
@@ -112,17 +232,185 @@ export class GitHubService {
   ): Promise<GitHubPullRequest[]> {
     try {
       this.logger.log(`Fetching PRs for ${owner}/${repo}`);
-      const response = await firstValueFrom(
-        this.httpService.get(`${this.baseUrl}/repos/${owner}/${repo}/pulls`, {
-          params: { state, per_page: perPage, page }
-        })
-      );
-      return response.data;
+      const url = `${this.baseUrl}/repos/${owner}/${repo}/pulls?state=${state}&per_page=${perPage}&page=${page}`;
+      return await this.makeRateLimitedRequest<GitHubPullRequest[]>(url);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Failed to fetch PRs for ${owner}/${repo}:`, errorMessage);
+      
+      // Check for rate limit issues
+      if (error.response?.status === 403 && 
+          (error.response?.data?.message?.includes('rate limit exceeded') ||
+           errorMessage.includes('rate limit exceeded'))) {
+        throw new HttpException('GitHub API rate limit exceeded. Please try again later or add authentication.', HttpStatus.TOO_MANY_REQUESTS);
+      }
+      
+      // Check for various "not found" scenarios
+      if (error.response?.status === 404 || 
+          errorMessage.includes('404') ||
+          errorMessage.includes('Not Found')) {
+        throw new HttpException(`Repository '${owner}/${repo}' not found`, HttpStatus.NOT_FOUND);
+      }
       throw new HttpException('Failed to fetch pull requests from GitHub', HttpStatus.BAD_GATEWAY);
     }
+  }
+
+  /**
+   * Get reviews for a specific pull request
+   * @param owner Repository owner
+   * @param repo Repository name
+   * @param pullNumber Pull request number
+   * @returns Array of PR reviews
+   */
+  async getPullRequestReviews(
+    owner: string,
+    repo: string,
+    pullNumber: number
+  ): Promise<any[]> {
+    try {
+      this.logger.log(`Fetching reviews for ${owner}/${repo}#${pullNumber}`);
+      const url = `${this.baseUrl}/repos/${owner}/${repo}/pulls/${pullNumber}/reviews`;
+      return await this.makeRateLimitedRequest<any[]>(url);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Failed to fetch reviews for ${owner}/${repo}#${pullNumber}:`, errorMessage);
+      
+      // Check for rate limit issues
+      if (error.response?.status === 403 && 
+          (error.response?.data?.message?.includes('rate limit exceeded') ||
+           errorMessage.includes('rate limit exceeded'))) {
+        throw new HttpException('GitHub API rate limit exceeded. Please try again later or add authentication.', HttpStatus.TOO_MANY_REQUESTS);
+      }
+      
+      // Check for various "not found" scenarios
+      if (error.response?.status === 404 || 
+          errorMessage.includes('404') ||
+          errorMessage.includes('Not Found')) {
+        throw new HttpException(`Pull request '${owner}/${repo}#${pullNumber}' not found`, HttpStatus.NOT_FOUND);
+      }
+      throw new HttpException('Failed to fetch pull request reviews from GitHub', HttpStatus.BAD_GATEWAY);
+    }
+  }
+
+  /**
+   * Get pull requests with reviews for multiple repositories (organization tracking)
+   * @param repositories Array of repository names in format 'owner/repo'
+   * @param startDate Start date for filtering PRs
+   * @param endDate End date for filtering PRs
+   * @returns Object with reviewer statistics
+   */
+  async getOrganizationReviewSummary(
+    repositories: string[],
+    startDate: Date,
+    endDate: Date
+  ): Promise<{
+    reviewerStats: { [reviewer: string]: { prsReviewed: number; prs: string[] } };
+    totalReviews: number;
+    dateRange: { start: string; end: string };
+  }> {
+    this.logger.log(`Fetching organization review summary for ${repositories.length} repositories`);
+    this.logger.log(`Date range: ${startDate.toISOString()} to ${endDate.toISOString()}`);
+    
+    const reviewerStats: { [reviewer: string]: { prsReviewed: number; prs: string[] } } = {};
+    let totalReviews = 0;
+
+    for (const repo of repositories) {
+      const [owner, repoName] = repo.split('/');
+      if (!owner || !repoName) {
+        this.logger.warn(`Invalid repository format: ${repo}`);
+        continue;
+      }
+
+      try {
+        this.logger.log(`Processing repository: ${repo}`);
+        
+        // Get pull requests with extended date range to catch PRs that might have reviews in our date range
+        const extendedStartDate = new Date(startDate);
+        extendedStartDate.setDate(extendedStartDate.getDate() - 30);
+        
+        const prs = await this.getPullRequests(owner, repoName, 'all', 10, 1); // Limit to 10 PRs to avoid timeout
+        this.logger.log(`Found ${prs.length} PRs in ${repo}`);
+
+        for (const pr of prs) {
+          const prCreated = new Date(pr.created_at);
+          
+          // Skip PRs created well before our extended date range
+          if (prCreated < extendedStartDate) {
+            this.logger.debug(`Skipping PR ${pr.number} - too old: ${prCreated.toISOString()}`);
+            break;
+          }
+          
+          // Skip PRs created well after our date range
+          if (prCreated > new Date(endDate.getTime() + 7 * 24 * 60 * 60 * 1000)) {
+            this.logger.debug(`Skipping PR ${pr.number} - too new: ${prCreated.toISOString()}`);
+            continue;
+          }
+
+          this.logger.debug(`Processing PR ${pr.number} created at ${prCreated.toISOString()}`);
+
+          try {
+            const reviews = await this.getPullRequestReviews(owner, repoName, pr.number);
+            this.logger.debug(`Found ${reviews.length} reviews for PR ${pr.number}`);
+            
+            for (const review of reviews) {
+              if (!review.submitted_at) {
+                this.logger.debug(`Skipping review - no submitted_at date`);
+                continue;
+              }
+              
+              const reviewDate = new Date(review.submitted_at);
+              this.logger.debug(`Review date: ${reviewDate.toISOString()}, state: ${review.state}`);
+              
+              // Filter reviews by submission date and include all review types
+              if (reviewDate >= startDate && reviewDate <= endDate) {
+                if (['APPROVED', 'CHANGES_REQUESTED', 'COMMENTED'].includes(review.state)) {
+                  const reviewer = review.user.login;
+                  const prAuthor = pr.user.login;
+                  
+                  this.logger.debug(`Reviewer: ${reviewer}, PR Author: ${prAuthor}`);
+                  
+                  // Skip reviews made by the PR author and bot reviews
+                  if (reviewer !== prAuthor && !reviewer.includes('[bot]')) {
+                    const prIdentifier = `${repo}#${pr.number}`;
+                    
+                    if (!reviewerStats[reviewer]) {
+                      reviewerStats[reviewer] = { prsReviewed: 0, prs: [] };
+                    }
+                    
+                    // Only count unique PRs
+                    if (!reviewerStats[reviewer].prs.includes(prIdentifier)) {
+                      reviewerStats[reviewer].prs.push(prIdentifier);
+                      reviewerStats[reviewer].prsReviewed++;
+                      totalReviews++;
+                      this.logger.log(`Added review: ${reviewer} reviewed ${prIdentifier}`);
+                    }
+                  } else {
+                    this.logger.debug(`Skipping review - author match or bot: ${reviewer}`);
+                  }
+                }
+              } else {
+                this.logger.debug(`Review date ${reviewDate.toISOString()} outside range`);
+              }
+            }
+          } catch (error) {
+            this.logger.warn(`Failed to fetch reviews for ${repo}#${pr.number}:`, error.message);
+          }
+        }
+      } catch (error) {
+        this.logger.error(`Error processing repository ${repo}:`, error.message);
+      }
+    }
+
+    this.logger.log(`Final results: ${Object.keys(reviewerStats).length} reviewers, ${totalReviews} total reviews`);
+
+    return {
+      reviewerStats,
+      totalReviews,
+      dateRange: {
+        start: startDate.toISOString().split('T')[0],
+        end: endDate.toISOString().split('T')[0]
+      }
+    };
   }
 
   /**
@@ -381,5 +669,57 @@ export class GitHubService {
       },
       repos
     };
+  }
+
+  /**
+   * Get organization repositories (including private ones if accessible)
+   * @param orgName Organization name
+   * @returns Array of repositories
+   */
+  async getOrganizationRepositories(orgName: string): Promise<any[]> {
+    try {
+      this.logger.log(`Fetching repositories for organization: ${orgName}`);
+      const url = `${this.baseUrl}/orgs/${orgName}/repos?per_page=100&sort=updated`;
+      return await this.makeRateLimitedRequest<any[]>(url);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Failed to fetch repositories for organization ${orgName}:`, errorMessage);
+      
+      if (error.response?.status === 404) {
+        throw new HttpException(`Organization '${orgName}' not found`, HttpStatus.NOT_FOUND);
+      }
+      
+      if (error.response?.status === 403) {
+        throw new HttpException(`Access denied to organization '${orgName}'. Check SAML authorization.`, HttpStatus.FORBIDDEN);
+      }
+      
+      throw new HttpException('Failed to fetch organization repositories from GitHub', HttpStatus.BAD_GATEWAY);
+    }
+  }
+
+  /**
+   * Get organization members (current and past)
+   * @param orgName Organization name
+   * @returns Array of members
+   */
+  async getOrganizationMembers(orgName: string): Promise<any[]> {
+    try {
+      this.logger.log(`Fetching members for organization: ${orgName}`);
+      const url = `${this.baseUrl}/orgs/${orgName}/members?per_page=100`;
+      return await this.makeRateLimitedRequest<any[]>(url);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Failed to fetch members for organization ${orgName}:`, errorMessage);
+      
+      if (error.response?.status === 404) {
+        throw new HttpException(`Organization '${orgName}' not found`, HttpStatus.NOT_FOUND);
+      }
+      
+      if (error.response?.status === 403) {
+        throw new HttpException(`Access denied to organization '${orgName}'. Check SAML authorization.`, HttpStatus.FORBIDDEN);
+      }
+      
+      throw new HttpException('Failed to fetch organization members from GitHub', HttpStatus.BAD_GATEWAY);
+    }
   }
 }

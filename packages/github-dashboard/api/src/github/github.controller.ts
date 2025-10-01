@@ -138,4 +138,86 @@ export class GitHubController {
     const repoList = repos ? repos.split(',').map(r => r.trim()) : [];
     return this.githubService.getUserActivitySummary(username, repoList);
   }
+
+  /**
+   * Get authentication status and available scopes
+   * GET /api/github/auth/status
+   */
+  @Get('auth/status')
+  @HttpCode(HttpStatus.OK)
+  async getAuthStatus(): Promise<{
+    authenticated: boolean;
+    hasToken: boolean;
+    scopes: string[];
+    rateLimit: {
+      limit: number;
+      remaining: number;
+      reset: number;
+    };
+  }> {
+    return this.githubService.getAuthStatus();
+  }
+
+  /**
+   * Get reviews for a specific pull request
+   * GET /api/github/repos/:owner/:repo/pulls/:pullNumber/reviews
+   */
+  @Get('repos/:owner/:repo/pulls/:pullNumber/reviews')
+  @HttpCode(HttpStatus.OK)
+  async getPullRequestReviews(
+    @Param('owner') owner: string,
+    @Param('repo') repo: string,
+    @Param('pullNumber') pullNumber: string
+  ): Promise<any[]> {
+    return this.githubService.getPullRequestReviews(owner, repo, parseInt(pullNumber, 10));
+  }
+
+  /**
+   * Get organization review summary for multiple repositories
+   * GET /api/github/org/review-summary?repos=owner1/repo1,owner2/repo2&startDate=2024-01-01&endDate=2024-01-07
+   */
+  @Get('org/review-summary')
+  @HttpCode(HttpStatus.OK)
+  async getOrganizationReviewSummary(
+    @Query('repos') repos: string,
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string
+  ): Promise<{
+    reviewerStats: { [reviewer: string]: { prsReviewed: number; prs: string[] } };
+    totalReviews: number;
+    dateRange: { start: string; end: string };
+  }> {
+    const repositoryList = repos.split(',').map(repo => repo.trim());
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    // Limit to first 3 repositories to avoid timeout
+    const limitedRepos = repositoryList.slice(0, 3);
+    
+    return this.githubService.getOrganizationReviewSummary(limitedRepos, start, end);
+  }
+
+  /**
+   * Get organization repositories
+   * GET /api/github/org/:orgName/repos
+   */
+  @Get('org/:orgName/repos')
+  @HttpCode(HttpStatus.OK)
+  async getOrganizationRepositories(
+    @Param('orgName') orgName: string
+  ): Promise<any[]> {
+    return this.githubService.getOrganizationRepositories(orgName);
+  }
+
+  /**
+   * Get organization members (past and present)
+   * GET /api/github/org/:orgName/members
+   */
+  @Get('org/:orgName/members')
+  @HttpCode(HttpStatus.OK)
+  async getOrganizationMembers(
+    @Param('orgName') orgName: string
+  ): Promise<any[]> {
+    return this.githubService.getOrganizationMembers(orgName);
+  }
 }
