@@ -65,3 +65,11 @@ Ports
 - Tilt UI: 10360
 
 Troubleshooting and deeper workflow details: see [docs/github-dashboard.md](docs/github-dashboard.md).
+
+## TODO Checklist
+- [ ] Kubernetes: manifests, secrets, overlays, CI deploy
+- [ ] Code quality: typecheck, ESLint, Prettier, pre-commit hooks
+- [ ] API e2e: create/list dashboards; users add/remove; repos add/remove; activity config
+- [ ] Web e2e: dashboards list; create dashboard; add user; repos dropdown; activity config
+- [ ] Seed demo data (migrations or seed script)
+- [ ] CI: run typecheck/lint/test/e2e on PRs
