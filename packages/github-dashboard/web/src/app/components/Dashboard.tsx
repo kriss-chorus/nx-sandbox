@@ -524,13 +524,16 @@ export const Dashboard: React.FC = () => {
         throw new Error(`Failed to add user: ${response.status} ${response.statusText}`);
       }
 
-      // Optimistically fetch the user's profile and activity, then add to state without needing a full reload
-      // Fetch user profile details (followers, public_repos, following)
-      const userProfilePromise = fetch(`http://localhost:3001/api/github/users/${encodeURIComponent(username)}`)
-        .then(r => r.ok ? r.json() : null)
-        .catch(() => null);
+      // Close dialog immediately on success and navigate to dashboard detail to reflect add
+      const dashboardForNav = selectedDashboard;
+      setAddUserDialogOpen(false);
+      setNewUsername('');
+      setError(null);
+      if (dashboardForNav && currentView !== 'dashboard') {
+        navigate(`/dashboard/${dashboardForNav.slug}`);
+      }
 
-      // Compute repos and date range for activity
+      // Fast background fetch: use cached batch endpoint filtered to this user (no reviews) for speed
       const reposParam = (dashboardRepositories || [])
         .map(r => typeof r === 'string' ? r : r.name)
         .filter(Boolean)
@@ -538,44 +541,47 @@ export const Dashboard: React.FC = () => {
       const start = activityConfig.dateRange.start ? new Date(activityConfig.dateRange.start + 'T00:00:00.000Z').toISOString() : '';
       const end = activityConfig.dateRange.end ? new Date(activityConfig.dateRange.end + 'T23:59:59.999Z').toISOString() : '';
       const rangeParams = start && end ? `&start_date=${start}&end_date=${end}` : '';
+      const reposQuery = reposParam ? `&repos=${encodeURIComponent(reposParam)}` : '';
 
-      // Fetch activity summary for the single user
-      const activityPromise = fetch(`http://localhost:3001/api/github/users/${encodeURIComponent(username)}/activity-summary?repos=${encodeURIComponent(reposParam)}${rangeParams}`)
-        .then(r => r.ok ? r.json() : null)
-        .catch(() => null);
+      try {
+        const fastResp = await fetch(
+          `http://localhost:3001/api/github/users/cached-batch-activity-summary?dashboard_id=${selectedDashboard.id}&include_reviews=false&users=${encodeURIComponent(username)}${reposQuery}${rangeParams}`
+        );
+        if (fastResp.ok) {
+          const arr = await fastResp.json();
+          const first = Array.isArray(arr) ? arr[0] : null;
+          if (first && first.user) {
+            const profile = first.user;
+            const newUser = {
+              id: profile.id,
+              login: profile.login,
+              name: profile.name || profile.login,
+              avatar_url: profile.avatar_url,
+              html_url: `https://github.com/${profile.login}`,
+              public_repos: profile.public_repos ?? 0,
+              followers: profile.followers ?? 0,
+              following: profile.following ?? 0,
+              public_gists: profile.public_gists ?? 0,
+              created_at: profile.created_at ?? '',
+              updated_at: profile.updated_at ?? ''
+            } as GitHubUser;
 
-      const [profile, activity] = await Promise.all([userProfilePromise, activityPromise]);
+            setGithubUsers(prev => {
+              if (prev.find(u => u.login.toLowerCase() === newUser.login.toLowerCase())) return prev;
+              return [newUser, ...prev];
+            });
 
-      if (profile) {
-        const newUser = {
-          id: profile.id,
-          login: profile.login,
-          name: profile.name || profile.login,
-          avatar_url: profile.avatar_url,
-          html_url: profile.html_url,
-          public_repos: profile.public_repos ?? 0,
-          followers: profile.followers ?? 0,
-          following: profile.following ?? 0,
-          public_gists: profile.public_gists ?? 0,
-          created_at: profile.created_at ?? '',
-          updated_at: profile.updated_at ?? ''
-        } as GitHubUser;
-
-        setGithubUsers(prev => {
-          if (prev.find(u => u.login.toLowerCase() === newUser.login.toLowerCase())) return prev;
-          return [newUser, ...prev];
-        });
-
-        if (activity && activity.activity) {
-          setUserActivities(prev => [{ user: newUser, activity: activity.activity, repos: activity.activity.repos }, ...prev]);
-        } else {
-          setUserActivities(prev => [{ user: newUser, activity: { prsCreated: 0, prsReviewed: 0, prsMerged: 0, totalActivity: 0 }, repos: [] }, ...prev]);
+            const act = first.activity;
+            if (act) {
+              setUserActivities(prev => [{ user: newUser, activity: act, repos: act.repos }, ...prev]);
+            } else {
+              setUserActivities(prev => [{ user: newUser, activity: { prsCreated: 0, prsReviewed: 0, prsMerged: 0, totalActivity: 0 }, repos: [] }, ...prev]);
+            }
+          }
         }
-      }
+      } catch {}
 
-      setNewUsername('');
-      setAddUserDialogOpen(false);
-      setError(null);
+      // error already cleared above
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add user');
