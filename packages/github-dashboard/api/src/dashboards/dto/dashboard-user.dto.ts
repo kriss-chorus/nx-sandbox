@@ -15,3 +15,12 @@ export class RemoveUserFromDashboardDto {
   @IsNotEmpty()
   githubUsername: string;
 }
+
+// Response DTO that includes both ID and username
+export class DashboardUserDto {
+  id: string;
+  githubUserId: string;
+  githubUsername: string;
+  displayName?: string;
+  addedAt: Date;
+}

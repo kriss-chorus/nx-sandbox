@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1759257380725,
-      "tag": "0000_wise_tombstone",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1759291080349,
-      "tag": "0001_curvy_anita_blake",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1759293621248,
-      "tag": "0003_whole_galactus",
+      "when": 1759299391755,
+      "tag": "0000_greedy_mentor",
       "breakpoints": true
     }
   ]

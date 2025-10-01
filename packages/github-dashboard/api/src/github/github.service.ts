@@ -485,36 +485,44 @@ export class GitHubService {
   }
 
   /**
-   * Get PR activity for a user in the past week
+   * Get PR activity for a user within a date range
    * @param username GitHub username
    * @param repoList Array of repository names (format: "owner/repo")
-   * @returns Weekly PR activity statistics
+   * @param startDate Start date for activity tracking (optional, defaults to 7 days ago)
+   * @param endDate End date for activity tracking (optional, defaults to now)
+   * @returns PR activity statistics for the specified date range
    */
-  async getUserWeeklyActivity(username: string, repoList: string[]): Promise<{
-    prsOpened: number;
+  async getUserActivity(username: string, repoList: string[], startDate?: string, endDate?: string): Promise<{
+    prsCreated: number;
     prsReviewed: number;
     prsMerged: number;
     totalActivity: number;
     repos: Array<{
       repo: string;
-      prsOpened: number;
+      prsCreated: number;
       prsReviewed: number;
       prsMerged: number;
       totalRecentPRs: number;
     }>;
   }> {
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-    const oneWeekAgoISO = oneWeekAgo.toISOString();
+    // Use provided date range or default to one week ago
+    const startDateObj = startDate ? new Date(startDate) : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const endDateObj = endDate ? new Date(endDate) : new Date();
+    
+    const startDateISO = startDateObj.toISOString().split('T')[0]; // YYYY-MM-DD format for GitHub search
+    const endDateISO = endDateObj.toISOString().split('T')[0];
+
+    this.logger.log(`🔍 Getting activity for ${username} from ${startDateISO} to ${endDateISO}`);
+    this.logger.log(`📁 Repositories to check: ${repoList.join(', ')}`);
 
     const stats = {
-      prsOpened: 0,
+      prsCreated: 0,
       prsReviewed: 0,
       prsMerged: 0,
       totalActivity: 0,
       repos: [] as Array<{
         repo: string;
-        prsOpened: number;
+        prsCreated: number;
         prsReviewed: number;
         prsMerged: number;
         totalRecentPRs: number;
@@ -529,67 +537,209 @@ export class GitHubService {
           continue;
         }
 
-        // Get all PRs for this repo from the past week
-        const allPRs = await this.getPullRequests(owner, repoName, 'all', 100);
-        const recentPRs = allPRs.filter(pr => 
-          new Date(pr.created_at) >= oneWeekAgo || 
-          new Date(pr.updated_at) >= oneWeekAgo
-        );
+        this.logger.log(`Processing repo ${repo} for user ${username} from ${startDateISO} to ${endDateISO}`);
+        
+        // Use GitHub Search API to find PRs created by user in date range
+        this.logger.log(`🔍 Searching for PRs created by ${username} in ${owner}/${repoName}`);
+        const prsCreated = await this.searchUserPRs(username, owner, repoName, 'created', startDateISO, endDateISO);
+        
+        // Use GitHub Search API to find PRs merged by user in date range  
+        this.logger.log(`🔍 Searching for PRs merged by ${username} in ${owner}/${repoName}`);
+        const prsMerged = await this.searchUserPRs(username, owner, repoName, 'merged', startDateISO, endDateISO);
+        
+        // For PRs reviewed, we still need to check individual PRs (GitHub search doesn't have review search)
+        const prsReviewed = await this.getUserReviewCount(owner, repoName, username, startDateISO, endDateISO);
 
-        // Count PRs opened by this user
-        const prsOpened = recentPRs.filter(pr => 
-          pr.user.login === username && 
-          new Date(pr.created_at) >= oneWeekAgo
-        ).length;
-
-        // Count PRs merged by this user
-        const prsMerged = recentPRs.filter(pr => 
-          pr.user.login === username && 
-          pr.merged_at && 
-          new Date(pr.merged_at) >= oneWeekAgo
-        ).length;
-
-        // For demonstration purposes, let's also count total recent PRs in the repo
-        // This gives a better sense of activity even if the user didn't open them
-        const totalRecentPRs = recentPRs.length;
-
-        // For PRs reviewed, we need to check review comments
-        // This is a simplified approach - in reality, we'd need to fetch review data
-        const prsReviewed = await this.getUserReviewCount(owner, repoName, username, oneWeekAgoISO);
+        // Get total recent PRs in repo for context
+        const totalRecentPRs = await this.getTotalRecentPRs(owner, repoName, startDateISO, endDateISO);
 
         const repoStats = {
           repo,
-          prsOpened,
+          prsCreated,
           prsReviewed,
           prsMerged,
           totalRecentPRs // Add this for better visibility
         };
 
         stats.repos.push(repoStats);
-        stats.prsOpened += prsOpened;
+        stats.prsCreated += prsCreated;
         stats.prsReviewed += prsReviewed;
         stats.prsMerged += prsMerged;
+        stats.totalActivity += prsCreated + prsReviewed + prsMerged;
 
+        this.logger.log(`Repo ${repo}: ${prsCreated} created, ${prsMerged} merged, ${prsReviewed} reviewed`);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        this.logger.error(`Failed to get weekly activity for ${repo}:`, errorMessage);
+        this.logger.error(`Failed to get activity for ${username} in ${repo}:`, errorMessage);
       }
     }
 
-    stats.totalActivity = stats.prsOpened + stats.prsReviewed + stats.prsMerged;
     return stats;
   }
 
   /**
-   * Get review count for a user (simplified implementation)
-   * In a real implementation, you'd fetch review data from GitHub API
+   * Search for PRs using GitHub Search API (much faster than fetching all PRs)
+   * Uses both username and user ID to handle username changes
+   * @param type 'created' = PRs created in date range, 'merged' = PRs merged in date range
    */
-  private async getUserReviewCount(owner: string, repo: string, username: string, _since: string): Promise<number> {
+  private async searchUserPRs(username: string, owner: string, repo: string, type: 'created' | 'merged', startDate: string, endDate: string): Promise<number> {
     try {
-      // This is a placeholder - GitHub API doesn't have a direct "reviews by user" endpoint
-      // You'd need to fetch all PRs and check their reviews
-      // For now, return 0 as we don't have review data easily accessible
+      // First, get the user's GitHub ID to handle username changes
+      const userInfo = await this.getUser(username);
+      const userId = userInfo.id;
+      
+      this.logger.log(`Searching for ${type === 'created' ? 'created in date range' : 'merged in date range'} PRs for user ${username} (ID: ${userId}) in ${owner}/${repo}`);
+      
+      // Try search with current username first
+      const searchQuery = type === 'merged' 
+        ? `repo:${owner}/${repo} author:${username} is:pr is:merged merged:${startDate}..${endDate}`
+        : `repo:${owner}/${repo} author:${username} is:pr created:${startDate}..${endDate}`;
+      
+      this.logger.log(`Searching with current username: ${searchQuery}`);
+      const response = await this.makeRateLimitedRequest(`https://api.github.com/search/issues?q=${encodeURIComponent(searchQuery)}&per_page=1`) as any;
+      
+      let totalCount = 0;
+      if (response && response.total_count !== undefined) {
+        totalCount = response.total_count;
+        this.logger.log(`Found ${totalCount} ${type} PRs with current username for ${username}`);
+      }
+      
+      // If we found results with current username, return them
+      if (totalCount > 0) {
+        return totalCount;
+      }
+      
+      // If no results with current username, try a broader search and filter by user ID
+      // This handles cases where the user changed their username
+      this.logger.log(`No results with current username, trying broader search for user ID ${userId}`);
+      
+      const broaderQuery = type === 'merged'
+        ? `repo:${owner}/${repo} is:pr is:merged merged:${startDate}..${endDate}`
+        : `repo:${owner}/${repo} is:pr created:${startDate}..${endDate}`;
+      
+      // Get more results to filter by user ID
+      const broaderResponse = await this.makeRateLimitedRequest(`https://api.github.com/search/issues?q=${encodeURIComponent(broaderQuery)}&per_page=100`) as any;
+      
+      if (broaderResponse && broaderResponse.items) {
+        // Filter results by user ID to handle username changes
+        const userPRs = broaderResponse.items.filter((pr: any) => pr.user.id === userId);
+        this.logger.log(`Found ${userPRs.length} ${type} PRs for user ID ${userId} (username may have changed)`);
+        return userPRs.length;
+      }
+      
       return 0;
+    } catch (error) {
+      this.logger.warn(`Failed to search for ${type} PRs for ${username} in ${owner}/${repo}:`, error);
+      return 0;
+    }
+  }
+
+  /**
+   * Get total recent PRs in a repository for context
+   */
+  private async getTotalRecentPRs(owner: string, repo: string, startDate: string, endDate: string): Promise<number> {
+    try {
+      const searchQuery = `repo:${owner}/${repo} is:pr created:${startDate}..${endDate}`;
+      this.logger.log(`Searching for total recent PRs: ${searchQuery}`);
+      
+      const response = await this.makeRateLimitedRequest(`https://api.github.com/search/issues?q=${encodeURIComponent(searchQuery)}&per_page=1`) as any;
+      
+      if (response && response.total_count !== undefined) {
+        return response.total_count;
+      }
+      
+      return 0;
+    } catch (error) {
+      this.logger.warn(`Failed to get total recent PRs for ${owner}/${repo}:`, error);
+      return 0;
+    }
+  }
+
+  /**
+   * Get review count for a user using GitHub Search API
+   * This searches for PRs that the user has reviewed within the date range
+   * Handles username changes by using user ID for comparison
+   */
+  private async getUserReviewCount(owner: string, repo: string, username: string, startDate: string, endDate: string): Promise<number> {
+    try {
+      this.logger.log(`Getting review count for ${username} in ${owner}/${repo} from ${startDate} to ${endDate}`);
+      
+      // Get user info to handle username changes
+      const userInfo = await this.getUser(username);
+      const userId = userInfo.id;
+      
+      const startDateObj = new Date(startDate);
+      const endDateObj = new Date(endDate);
+      
+      // Get recent PRs in the repository (limit to 20 most recent to reduce API calls)
+      const allPRs = await this.getPullRequests(owner, repo, 'all', 20);
+      this.logger.log(`Found ${allPRs.length} total PRs in ${owner}/${repo}`);
+      
+      // Filter to only PRs that are not created by the user (using both username and ID) and are within date range
+      const otherPRs = allPRs.filter(pr => 
+        pr.user.login !== username && pr.user.id !== userId &&
+        (new Date(pr.created_at) >= startDateObj || 
+         new Date(pr.updated_at) >= startDateObj)
+      );
+      
+      this.logger.log(`Checking ${otherPRs.length} PRs for reviews by ${username} (ID: ${userId}) in ${owner}/${repo}`);
+      
+      // Process PRs in parallel batches to avoid overwhelming the API
+      const batchSize = 3; // Smaller batch size for reviews
+      let reviewedPRs = new Set<number>();
+      
+      for (let i = 0; i < otherPRs.length; i += batchSize) {
+        const batch = otherPRs.slice(i, i + batchSize);
+        
+        // Process batch in parallel
+        const batchPromises = batch.map(async (pr) => {
+          try {
+            this.logger.log(`Checking reviews for PR #${pr.number} in ${owner}/${repo}`);
+            const reviews = await this.getPullRequestReviews(owner, repo, pr.number);
+            this.logger.log(`Found ${reviews.length} reviews for PR #${pr.number}`);
+            
+            // Check if this user has ANY review activity on this PR within the date range
+            // Use both username and user ID to handle username changes
+            const hasUserReview = reviews.some(review => {
+              const isUserReview = (review.user.login === username || review.user.id === userId) && review.submitted_at;
+              if (isUserReview) {
+                const reviewDate = new Date(review.submitted_at);
+                const inRange = reviewDate >= startDateObj && reviewDate <= endDateObj;
+                if (inRange) {
+                  this.logger.log(`User ${username} (ID: ${userId}) reviewed PR #${pr.number} on ${review.submitted_at} (${review.state})`);
+                }
+                return inRange;
+              }
+              return false;
+            });
+            
+            return hasUserReview ? pr.number : null;
+          } catch (error) {
+            this.logger.warn(`Failed to get reviews for PR ${pr.number} in ${owner}/${repo}:`, error);
+            return null;
+          }
+        });
+        
+        // Wait for batch to complete
+        const batchResults = await Promise.all(batchPromises);
+        
+        // Add reviewed PRs to set
+        batchResults.forEach(prNumber => {
+          if (prNumber) {
+            reviewedPRs.add(prNumber);
+            this.logger.log(`✅ User ${username} (ID: ${userId}) reviewed PR #${prNumber} in ${owner}/${repo}`);
+          }
+        });
+        
+        // Small delay between batches to be respectful to GitHub API
+        if (i + batchSize < otherPRs.length) {
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+      }
+      
+      const reviewCount = reviewedPRs.size;
+      this.logger.log(`📊 User ${username} (ID: ${userId}) reviewed ${reviewCount} unique PRs in ${owner}/${repo} from ${startDate} to ${endDate}`);
+      return reviewCount;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Failed to get review count for ${username} in ${owner}/${repo}:`, errorMessage);
@@ -603,10 +753,10 @@ export class GitHubService {
    * @param repoList Array of repository names
    * @returns Complete activity summary
    */
-  async getUserActivitySummary(username: string, repoList: string[]): Promise<{
+  async getUserActivitySummary(username: string, repoList: string[], startDate?: string, endDate?: string): Promise<{
     user: GitHubUser;
-    weeklyActivity: {
-      prsOpened: number;
+    activity: {
+      prsCreated: number;
       prsReviewed: number;
       prsMerged: number;
       totalActivity: number;
@@ -619,10 +769,12 @@ export class GitHubService {
     };
     repos: Array<{
       repo: string;
-      weeklyActivity: {
-        prsOpened: number;
+      activity: {
+        repo: string;
+        prsCreated: number;
         prsReviewed: number;
         prsMerged: number;
+        totalRecentPRs: number;
       };
       overallStats: {
         prCount: number;
@@ -635,31 +787,31 @@ export class GitHubService {
     // Get user info
     const user = await this.getUser(username);
     
-    // Get weekly activity
-    const weeklyActivity = await this.getUserWeeklyActivity(username, repoList);
+    // Get activity for the specified date range
+    const activity = await this.getUserActivity(username, repoList, startDate, endDate);
     
     // Get overall PR stats
     const overallStats = await this.getUserPRStats(username, repoList);
     
     // Combine repo data
     const repos = repoList.map(repo => {
-      const weeklyRepo = weeklyActivity.repos.find(r => r.repo === repo);
+      const activityRepo = activity.repos.find(r => r.repo === repo);
       const overallRepo = overallStats.repos.find(r => r.repo === repo);
       
       return {
         repo,
-        weeklyActivity: weeklyRepo || { prsOpened: 0, prsReviewed: 0, prsMerged: 0 },
+        activity: activityRepo || { repo, prsCreated: 0, prsReviewed: 0, prsMerged: 0, totalRecentPRs: 0 },
         overallStats: overallRepo || { prCount: 0, openCount: 0, closedCount: 0, mergedCount: 0 }
       };
     });
 
     return {
       user,
-      weeklyActivity: {
-        prsOpened: weeklyActivity.prsOpened,
-        prsReviewed: weeklyActivity.prsReviewed,
-        prsMerged: weeklyActivity.prsMerged,
-        totalActivity: weeklyActivity.totalActivity
+      activity: {
+        prsCreated: activity.prsCreated,
+        prsReviewed: activity.prsReviewed,
+        prsMerged: activity.prsMerged,
+        totalActivity: activity.totalActivity
       },
       overallStats: {
         totalPRs: overallStats.totalPRs,
@@ -748,5 +900,69 @@ export class GitHubService {
       
       throw new HttpException('Failed to fetch repository from GitHub', HttpStatus.BAD_GATEWAY);
     }
+  }
+
+  /**
+   * Get batch activity summary for multiple users by dashboard ID
+   * This optimizes API calls by processing users in parallel and reusing repository data
+   */
+  async getBatchUserActivitySummaryByDashboard(
+    dashboardId: string, 
+    repos: string[] = [], 
+    startDate?: string, 
+    endDate?: string
+  ): Promise<Array<{
+    user: GitHubUser;
+    activity: {
+      prsCreated: number;
+      prsReviewed: number;
+      prsMerged: number;
+      totalActivity: number;
+      repos: Array<{
+        repo: string;
+        prsCreated: number;
+        prsReviewed: number;
+        prsMerged: number;
+        totalRecentPRs: number;
+      }>;
+    };
+  }>> {
+    this.logger.log(`Getting batch activity summary for dashboard ${dashboardId}`);
+    
+    // Get dashboard users from database
+    const dashboardUsersResponse = await fetch(`http://localhost:3001/api/dashboards/${dashboardId}/users`);
+    if (!dashboardUsersResponse.ok) {
+      throw new Error(`Failed to get dashboard users: ${dashboardUsersResponse.statusText}`);
+    }
+    
+    const dashboardUsers = await dashboardUsersResponse.json();
+    const usernames = dashboardUsers.map((du: any) => du.user.githubUsername);
+    
+    this.logger.log(`Found ${usernames.length} users in dashboard: ${usernames.join(', ')}`);
+    
+    // Process all users in parallel for better performance
+    const userPromises = usernames.map(async (username) => {
+      try {
+        return await this.getUserActivitySummary(username, repos, startDate, endDate);
+      } catch (error) {
+        this.logger.warn(`Failed to get activity for user ${username}:`, error);
+        // Return empty activity data for failed users
+        return {
+          user: { login: username, id: 0, name: username } as GitHubUser,
+          activity: {
+            prsCreated: 0,
+            prsReviewed: 0,
+            prsMerged: 0,
+            totalActivity: 0,
+            repos: []
+          }
+        };
+      }
+    });
+
+    const results = await Promise.all(userPromises);
+    this.logger.log(`Batch activity summary completed for ${results.length} users`);
+    
+    return results;
   }
 }

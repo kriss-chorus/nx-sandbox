@@ -13,7 +13,7 @@ export class DateRangeDto {
 
 export class ActivityConfigDto {
   @IsBoolean()
-  trackPRsOpened: boolean;
+  trackPRsCreated: boolean;
 
   @IsBoolean()
   trackPRsMerged: boolean;

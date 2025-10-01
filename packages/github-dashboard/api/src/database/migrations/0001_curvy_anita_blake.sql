@@ -1,2 +1,0 @@
-ALTER TABLE "dashboard_repositories" DROP CONSTRAINT "dashboard_repositories_dashboard_id_github_repo_id_unique";--> statement-breakpoint
-ALTER TABLE "dashboard_repositories" ADD CONSTRAINT "dashboard_repositories_dashboard_id_github_repo_id_pk" PRIMARY KEY("dashboard_id","github_repo_id");

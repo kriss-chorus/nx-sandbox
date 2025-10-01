@@ -39,7 +39,7 @@ import { GitHubUser } from '../../types/github';
 interface UserActivity {
   user: GitHubUser;
   activity: {
-    prsOpened: number;
+    prsCreated: number;
     prsReviewed: number;
     prsMerged: number;
     totalActivity: number;
@@ -115,7 +115,7 @@ export const Dashboard: React.FC = () => {
   const [loadingProgress, setLoadingProgress] = useState<{current: number, total: number} | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<'dashboards' | 'dashboard'>('dashboards');
-  const [sortBy, setSortBy] = useState<'prsOpened' | 'prsReviewed' | 'prsMerged' | 'totalActivity'>('totalActivity');
+  const [sortBy, setSortBy] = useState<'prsCreated' | 'prsReviewed' | 'prsMerged' | 'totalActivity'>('totalActivity');
   
   // Create Dashboard Dialog
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -134,7 +134,7 @@ export const Dashboard: React.FC = () => {
   // Activity Configuration - Simplified and Grouped
   const [activityConfig, setActivityConfig] = useState({
     // PR Creation & Management
-    trackPRsOpened: true,
+    trackPRsCreated: true,
     trackPRsMerged: true,
     
     // PR Review Activity (includes comments, approvals, changes requested, emoji reactions within PRs)
@@ -173,9 +173,10 @@ export const Dashboard: React.FC = () => {
   useEffect(() => {
     if (dashboardSlug && dashboards.length > 0) {
       const dashboard = dashboards.find(d => d.slug === dashboardSlug);
-      if (dashboard) {
+      if (dashboard && (!selectedDashboard || selectedDashboard.id !== dashboard.id)) {
+        // Only load if it's a different dashboard
         loadDashboardUsers(dashboard);
-      } else {
+      } else if (!dashboard) {
         // Dashboard not found, navigate back to dashboard list
         navigate('/');
       }
@@ -184,7 +185,7 @@ export const Dashboard: React.FC = () => {
       setCurrentView('dashboards');
       setSelectedDashboard(null);
     }
-  }, [dashboardSlug, dashboards, navigate]);
+  }, [dashboardSlug, dashboards, navigate, selectedDashboard]);
 
   const loadDashboards = async () => {
     try {
@@ -243,7 +244,7 @@ export const Dashboard: React.FC = () => {
       // Convert the frontend config format to the API format
       const apiConfig = {
         configs: [
-          { activityTypeName: 'prs_opened', enabled: config.trackPRsOpened, dateRangeStart: config.dateRange.start, dateRangeEnd: config.dateRange.end },
+          { activityTypeName: 'prs_created', enabled: config.trackPRsCreated, dateRangeStart: config.dateRange.start, dateRangeEnd: config.dateRange.end },
           { activityTypeName: 'prs_merged', enabled: config.trackPRsMerged, dateRangeStart: config.dateRange.start, dateRangeEnd: config.dateRange.end },
           { activityTypeName: 'pr_reviews', enabled: config.trackPRReviews, dateRangeStart: config.dateRange.start, dateRangeEnd: config.dateRange.end },
           { activityTypeName: 'commits', enabled: config.trackCommits, dateRangeStart: config.dateRange.start, dateRangeEnd: config.dateRange.end },
@@ -331,55 +332,61 @@ export const Dashboard: React.FC = () => {
       const dashboardUsers = await dashboardUsersResponse.json();
       console.log('Dashboard users:', dashboardUsers);
       
+      // OPTIMIZATION: Use batch API call for all users at once
+      console.log(`Fetching batch activity for dashboard ${dashboard.id}`);
+      
+      const dateRangeParams = activityConfig.dateRange.start && activityConfig.dateRange.end 
+        ? `&start_date=${activityConfig.dateRange.start}&end_date=${activityConfig.dateRange.end}`
+        : '';
+      
+      const batchResponse = await fetch(
+        `http://localhost:3001/api/github/users/batch-activity-summary?dashboard_id=${dashboard.id}&repos=ChorusInnovations/platform${dateRangeParams}`
+      );
+      
       const users: GitHubUser[] = [];
       const activities: UserActivity[] = [];
       
-      // OPTIMIZATION: Load users sequentially with progress updates to reduce API pressure
-      for (let i = 0; i < dashboardUsers.length; i++) {
-        const dashboardUser = dashboardUsers[i];
-        const user = dashboardUser.user; // Extract user from the nested structure
-        setLoadingProgress({ current: i + 1, total: dashboardUsers.length });
-        console.log(`Loading user ${i + 1}/${dashboardUsers.length}: ${user.githubUsername}`);
+      if (batchResponse.ok) {
+        const batchData = await batchResponse.json();
+        console.log(`Batch API returned data for ${batchData.length} users`);
+        console.log('Batch data structure:', batchData[0]); // Log first user's data structure
         
-        try {
-          // Use user data from our database instead of making GitHub API calls
-          const userData = {
-            id: user.githubUserId, // Use GitHub user ID
-            login: user.githubUsername,
-            name: user.displayName || user.githubUsername,
-            avatar_url: user.avatarUrl,
-            html_url: user.profileUrl,
-            public_repos: 0, // We'll get this from activity summary if needed
-            followers: 0,
-            following: 0
-          };
+        // Process batch results
+        batchData.forEach((userActivity: any, index: number) => {
+          setLoadingProgress({ current: index + 1, total: batchData.length });
           
-          // Get activity summary (this will also fetch repos)
-          console.log(`Fetching activity for ${user.githubUsername}`);
-          const dateRangeParams = activityConfig.dateRange.start && activityConfig.dateRange.end 
-            ? `&start_date=${activityConfig.dateRange.start}&end_date=${activityConfig.dateRange.end}`
-            : '';
-          const activityResponse = await fetch(
-            `http://localhost:3001/api/github/users/${user.githubUsername}/activity-summary?repos=ChorusInnovations/platform${dateRangeParams}`
-          );
-          
-          if (activityResponse.ok) {
-            const activityData = await activityResponse.json();
+          // Use the user data from our database as the source of truth
+          const dashboardUser = dashboardUsers.find(du => du.user.githubUsername === userActivity.user.login);
+          if (dashboardUser) {
+            const user = dashboardUser.user;
+            const userData = {
+              id: user.githubUserId,
+              login: user.githubUsername,
+              name: user.displayName || user.githubUsername,
+              avatar_url: user.avatarUrl,
+              html_url: user.profileUrl,
+              public_repos: userActivity.user.public_repos || 0,
+              followers: userActivity.user.followers || 0,
+              following: userActivity.user.following || 0
+            };
+            
             users.push(userData);
-            activities.push(activityData);
-          } else {
-            console.error(`Failed to get activity for ${user.githubUsername}:`, activityResponse.status);
-            // Fallback: create empty activity data
-            users.push(userData);
-            activities.push({
+            // Transform the batch response to match expected structure
+            const transformedActivity = {
               user: userData,
-              activity: { prsOpened: 0, prsReviewed: 0, prsMerged: 0, totalActivity: 0 },
-              repos: []
-            });
+              activity: userActivity.activity,
+              repos: userActivity.repos || []
+            };
+            console.log(`Transformed activity for ${userData.login}:`, transformedActivity);
+            activities.push(transformedActivity);
           }
-        } catch (err) {
-          console.error(`Failed to load user ${user.githubUsername}:`, err);
-          // Create fallback data even on error
+        });
+      } else {
+        console.error(`Batch API failed:`, batchResponse.status);
+        // Fallback: create empty data for all users
+        dashboardUsers.forEach((dashboardUser, index) => {
+          setLoadingProgress({ current: index + 1, total: dashboardUsers.length });
+          const user = dashboardUser.user;
           const userData = {
             id: user.githubUserId,
             login: user.githubUsername,
@@ -393,15 +400,10 @@ export const Dashboard: React.FC = () => {
           users.push(userData);
           activities.push({
             user: userData,
-            activity: { prsOpened: 0, prsReviewed: 0, prsMerged: 0, totalActivity: 0 },
+            activity: { prsCreated: 0, prsReviewed: 0, prsMerged: 0, totalActivity: 0 },
             repos: []
           });
-        }
-        
-        // Small delay between users to be respectful to GitHub API
-        if (i < dashboardUsers.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-        }
+        });
       }
       
       // DEVELOPMENT MODE: Create mock data for users (DISABLED - using real API calls)
@@ -421,7 +423,7 @@ export const Dashboard: React.FC = () => {
         
         const mockActivity = {
           user: mockUser,
-          activity: { prsOpened: 0, prsReviewed: 0, prsMerged: 0, totalActivity: 0 },
+          activity: { prsCreated: 0, prsReviewed: 0, prsMerged: 0, totalActivity: 0 },
           repos: []
         };
         
@@ -854,7 +856,7 @@ export const Dashboard: React.FC = () => {
                               .filter(([key, value]) => key !== 'dateRange' && value === true)
                               .map(([key]) => {
                                 switch(key) {
-                                  case 'trackPRsOpened': return 'PRs Opened';
+                                  case 'trackPRsCreated': return 'PRs Created';
                                   case 'trackPRsMerged': return 'PRs Merged';
                                   case 'trackPRReviews': return 'PR Reviews';
                                   case 'trackCommits': return 'Commits';
@@ -881,6 +883,19 @@ export const Dashboard: React.FC = () => {
                 </CardContent>
               </Card>
 
+              {/* Add User Button - Show when there are users */}
+              {sortedActivities.length > 0 && (
+                <Box textAlign="center" mb={3}>
+                  <Button 
+                    variant="outlined" 
+                    startIcon={<Add />}
+                    onClick={() => setAddUserDialogOpen(true)}
+                  >
+                    Add Another GitHub User
+                  </Button>
+                </Box>
+              )}
+
               {/* Sorting Controls */}
               {userActivities.length > 0 && (
                 <Box display="flex" alignItems="center" gap={2} mb={3}>
@@ -898,7 +913,7 @@ export const Dashboard: React.FC = () => {
                     }}
                   >
                     <option value="totalActivity">Total Activity</option>
-                    <option value="prsOpened">PRs Opened</option>
+                    <option value="prsCreated">PRs Created</option>
                     <option value="prsReviewed">PRs Reviewed</option>
                     <option value="prsMerged">PRs Merged</option>
                   </select>
@@ -940,7 +955,7 @@ export const Dashboard: React.FC = () => {
                   .filter(([key, value]) => key !== 'dateRange' && value === true)
                   .map(([key]) => {
                     switch(key) {
-                      case 'trackPRsOpened': return 'PRs Opened';
+                      case 'trackPRsCreated': return 'PRs Created';
                       case 'trackPRsMerged': return 'PRs Merged';
                       case 'trackPRReviews': return 'PR Reviews';
                       case 'trackCommits': return 'Commits';
@@ -991,9 +1006,9 @@ export const Dashboard: React.FC = () => {
                               📊 Activity:
                             </Typography>
                             <Box display="flex" gap={1} flexWrap="wrap">
-                              {activityConfig.trackPRsOpened && (
+                              {activityConfig.trackPRsCreated && (
                                 <Chip 
-                                  label={`${activity.prsOpened} opened`} 
+                                  label={`${activity.prsCreated} created`} 
                                   size="small" 
                                   color="primary" 
                                   variant="outlined"
@@ -1045,21 +1060,6 @@ export const Dashboard: React.FC = () => {
                     </Grid>
                   );
                 })}
-            
-            {/* Add User Button - Show when there are users */}
-            {sortedActivities.length > 0 && (
-              <Grid item xs={12}>
-                <Box textAlign="center" py={2}>
-                  <Button 
-                    variant="outlined" 
-                    startIcon={<Add />}
-                    onClick={() => setAddUserDialogOpen(true)}
-                  >
-                    Add Another GitHub User
-                  </Button>
-                </Box>
-              </Grid>
-            )}
             
             {sortedActivities.length === 0 && !loading && (
               <Grid item xs={12}>
@@ -1425,14 +1425,14 @@ export const Dashboard: React.FC = () => {
                     <FormControlLabel
                       control={
                         <Checkbox
-                          checked={tempActivityConfig.trackPRsOpened}
+                          checked={tempActivityConfig.trackPRsCreated}
                           onChange={(e) => handleTempActivityConfigChange({
                             ...tempActivityConfig,
-                            trackPRsOpened: e.target.checked
+                            trackPRsCreated: e.target.checked
                           })}
                         />
                       }
-                      label="Track PRs Opened"
+                      label="Track PRs Created"
                     />
                     <FormControlLabel
                       control={

@@ -7,6 +7,22 @@ export class GitHubController {
   constructor(private readonly githubService: GitHubService) {}
 
   /**
+   * Get batch activity summary for multiple users by dashboard ID
+   * GET /api/github/users/batch-activity-summary?dashboard_id=uuid&repos=owner/repo1&start_date=2024-01-01&end_date=2024-12-31
+   */
+  @Get('users/batch-activity-summary')
+  @HttpCode(HttpStatus.OK)
+  async getBatchUserActivitySummary(
+    @Query('dashboard_id') dashboardId: string,
+    @Query('repos') repos?: string,
+    @Query('start_date') startDate?: string,
+    @Query('end_date') endDate?: string
+  ) {
+    const repoList = repos ? repos.split(',').map(r => r.trim()) : [];
+    return this.githubService.getBatchUserActivitySummaryByDashboard(dashboardId, repoList, startDate, endDate);
+  }
+
+  /**
    * Get GitHub user information
    * GET /api/github/users/:username
    */
@@ -81,13 +97,13 @@ export class GitHubController {
     @Param('username') username: string,
     @Query('repos') repos: string
   ): Promise<{
-    prsOpened: number;
+    prsCreated: number;
     prsReviewed: number;
     prsMerged: number;
     totalActivity: number;
     repos: Array<{
       repo: string;
-      prsOpened: number;
+      prsCreated: number;
       prsReviewed: number;
       prsMerged: number;
       totalRecentPRs: number;
@@ -105,11 +121,13 @@ export class GitHubController {
   @HttpCode(HttpStatus.OK)
   async getUserActivitySummary(
     @Param('username') username: string,
-    @Query('repos') repos: string
+    @Query('repos') repos: string,
+    @Query('start_date') startDate?: string,
+    @Query('end_date') endDate?: string
   ): Promise<{
     user: GitHubUser;
-    weeklyActivity: {
-      prsOpened: number;
+    activity: {
+      prsCreated: number;
       prsReviewed: number;
       prsMerged: number;
       totalActivity: number;
@@ -122,8 +140,8 @@ export class GitHubController {
     };
     repos: Array<{
       repo: string;
-      weeklyActivity: {
-        prsOpened: number;
+      activity: {
+        prsCreated: number;
         prsReviewed: number;
         prsMerged: number;
       };
@@ -136,7 +154,7 @@ export class GitHubController {
     }>;
   }> {
     const repoList = repos ? repos.split(',').map(r => r.trim()) : [];
-    return this.githubService.getUserActivitySummary(username, repoList);
+    return this.githubService.getUserActivitySummary(username, repoList, startDate, endDate);
   }
 
   /**

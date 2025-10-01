@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { Dashboard } from './components/Dashboard';
@@ -27,6 +27,7 @@ export function App() {
         <CssBaseline />
         <Routes>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/dashboard" element={<Navigate to="/" replace />} />
           <Route path="/dashboard/:dashboardSlug" element={<Dashboard />} />
         </Routes>
       </ThemeProvider>

@@ -238,14 +238,14 @@ export class DashboardsService {
 
     // Build the activity configuration object
     const activityConfig: ActivityConfigDto = {
-      trackPRsOpened: configMap.get('prs_opened')?.enabled ?? true,
+      trackPRsCreated: configMap.get('prs_created')?.enabled ?? true,
       trackPRsMerged: configMap.get('prs_merged')?.enabled ?? true,
       trackPRReviews: configMap.get('pr_reviews')?.enabled ?? true,
       trackCommits: configMap.get('commits')?.enabled ?? false,
       trackIssues: configMap.get('issues')?.enabled ?? false,
       dateRange: {
-        start: configMap.get('prs_opened')?.dateRangeStart || '',
-        end: configMap.get('prs_opened')?.dateRangeEnd || ''
+        start: configMap.get('prs_created')?.dateRangeStart || '',
+        end: configMap.get('prs_created')?.dateRangeEnd || ''
       }
     };
 
