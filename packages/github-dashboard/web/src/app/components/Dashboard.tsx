@@ -163,18 +163,22 @@ export const Dashboard: React.FC = () => {
     setLoading(true);
     setError(null);
     
+    // Clear previous state immediately to prevent showing wrong users
+    setGithubUsers([]);
+    setUserActivities([]);
+    
     try {
       const users: GitHubUser[] = [];
       const activities: UserActivity[] = [];
       const githubUsers = dashboard.githubUsers || [];
       
-      for (const username of githubUsers) {
+      // Load users in parallel for better performance
+      const userPromises = githubUsers.map(async (username) => {
         try {
           // Get user basic info
           const userResponse = await fetch(`http://localhost:3001/api/github/users/${username}`);
           if (userResponse.ok) {
             const userData = await userResponse.json();
-            users.push(userData);
             
             // Get user's repositories for activity tracking
             const reposResponse = await fetch(`http://localhost:3001/api/github/users/${username}/repos?per_page=10`);
@@ -191,25 +195,40 @@ export const Dashboard: React.FC = () => {
                 if (activityResponse.ok) {
                   const activityData = await activityResponse.json();
                   console.log(`Activity data for ${username}:`, activityData);
-                  activities.push(activityData);
+                  return { user: userData, activity: activityData };
                 } else {
                   console.error(`Failed to get activity for ${username}:`, activityResponse.status);
                 }
-              } else {
-                // If no repos, create empty activity data
-                activities.push({
-                  user: userData,
-                  weeklyActivity: { prsOpened: 0, prsReviewed: 0, prsMerged: 0, totalActivity: 0 },
-                  overallStats: { totalPRs: 0, openPRs: 0, closedPRs: 0, mergedPRs: 0 },
-                  repos: []
-                });
               }
             }
+            
+            // Fallback: create empty activity data
+            return {
+              user: userData,
+              activity: {
+                user: userData,
+                weeklyActivity: { prsOpened: 0, prsReviewed: 0, prsMerged: 0, totalActivity: 0 },
+                overallStats: { totalPRs: 0, openPRs: 0, closedPRs: 0, mergedPRs: 0 },
+                repos: []
+              }
+            };
           }
         } catch (err) {
           console.error(`Failed to load user ${username}:`, err);
         }
-      }
+        return null;
+      });
+
+      // Wait for all user data to load
+      const userResults = await Promise.all(userPromises);
+      
+      // Process results
+      userResults.forEach(result => {
+        if (result) {
+          users.push(result.user);
+          activities.push(result.activity);
+        }
+      });
       setGithubUsers(users);
       setUserActivities(activities);
     } catch (err) {
@@ -242,18 +261,40 @@ export const Dashboard: React.FC = () => {
         }
       }
       
-      // Add user to dashboard (this would need a new API endpoint)
-      // For now, just add to local state
-      const updatedDashboard = {
-        ...selectedDashboard,
-        githubUsers: [...(selectedDashboard.githubUsers || []), newUsername]
-      };
-      setSelectedDashboard(updatedDashboard);
+      // Add user to dashboard via API
+      const addUserResponse = await fetch(`http://localhost:3001/api/dashboards/${selectedDashboard.id}/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          githubUsername: newUsername.trim(),
+          displayName: newUsername.trim()
+        })
+      });
+
+      if (!addUserResponse.ok) {
+        if (addUserResponse.status === 409) {
+          throw new Error(`User '${newUsername}' is already in this dashboard`);
+        } else {
+          throw new Error(`Failed to add user to dashboard: ${addUserResponse.status} ${addUserResponse.statusText}`);
+        }
+      }
+
+      // Refresh dashboard data to get updated user list
+      await loadDashboards();
+      
+      // Find the updated dashboard and reload its users
+      const updatedDashboards = await fetch('http://localhost:3001/api/dashboards').then(r => r.json());
+      const updatedDashboard = updatedDashboards.find((d: any) => d.id === selectedDashboard.id);
+      if (updatedDashboard) {
+        setSelectedDashboard(updatedDashboard);
+        // Reload the users for the current dashboard
+        await loadDashboardUsers(updatedDashboard);
+      }
+      
       setNewUsername('');
       setAddUserDialogOpen(false);
-      
-      // Reload the dashboard users
-      loadDashboardUsers(updatedDashboard);
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add user');
