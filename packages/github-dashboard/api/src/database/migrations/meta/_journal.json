@@ -15,6 +15,13 @@
       "when": 1759291080349,
       "tag": "0001_curvy_anita_blake",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1759293621248,
+      "tag": "0003_whole_galactus",
+      "breakpoints": true
     }
   ]
 }

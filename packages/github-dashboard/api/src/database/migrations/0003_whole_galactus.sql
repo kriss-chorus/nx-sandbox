@@ -1,0 +1,2 @@
+ALTER TABLE "dashboard_repositories" DROP CONSTRAINT "dashboard_repositories_dashboard_id_github_repo_id_pk";--> statement-breakpoint
+ALTER TABLE "dashboard_repositories" ADD CONSTRAINT "dashboard_repositories_dashboard_id_github_repo_id_unique" UNIQUE("dashboard_id","github_repo_id");
