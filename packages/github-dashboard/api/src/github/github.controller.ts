@@ -23,6 +23,23 @@ export class GitHubController {
   }
 
   /**
+   * Get cached batch activity summary for multiple users by dashboard ID
+   * Uses in-memory cache to minimize GitHub API calls and filters data server-side
+   * GET /api/github/users/cached-batch-activity-summary?dashboard_id=uuid&repos=owner/repo1&start_date=2024-01-01&end_date=2024-12-31
+   */
+  @Get('users/cached-batch-activity-summary')
+  @HttpCode(HttpStatus.OK)
+  async getCachedBatchUserActivitySummary(
+    @Query('dashboard_id') dashboardId: string,
+    @Query('repos') repos?: string,
+    @Query('start_date') startDate?: string,
+    @Query('end_date') endDate?: string
+  ) {
+    const repoList = repos ? repos.split(',').map(r => r.trim()) : [];
+    return this.githubService.getCachedBatchUserActivitySummaryByDashboard(dashboardId, repoList, startDate, endDate);
+  }
+
+  /**
    * Get GitHub user information
    * GET /api/github/users/:username
    */

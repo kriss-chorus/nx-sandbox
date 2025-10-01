@@ -117,41 +117,32 @@ export const Dashboard: React.FC = () => {
   const [currentView, setCurrentView] = useState<'dashboards' | 'dashboard'>('dashboards');
   const [sortBy, setSortBy] = useState<'prsCreated' | 'prsReviewed' | 'prsMerged' | 'totalActivity'>('totalActivity');
   
-  // Create Dashboard Dialog
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [newDashboardName, setNewDashboardName] = useState('');
   const [newDashboardDescription, setNewDashboardDescription] = useState('');
   
-  // Add User Dialog
   const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
   const [newUsername, setNewUsername] = useState('');
 
-  // Repository Management (per dashboard)
   const [organizationRepos, setOrganizationRepos] = useState<OrganizationRepository[]>([]);
   const [selectedRepoToAdd, setSelectedRepoToAdd] = useState<string>('');
   const [dashboardRepositories, setDashboardRepositories] = useState<string[]>([]);
 
-  // Activity Configuration - Simplified and Grouped
   const [activityConfig, setActivityConfig] = useState({
-    // PR Creation & Management
     trackPRsCreated: true,
     trackPRsMerged: true,
     
-    // PR Review Activity (includes comments, approvals, changes requested, emoji reactions within PRs)
     trackPRReviews: true,
     
-    // General Activity
     trackCommits: false,
     trackIssues: false,
     
-    // Date Range
     dateRange: {
       start: '',
       end: ''
     }
   });
 
-  // Organization Review Features
   const [organizationMembers, setOrganizationMembers] = useState<OrganizationMember[]>([]);
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [reviewTypes, setReviewTypes] = useState<string[]>(['APPROVED', 'CHANGES_REQUESTED', 'COMMENTED']);
@@ -160,28 +151,22 @@ export const Dashboard: React.FC = () => {
   const [reviewSummary, setReviewSummary] = useState<ReviewSummary | null>(null);
   const [loadingReviewSummary, setLoadingReviewSummary] = useState(false);
 
-  // Activity Configuration Modal
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [tempActivityConfig, setTempActivityConfig] = useState(activityConfig);
 
-  // Load dashboards on component mount
   useEffect(() => {
     loadDashboards();
   }, []);
 
-  // Handle URL parameter changes
   useEffect(() => {
     if (dashboardSlug && dashboards.length > 0) {
       const dashboard = dashboards.find(d => d.slug === dashboardSlug);
       if (dashboard && (!selectedDashboard || selectedDashboard.id !== dashboard.id)) {
-        // Only load if it's a different dashboard
         loadDashboardUsers(dashboard);
       } else if (!dashboard) {
-        // Dashboard not found, navigate back to dashboard list
         navigate('/');
       }
     } else if (!dashboardSlug) {
-      // No dashboard in URL, show dashboard list
       setCurrentView('dashboards');
       setSelectedDashboard(null);
     }
@@ -225,7 +210,6 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  // Load activity configuration for a dashboard
   const loadActivityConfiguration = async (dashboardId: string) => {
     try {
       const response = await fetch(`http://localhost:3001/api/dashboards/${dashboardId}/activity-config`);
@@ -238,17 +222,40 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  // Save activity configuration for a dashboard
   const saveActivityConfiguration = async (dashboardId: string, config: typeof activityConfig) => {
     try {
-      // Convert the frontend config format to the API format
       const apiConfig = {
         configs: [
-          { activityTypeName: 'prs_created', enabled: config.trackPRsCreated, dateRangeStart: config.dateRange.start, dateRangeEnd: config.dateRange.end },
-          { activityTypeName: 'prs_merged', enabled: config.trackPRsMerged, dateRangeStart: config.dateRange.start, dateRangeEnd: config.dateRange.end },
-          { activityTypeName: 'pr_reviews', enabled: config.trackPRReviews, dateRangeStart: config.dateRange.start, dateRangeEnd: config.dateRange.end },
-          { activityTypeName: 'commits', enabled: config.trackCommits, dateRangeStart: config.dateRange.start, dateRangeEnd: config.dateRange.end },
-          { activityTypeName: 'issues', enabled: config.trackIssues, dateRangeStart: config.dateRange.start, dateRangeEnd: config.dateRange.end }
+          { 
+            activityTypeName: 'prs_created', 
+            enabled: config.trackPRsCreated, 
+            dateRangeStart: config.dateRange.start ? new Date(config.dateRange.start + 'T00:00:00.000Z').toISOString() : undefined, 
+            dateRangeEnd: config.dateRange.end ? new Date(config.dateRange.end + 'T23:59:59.999Z').toISOString() : undefined 
+          },
+          { 
+            activityTypeName: 'prs_merged', 
+            enabled: config.trackPRsMerged, 
+            dateRangeStart: config.dateRange.start ? new Date(config.dateRange.start + 'T00:00:00.000Z').toISOString() : undefined, 
+            dateRangeEnd: config.dateRange.end ? new Date(config.dateRange.end + 'T23:59:59.999Z').toISOString() : undefined 
+          },
+          { 
+            activityTypeName: 'pr_reviews', 
+            enabled: config.trackPRReviews, 
+            dateRangeStart: config.dateRange.start ? new Date(config.dateRange.start + 'T00:00:00.000Z').toISOString() : undefined, 
+            dateRangeEnd: config.dateRange.end ? new Date(config.dateRange.end + 'T23:59:59.999Z').toISOString() : undefined 
+          },
+          { 
+            activityTypeName: 'commits', 
+            enabled: config.trackCommits, 
+            dateRangeStart: config.dateRange.start ? new Date(config.dateRange.start + 'T00:00:00.000Z').toISOString() : undefined, 
+            dateRangeEnd: config.dateRange.end ? new Date(config.dateRange.end + 'T23:59:59.999Z').toISOString() : undefined 
+          },
+          { 
+            activityTypeName: 'issues', 
+            enabled: config.trackIssues, 
+            dateRangeStart: config.dateRange.start ? new Date(config.dateRange.start + 'T00:00:00.000Z').toISOString() : undefined, 
+            dateRangeEnd: config.dateRange.end ? new Date(config.dateRange.end + 'T23:59:59.999Z').toISOString() : undefined 
+          }
         ]
       };
 
@@ -272,12 +279,10 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  // Handle activity configuration modal
   const openConfigModal = async () => {
     setTempActivityConfig(activityConfig);
     setConfigModalOpen(true);
     
-    // Load organization data if not already loaded
     if (organizationRepos.length === 0) {
       await loadOrganizationData();
     }
@@ -285,46 +290,59 @@ export const Dashboard: React.FC = () => {
 
   const closeConfigModal = () => {
     setConfigModalOpen(false);
-    setTempActivityConfig(activityConfig); // Reset to current config
+    setTempActivityConfig(activityConfig);
   };
 
   const saveConfigModal = async () => {
     if (selectedDashboard) {
-      // Save activity configuration
       await saveActivityConfiguration(selectedDashboard.id, tempActivityConfig);
       setActivityConfig(tempActivityConfig);
       
-      // Reload dashboard repositories to reflect any changes
-      await loadDashboardRepositories(selectedDashboard.id);
+      // Reload dashboard users with the new configuration (repositories are already loaded)
+      await loadDashboardUsers(selectedDashboard);
       
       setConfigModalOpen(false);
     }
   };
 
-  // Handle temporary activity configuration changes (no auto-save)
   const handleTempActivityConfigChange = (newConfig: typeof activityConfig) => {
     setTempActivityConfig(newConfig);
   };
 
   const loadDashboardUsers = async (dashboard: Dashboard) => {
     setSelectedDashboard(dashboard);
-    setCurrentView('dashboard'); // Navigate to dashboard view
+    setCurrentView('dashboard');
     setLoading(true);
     setError(null);
     
-    // Update URL to include dashboard slug
     navigate(`/dashboard/${dashboard.slug}`);
     
-    // Clear previous state immediately to prevent showing wrong users
     setGithubUsers([]);
     setUserActivities([]);
     
-    // Load activity configuration for this dashboard
-    await loadActivityConfiguration(dashboard.id);
+    // Load activity configuration first
+    const configResponse = await fetch(`http://localhost:3001/api/dashboards/${dashboard.id}/activity-config`);
+    let currentConfig = activityConfig;
+    if (configResponse.ok) {
+      const dbConfig = await configResponse.json();
+      // Convert UTC timestamps back to date strings for the UI
+      currentConfig = {
+        ...dbConfig,
+        dateRange: {
+          start: dbConfig.dateRange.start ? new Date(dbConfig.dateRange.start).toISOString().split('T')[0] : '',
+          end: dbConfig.dateRange.end ? new Date(dbConfig.dateRange.end).toISOString().split('T')[0] : ''
+        }
+      };
+      setActivityConfig(currentConfig);
+    }
     
     try {
-      // Get dashboard users from the new normalized API
-      const dashboardUsersResponse = await fetch(`http://localhost:3001/api/dashboards/${dashboard.id}/users`);
+      // Load dashboard users and repositories in parallel for better performance
+      const [dashboardUsersResponse, repositoriesResponse] = await Promise.all([
+        fetch(`http://localhost:3001/api/dashboards/${dashboard.id}/users`),
+        fetch(`http://localhost:3001/api/dashboards/${dashboard.id}/repositories`)
+      ]);
+      
       if (!dashboardUsersResponse.ok) {
         throw new Error(`Failed to load dashboard users: ${dashboardUsersResponse.statusText}`);
       }
@@ -332,15 +350,21 @@ export const Dashboard: React.FC = () => {
       const dashboardUsers = await dashboardUsersResponse.json();
       console.log('Dashboard users:', dashboardUsers);
       
-      // OPTIMIZATION: Use batch API call for all users at once
+      // Load repositories immediately (fast database call)
+      if (repositoriesResponse.ok) {
+        const repos = await repositoriesResponse.json();
+        setDashboardRepositories(repos);
+        console.log('Dashboard repositories loaded:', repos);
+      }
+      
       console.log(`Fetching batch activity for dashboard ${dashboard.id}`);
       
-      const dateRangeParams = activityConfig.dateRange.start && activityConfig.dateRange.end 
-        ? `&start_date=${activityConfig.dateRange.start}&end_date=${activityConfig.dateRange.end}`
+      const dateRangeParams = currentConfig.dateRange.start && currentConfig.dateRange.end 
+        ? `&start_date=${new Date(currentConfig.dateRange.start + 'T00:00:00.000Z').toISOString()}&end_date=${new Date(currentConfig.dateRange.end + 'T23:59:59.999Z').toISOString()}`
         : '';
       
       const batchResponse = await fetch(
-        `http://localhost:3001/api/github/users/batch-activity-summary?dashboard_id=${dashboard.id}&repos=ChorusInnovations/platform${dateRangeParams}`
+        `http://localhost:3001/api/github/users/cached-batch-activity-summary?dashboard_id=${dashboard.id}&repos=ChorusInnovations/platform${dateRangeParams}`
       );
       
       const users: GitHubUser[] = [];
@@ -349,29 +373,29 @@ export const Dashboard: React.FC = () => {
       if (batchResponse.ok) {
         const batchData = await batchResponse.json();
         console.log(`Batch API returned data for ${batchData.length} users`);
-        console.log('Batch data structure:', batchData[0]); // Log first user's data structure
+        console.log('Batch data structure:', batchData[0]);
         
-        // Process batch results
         batchData.forEach((userActivity: any, index: number) => {
           setLoadingProgress({ current: index + 1, total: batchData.length });
           
-          // Use the user data from our database as the source of truth
-          const dashboardUser = dashboardUsers.find(du => du.user.githubUsername === userActivity.user.login);
+          const dashboardUser = dashboardUsers.find((du: any) => du.user.githubUsername === userActivity.user.login);
           if (dashboardUser) {
             const user = dashboardUser.user;
             const userData = {
               id: user.githubUserId,
               login: user.githubUsername,
               name: user.displayName || user.githubUsername,
-              avatar_url: user.avatarUrl,
+              avatar_url: user.avatarUrl || `https://avatars.githubusercontent.com/u/${user.githubUserId}?v=4`,
               html_url: user.profileUrl,
               public_repos: userActivity.user.public_repos || 0,
+              public_gists: 0,
               followers: userActivity.user.followers || 0,
-              following: userActivity.user.following || 0
+              following: userActivity.user.following || 0,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
             };
             
             users.push(userData);
-            // Transform the batch response to match expected structure
             const transformedActivity = {
               user: userData,
               activity: userActivity.activity,
@@ -383,8 +407,7 @@ export const Dashboard: React.FC = () => {
         });
       } else {
         console.error(`Batch API failed:`, batchResponse.status);
-        // Fallback: create empty data for all users
-        dashboardUsers.forEach((dashboardUser, index) => {
+        dashboardUsers.forEach((dashboardUser: any, index: number) => {
           setLoadingProgress({ current: index + 1, total: dashboardUsers.length });
           const user = dashboardUser.user;
           const userData = {
@@ -394,8 +417,11 @@ export const Dashboard: React.FC = () => {
             avatar_url: user.avatarUrl,
             html_url: user.profileUrl,
             public_repos: 0,
+            public_gists: 0,
             followers: 0,
-            following: 0
+            following: 0,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
           };
           users.push(userData);
           activities.push({
@@ -406,7 +432,6 @@ export const Dashboard: React.FC = () => {
         });
       }
       
-      // DEVELOPMENT MODE: Create mock data for users (DISABLED - using real API calls)
       /*
       console.log(`DEVELOPMENT MODE: Creating mock data for ${githubUsers.length} users`);
       githubUsers.forEach((username, index) => {
@@ -434,9 +459,6 @@ export const Dashboard: React.FC = () => {
       
       setGithubUsers(users);
       setUserActivities(activities);
-
-      // Load dashboard repositories
-      await loadDashboardRepositories(dashboard.id);
     } catch (err) {
       setError('Failed to load dashboard users');
     } finally {
@@ -448,7 +470,6 @@ export const Dashboard: React.FC = () => {
   const addUserToDashboard = async () => {
     if (!newUsername.trim() || !selectedDashboard) return;
     
-    // Check if user is already in the dashboard
     const existingUsers = selectedDashboard.githubUsers || [];
     if (existingUsers.includes(newUsername.trim())) {
       setError(`User '${newUsername}' is already in this dashboard`);
@@ -456,10 +477,7 @@ export const Dashboard: React.FC = () => {
     }
     
     try {
-      // DEVELOPMENT MODE: Skip user verification to preserve API calls
-      // TODO: Uncomment when ready to verify users
       /*
-      // First verify the user exists
       const userResponse = await fetch(`http://localhost:3001/api/github/users/${newUsername}`);
       if (!userResponse.ok) {
         if (userResponse.status === 404) {
@@ -474,7 +492,6 @@ export const Dashboard: React.FC = () => {
       
       console.log(`DEVELOPMENT MODE: Skipping user verification for ${newUsername}`);
       
-      // Add user to dashboard via API
       const addUserResponse = await fetch(`http://localhost:3001/api/dashboards/${selectedDashboard.id}/users`, {
         method: 'POST',
         headers: {
@@ -494,14 +511,12 @@ export const Dashboard: React.FC = () => {
         }
       }
 
-      // OPTIMIZATION: Just update local state instead of making more API calls
       const updatedDashboard = {
         ...selectedDashboard,
         githubUsers: [...(selectedDashboard.githubUsers || []), newUsername.trim()]
       };
       setSelectedDashboard(updatedDashboard);
       
-      // Update the dashboards list locally too
       setDashboards(dashboards.map(d => 
         d.id === selectedDashboard.id ? updatedDashboard : d
       ));
@@ -526,18 +541,15 @@ export const Dashboard: React.FC = () => {
         throw new Error(`Failed to remove user from dashboard: ${removeUserResponse.status} ${removeUserResponse.statusText}`);
       }
 
-      // Update local state to remove the user
       setGithubUsers(prev => prev.filter(user => user.login !== username));
       setUserActivities(prev => prev.filter(activity => activity.user.login !== username));
       
-      // Also update the dashboard's githubUsers array
       const updatedDashboard = {
         ...selectedDashboard,
         githubUsers: (selectedDashboard.githubUsers || []).filter((user: string) => user !== username)
       };
       setSelectedDashboard(updatedDashboard);
       
-      // Update the dashboards list locally too
       setDashboards(dashboards.map(d => 
         d.id === selectedDashboard.id ? updatedDashboard : d
       ));
@@ -561,7 +573,6 @@ export const Dashboard: React.FC = () => {
     setSortBy(event.target.value as any);
   };
 
-  // Repository Management Functions
   const loadDashboardRepositories = async (dashboardId: string) => {
     try {
       const response = await fetch(`http://localhost:3001/api/dashboards/${dashboardId}/repositories`);
@@ -585,8 +596,9 @@ export const Dashboard: React.FC = () => {
       });
 
       if (response.ok) {
-        // Refresh dashboard repositories
-        await loadDashboardRepositories(selectedDashboard.id);
+        // Update local state immediately instead of reloading from API
+        const newRepo = { name: selectedRepoToAdd };
+        setDashboardRepositories(prev => [...prev, newRepo]);
         setSelectedRepoToAdd('');
       } else {
         throw new Error(`Failed to add repository: ${response.status}`);
@@ -606,8 +618,8 @@ export const Dashboard: React.FC = () => {
       );
 
       if (response.ok) {
-        // Refresh dashboard repositories
-        await loadDashboardRepositories(selectedDashboard.id);
+        // Update local state immediately instead of reloading from API
+        setDashboardRepositories(prev => prev.filter(repo => repo.name !== name));
       } else {
         throw new Error(`Failed to remove repository: ${response.status}`);
       }
@@ -616,17 +628,14 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  // Organization Review Functions
   const loadOrganizationData = async () => {
     try {
-      // Load organization repositories
       const reposResponse = await fetch('http://localhost:3001/api/github/org/ChorusInnovations/repos');
       if (reposResponse.ok) {
         const repos = await reposResponse.json();
         setOrganizationRepos(repos);
       }
 
-      // Load organization members
       const membersResponse = await fetch('http://localhost:3001/api/github/org/ChorusInnovations/members');
       if (membersResponse.ok) {
         const members = await membersResponse.json();

@@ -8,8 +8,8 @@ export const dashboardActivityConfigs = pgTable('dashboard_activity_configs', {
   dashboardId: uuid('dashboard_id').notNull().references(() => dashboards.id, { onDelete: 'cascade' }),
   activityTypeId: uuid('activity_type_id').notNull().references(() => activityTypes.id, { onDelete: 'cascade' }),
   enabled: boolean('enabled').default(true),
-  dateRangeStart: varchar('date_range_start', { length: 10 }), // YYYY-MM-DD format
-  dateRangeEnd: varchar('date_range_end', { length: 10 }), // YYYY-MM-DD format
+  dateRangeStart: timestamp('date_range_start', { withTimezone: true }), // UTC timestamp
+  dateRangeEnd: timestamp('date_range_end', { withTimezone: true }), // UTC timestamp
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 }, (table) => ({

@@ -244,8 +244,8 @@ export class DashboardsService {
       trackCommits: configMap.get('commits')?.enabled ?? false,
       trackIssues: configMap.get('issues')?.enabled ?? false,
       dateRange: {
-        start: configMap.get('prs_created')?.dateRangeStart || '',
-        end: configMap.get('prs_created')?.dateRangeEnd || ''
+        start: configMap.get('prs_created')?.dateRangeStart?.toISOString() || '',
+        end: configMap.get('prs_created')?.dateRangeEnd?.toISOString() || ''
       }
     };
 
@@ -266,8 +266,8 @@ export class DashboardsService {
     const configsToUpdate = updateDto.configs.map(config => ({
       activityTypeId: activityTypeMap.get(config.activityTypeName)?.id,
       enabled: config.enabled,
-      dateRangeStart: config.dateRangeStart,
-      dateRangeEnd: config.dateRangeEnd
+      dateRangeStart: config.dateRangeStart ? new Date(config.dateRangeStart) : null,
+      dateRangeEnd: config.dateRangeEnd ? new Date(config.dateRangeEnd) : null
     })).filter(config => config.activityTypeId); // Filter out invalid activity types
 
     await this.dashboardActivityConfigRepository.updateDashboardConfigs(dashboardId, configsToUpdate);

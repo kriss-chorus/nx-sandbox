@@ -3,6 +3,8 @@ import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { GitHubUser, GitHubRepo, GitHubPullRequest } from './interfaces';
 import { RateLimitService } from './rate-limit.service';
+import { GitHubCacheService } from './cache/github-cache.service';
+import { CacheKeys } from './cache/cache-keys';
 
 @Injectable()
 export class GitHubService {
@@ -12,7 +14,8 @@ export class GitHubService {
 
   constructor(
     private readonly httpService: HttpService,
-    private readonly rateLimitService: RateLimitService
+    private readonly rateLimitService: RateLimitService,
+    private readonly cacheService: GitHubCacheService
   ) {
     if (this.githubToken) {
       this.logger.log('GitHub PAT configured - using authenticated requests');
@@ -485,6 +488,28 @@ export class GitHubService {
   }
 
   /**
+   * Get emoji reactions for a pull request
+   * @param owner Repository owner
+   * @param repo Repository name
+   * @param pullNumber Pull request number
+   * @returns Array of emoji reactions
+   */
+  async getPullRequestReactions(
+    owner: string,
+    repo: string,
+    pullNumber: number
+  ): Promise<any[]> {
+    try {
+      this.logger.log(`Fetching reactions for ${owner}/${repo}#${pullNumber}`);
+      const url = `${this.baseUrl}/repos/${owner}/${repo}/issues/${pullNumber}/reactions`;
+      return await this.makeRateLimitedRequest<any[]>(url);
+    } catch (error) {
+      this.logger.warn(`Failed to fetch reactions for ${owner}/${repo}#${pullNumber}:`, error);
+      return [];
+    }
+  }
+
+  /**
    * Get PR activity for a user within a date range
    * @param username GitHub username
    * @param repoList Array of repository names (format: "owner/repo")
@@ -694,9 +719,25 @@ export class GitHubService {
         // Process batch in parallel
         const batchPromises = batch.map(async (pr) => {
           try {
-            this.logger.log(`Checking reviews for PR #${pr.number} in ${owner}/${repo}`);
-            const reviews = await this.getPullRequestReviews(owner, repo, pr.number);
-            this.logger.log(`Found ${reviews.length} reviews for PR #${pr.number}`);
+            this.logger.log(`Checking reviews and reactions for PR #${pr.number} in ${owner}/${repo}`);
+            
+            // Get both reviews and emoji reactions
+            const [reviews, reactions] = await Promise.all([
+              this.getPullRequestReviews(owner, repo, pr.number),
+              this.getPullRequestReactions(owner, repo, pr.number)
+            ]);
+            
+            this.logger.log(`Found ${reviews.length} reviews and ${reactions.length} reactions for PR #${pr.number}`);
+            
+            // Debug: Log all reactions found
+            if (reactions.length > 0) {
+              this.logger.log(`🔍 All reactions on PR #${pr.number}:`, reactions.map(r => ({
+                user: r.user.login,
+                userId: r.user.id,
+                content: r.content,
+                created_at: r.created_at
+              })));
+            }
             
             // Check if this user has ANY review activity on this PR within the date range
             // Use both username and user ID to handle username changes
@@ -712,8 +753,25 @@ export class GitHubService {
               }
               return false;
             });
+
+            // Check if this user has ANY emoji reaction activity on this PR within the date range
+            const hasUserReaction = reactions.some(reaction => {
+              const isUserReaction = (reaction.user.login === username || reaction.user.id === userId) && reaction.created_at;
+              if (isUserReaction) {
+                const reactionDate = new Date(reaction.created_at);
+                const inRange = reactionDate >= startDateObj && reactionDate <= endDateObj;
+                this.logger.log(`🔍 Checking reaction by ${reaction.user.login} (ID: ${reaction.user.id}) on PR #${pr.number}: ${reaction.content} at ${reaction.created_at}`);
+                this.logger.log(`📅 Date range: ${startDateObj.toISOString()} to ${endDateObj.toISOString()}`);
+                this.logger.log(`📅 Reaction date: ${reactionDate.toISOString()}, In range: ${inRange}`);
+                if (inRange) {
+                  this.logger.log(`✅ User ${username} (ID: ${userId}) reacted with ${reaction.content} on PR #${pr.number} on ${reaction.created_at}`);
+                }
+                return inRange;
+              }
+              return false;
+            });
             
-            return hasUserReview ? pr.number : null;
+            return (hasUserReview || hasUserReaction) ? pr.number : null;
           } catch (error) {
             this.logger.warn(`Failed to get reviews for PR ${pr.number} in ${owner}/${repo}:`, error);
             return null;
@@ -738,7 +796,7 @@ export class GitHubService {
       }
       
       const reviewCount = reviewedPRs.size;
-      this.logger.log(`📊 User ${username} (ID: ${userId}) reviewed ${reviewCount} unique PRs in ${owner}/${repo} from ${startDate} to ${endDate}`);
+      this.logger.log(`📊 User ${username} (ID: ${userId}) reviewed/reacted to ${reviewCount} unique PRs in ${owner}/${repo} from ${startDate} to ${endDate}`);
       return reviewCount;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -936,19 +994,26 @@ export class GitHubService {
     }
     
     const dashboardUsers = await dashboardUsersResponse.json();
-    const usernames = dashboardUsers.map((du: any) => du.user.githubUsername);
     
-    this.logger.log(`Found ${usernames.length} users in dashboard: ${usernames.join(', ')}`);
+    this.logger.log(`Found ${dashboardUsers.length} users in dashboard: ${dashboardUsers.map((du: any) => `${du.user.githubUsername} (ID: ${du.user.githubUserId})`).join(', ')}`);
     
     // Process all users in parallel for better performance
-    const userPromises = usernames.map(async (username) => {
+    const userPromises = dashboardUsers.map(async (dashboardUser: any) => {
       try {
-        return await this.getUserActivitySummary(username, repos, startDate, endDate);
+        const { githubUsername, githubUserId } = dashboardUser.user;
+        this.logger.log(`Getting activity for user ${githubUsername} (GitHub ID: ${githubUserId})`);
+        
+        // Use the GitHub user ID for more reliable searching
+        return await this.getUserActivitySummary(githubUsername, repos, startDate, endDate);
       } catch (error) {
-        this.logger.warn(`Failed to get activity for user ${username}:`, error);
+        this.logger.warn(`Failed to get activity for user ${dashboardUser.user.githubUsername}:`, error);
         // Return empty activity data for failed users
         return {
-          user: { login: username, id: 0, name: username } as GitHubUser,
+          user: { 
+            login: dashboardUser.user.githubUsername, 
+            id: parseInt(dashboardUser.user.githubUserId), 
+            name: dashboardUser.user.displayName || dashboardUser.user.githubUsername 
+          } as GitHubUser,
           activity: {
             prsCreated: 0,
             prsReviewed: 0,
@@ -964,5 +1029,374 @@ export class GitHubService {
     this.logger.log(`Batch activity summary completed for ${results.length} users`);
     
     return results;
+  }
+
+  /**
+   * Get cached and filtered activity summary for multiple users by dashboard ID
+   * Uses in-memory cache to minimize GitHub API calls and filters data server-side
+   * @param dashboardId Dashboard ID
+   * @param repos Array of repository names (format: "owner/repo")
+   * @param startDate Start date for activity tracking (optional)
+   * @param endDate End date for activity tracking (optional)
+   * @returns Array of user activity summaries
+   */
+  async getCachedBatchUserActivitySummaryByDashboard(
+    dashboardId: string, 
+    repos: string[] = [], 
+    startDate?: string, 
+    endDate?: string
+  ): Promise<Array<{
+    user: GitHubUser;
+    activity: {
+      prsCreated: number;
+      prsReviewed: number;
+      prsMerged: number;
+      totalActivity: number;
+      repos: Array<{
+        repo: string;
+        prsCreated: number;
+        prsReviewed: number;
+        prsMerged: number;
+        totalRecentPRs: number;
+      }>;
+    };
+  }>> {
+    this.logger.log(`Getting cached batch activity summary for dashboard ${dashboardId}`);
+    
+    // Get dashboard users from database
+    const dashboardUsersResponse = await fetch(`http://localhost:3001/api/dashboards/${dashboardId}/users`);
+    if (!dashboardUsersResponse.ok) {
+      throw new Error(`Failed to get dashboard users: ${dashboardUsersResponse.statusText}`);
+    }
+    
+    const dashboardUsers = await dashboardUsersResponse.json();
+    this.logger.log(`Found ${dashboardUsers.length} users in dashboard: ${dashboardUsers.map((du: any) => `${du.user.githubUsername} (ID: ${du.user.githubUserId})`).join(', ')}`);
+    
+    // Process all users in parallel for better performance
+    const userPromises = dashboardUsers.map(async (dashboardUser: any) => {
+      try {
+        const { githubUsername, githubUserId } = dashboardUser.user;
+        this.logger.log(`Getting cached activity for user ${githubUsername} (GitHub ID: ${githubUserId})`);
+        
+        // Use the cached method for better performance
+        return await this.getCachedUserActivitySummary(githubUsername, githubUserId, repos, startDate, endDate);
+      } catch (error) {
+        this.logger.warn(`Failed to get cached activity for user ${dashboardUser.user.githubUsername}:`, error);
+        // Return empty activity data for failed users
+        return {
+          user: { 
+            login: dashboardUser.user.githubUsername, 
+            id: parseInt(dashboardUser.user.githubUserId), 
+            name: dashboardUser.user.displayName || dashboardUser.user.githubUsername 
+          } as GitHubUser,
+          activity: {
+            prsCreated: 0,
+            prsReviewed: 0,
+            prsMerged: 0,
+            totalActivity: 0,
+            repos: []
+          }
+        };
+      }
+    });
+
+    const results = await Promise.all(userPromises);
+    this.logger.log(`Cached batch activity summary completed for ${results.length} users`);
+    
+    return results;
+  }
+
+  /**
+   * Get cached and filtered activity summary for a single user
+   * Uses cache to minimize API calls and filters data server-side
+   */
+  private async getCachedUserActivitySummary(
+    username: string,
+    githubUserId: string,
+    repoList: string[],
+    startDate?: string,
+    endDate?: string
+  ): Promise<{
+    user: GitHubUser;
+    activity: {
+      prsCreated: number;
+      prsReviewed: number;
+      prsMerged: number;
+      totalActivity: number;
+      repos: Array<{
+        repo: string;
+        prsCreated: number;
+        prsReviewed: number;
+        prsMerged: number;
+        totalRecentPRs: number;
+      }>;
+    };
+  }> {
+    // Use provided date range or default to one week ago
+    const startDateObj = startDate ? new Date(startDate) : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const endDateObj = endDate ? new Date(endDate) : new Date();
+    
+    const startDateISO = startDateObj.toISOString().split('T')[0];
+    const endDateISO = endDateObj.toISOString().split('T')[0];
+
+    this.logger.log(`🔍 Getting cached activity for user ${username} (ID: ${githubUserId}) from ${startDateISO} to ${endDateISO}`);
+
+    // Get user info (cached)
+    const user = await this.getCachedUser(username);
+
+    const stats = {
+      prsCreated: 0,
+      prsReviewed: 0,
+      prsMerged: 0,
+      totalActivity: 0,
+      repos: [] as Array<{
+        repo: string;
+        prsCreated: number;
+        prsReviewed: number;
+        prsMerged: number;
+        totalRecentPRs: number;
+      }>
+    };
+
+    for (const repo of repoList) {
+      try {
+        const [owner, repoName] = repo.split('/');
+        if (!owner || !repoName) {
+          this.logger.warn(`Invalid repo format: ${repo}`);
+          continue;
+        }
+
+        this.logger.log(`Processing cached repo ${repo} for user ${username} (ID: ${githubUserId})`);
+        
+        // Get cached PRs for this repo
+        const prs = await this.getCachedPRs(owner, repoName);
+        this.logger.log(`🔍 Retrieved ${prs.length} PRs from cache for ${repo}`);
+        
+        // Filter PRs by date range and user activity
+        const filteredPRs = this.filterPRsByUserAndDate(prs, parseInt(githubUserId), username, startDateObj, endDateObj);
+        this.logger.log(`🔍 Filtered to ${filteredPRs.length} PRs within date range for ${repo}`);
+        
+        // Count PRs created and merged
+        const prsCreated = filteredPRs.filter(pr => 
+          pr.user.id === parseInt(githubUserId) && 
+          new Date(pr.created_at) >= startDateObj && 
+          new Date(pr.created_at) <= endDateObj
+        ).length;
+
+        const prsMerged = filteredPRs.filter(pr => 
+          pr.user.id === parseInt(githubUserId) && 
+          pr.merged_at &&
+          new Date(pr.merged_at) >= startDateObj && 
+          new Date(pr.merged_at) <= endDateObj
+        );
+        
+        // Debug: Log merged PRs for this user
+        if (prsMerged.length > 0) {
+          this.logger.log(`🔍 Found ${prsMerged.length} merged PRs for user ${username} (ID: ${githubUserId}) in ${repo}:`);
+          prsMerged.forEach(pr => {
+            this.logger.log(`  - PR #${pr.number}: merged at ${pr.merged_at}`);
+          });
+        } else {
+          this.logger.log(`🔍 No merged PRs found for user ${username} (ID: ${githubUserId}) in ${repo} between ${startDateObj.toISOString()} and ${endDateObj.toISOString()}`);
+        }
+        
+        const prsMergedCount = prsMerged.length;
+
+        // Count PRs reviewed (excluding user's own PRs)
+        const prsReviewed = await this.getCachedPRsReviewed(owner, repoName, filteredPRs, parseInt(githubUserId), username, startDateObj, endDateObj);
+
+        // Get total recent PRs in repo for context
+        const totalRecentPRs = filteredPRs.length;
+
+        const repoStats = {
+          repo,
+          prsCreated,
+          prsReviewed,
+          prsMerged: prsMergedCount,
+          totalRecentPRs
+        };
+
+        stats.repos.push(repoStats);
+        stats.prsCreated += prsCreated;
+        stats.prsReviewed += prsReviewed;
+        stats.prsMerged += prsMergedCount;
+        stats.totalActivity += prsCreated + prsReviewed + prsMergedCount;
+
+        this.logger.log(`Cached repo ${repo}: ${prsCreated} created, ${prsMergedCount} merged, ${prsReviewed} reviewed`);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        this.logger.error(`Failed to get cached activity for user ${username} (ID: ${githubUserId}) in ${repo}:`, errorMessage);
+      }
+    }
+
+    return {
+      user,
+      activity: stats
+    };
+  }
+
+  /**
+   * Get cached user information
+   */
+  private async getCachedUser(username: string): Promise<GitHubUser> {
+    const cacheKey = CacheKeys.user(username);
+    let user = this.cacheService.get<GitHubUser>(cacheKey);
+    
+    if (!user) {
+      this.logger.log(`Cache miss for user: ${username}`);
+      user = await this.getUser(username);
+      this.cacheService.set(cacheKey, user, 30 * 60 * 1000); // 30 minutes
+    }
+    
+    return user;
+  }
+
+  /**
+   * Get cached PRs for a repository
+   */
+  private async getCachedPRs(owner: string, repo: string): Promise<GitHubPullRequest[]> {
+    const cacheKey = CacheKeys.prList(owner, repo, 90); // 90 days
+    let prs = this.cacheService.get<GitHubPullRequest[]>(cacheKey);
+    
+    if (!prs) {
+      this.logger.log(`Cache miss for PRs: ${owner}/${repo}`);
+      try {
+        // Use direct PRs API instead of search API for better reliability
+        const response = await this.makeRateLimitedRequest(`https://api.github.com/repos/${owner}/${repo}/pulls?state=all&per_page=100&sort=updated&direction=desc`) as any;
+        
+        prs = response || [];
+        this.logger.log(`Retrieved ${prs.length} PRs from GitHub API for ${owner}/${repo}`);
+        this.cacheService.set(cacheKey, prs, 15 * 60 * 1000); // 15 minutes
+      } catch (error) {
+        this.logger.error(`Failed to fetch PRs for ${owner}/${repo}:`, error);
+        prs = [];
+      }
+    }
+    
+    return prs;
+  }
+
+  /**
+   * Filter PRs by user and date range
+   * Include PRs that were created, merged, or updated within the date range
+   */
+  private filterPRsByUserAndDate(
+    prs: GitHubPullRequest[], 
+    userId: number, 
+    username: string, 
+    startDate: Date, 
+    endDate: Date
+  ): GitHubPullRequest[] {
+    return prs.filter(pr => {
+      const createdAt = new Date(pr.created_at);
+      const updatedAt = new Date(pr.updated_at);
+      const mergedAt = pr.merged_at ? new Date(pr.merged_at) : null;
+      
+      // Include PR if it was created, updated, or merged within the date range
+      return (createdAt >= startDate && createdAt <= endDate) ||
+             (updatedAt >= startDate && updatedAt <= endDate) ||
+             (mergedAt && mergedAt >= startDate && mergedAt <= endDate);
+    });
+  }
+
+  /**
+   * Get cached PRs reviewed count
+   */
+  private async getCachedPRsReviewed(
+    owner: string, 
+    repo: string, 
+    prs: GitHubPullRequest[], 
+    userId: number, 
+    username: string, 
+    startDate: Date, 
+    endDate: Date
+  ): Promise<number> {
+    let reviewedCount = 0;
+    
+    // Process PRs in small batches to avoid overwhelming the API
+    const batchSize = 3;
+    for (let i = 0; i < prs.length; i += batchSize) {
+      const batch = prs.slice(i, i + batchSize);
+      
+      const batchPromises = batch.map(async (pr) => {
+        // Skip user's own PRs
+        if (pr.user.id === userId) {
+          return false;
+        }
+        
+        try {
+          // Get cached reviews and reactions
+          const [reviews, reactions] = await Promise.all([
+            this.getCachedPRReviews(owner, repo, pr.number),
+            this.getCachedPRReactions(owner, repo, pr.number)
+          ]);
+          
+          // Check if user has any review activity within date range
+          const hasReview = reviews.some(review => {
+            if (review.user.id === userId && review.submitted_at) {
+              const reviewDate = new Date(review.submitted_at);
+              return reviewDate >= startDate && reviewDate <= endDate;
+            }
+            return false;
+          });
+          
+          // Check if user has any reaction activity within date range
+          const hasReaction = reactions.some(reaction => {
+            if (reaction.user.id === userId && reaction.created_at) {
+              const reactionDate = new Date(reaction.created_at);
+              return reactionDate >= startDate && reactionDate <= endDate;
+            }
+            return false;
+          });
+          
+          return hasReview || hasReaction;
+        } catch (error) {
+          this.logger.warn(`Failed to get reviews/reactions for PR ${pr.number}:`, error);
+          return false;
+        }
+      });
+      
+      const batchResults = await Promise.all(batchPromises);
+      reviewedCount += batchResults.filter(Boolean).length;
+      
+      // Small delay between batches
+      if (i + batchSize < prs.length) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+    
+    return reviewedCount;
+  }
+
+  /**
+   * Get cached PR reviews
+   */
+  private async getCachedPRReviews(owner: string, repo: string, prNumber: number): Promise<any[]> {
+    const cacheKey = CacheKeys.prReviews(owner, repo, prNumber);
+    let reviews = this.cacheService.get<any[]>(cacheKey);
+    
+    if (!reviews) {
+      this.logger.log(`Cache miss for reviews: ${owner}/${repo}#${prNumber}`);
+      reviews = await this.getPullRequestReviews(owner, repo, prNumber);
+      this.cacheService.set(cacheKey, reviews, 15 * 60 * 1000); // 15 minutes
+    }
+    
+    return reviews;
+  }
+
+  /**
+   * Get cached PR reactions
+   */
+  private async getCachedPRReactions(owner: string, repo: string, prNumber: number): Promise<any[]> {
+    const cacheKey = CacheKeys.prReactions(owner, repo, prNumber);
+    let reactions = this.cacheService.get<any[]>(cacheKey);
+    
+    if (!reactions) {
+      this.logger.log(`Cache miss for reactions: ${owner}/${repo}#${prNumber}`);
+      reactions = await this.getPullRequestReactions(owner, repo, prNumber);
+      this.cacheService.set(cacheKey, reactions, 15 * 60 * 1000); // 15 minutes
+    }
+    
+    return reactions;
   }
 }
