@@ -1,8 +1,13 @@
+import { Injectable } from '@nestjs/common';
 import { eq, and } from 'drizzle-orm';
-import { BaseRepository } from './base.repository';
+import { BaseRepository } from '../base.repository';
 import { dashboardGithubUsers, DashboardGithubUser, NewDashboardGithubUser } from '../entities';
 
-export class DashboardUserRepository extends BaseRepository {
+@Injectable()
+export class DashboardUserRepository extends BaseRepository<DashboardGithubUser, NewDashboardGithubUser, Partial<NewDashboardGithubUser>> {
+  constructor() {
+    super(dashboardGithubUsers);
+  }
   /**
    * Add a GitHub user to a dashboard
    */

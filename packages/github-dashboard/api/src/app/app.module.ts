@@ -4,6 +4,9 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import databaseConfig from '../config/database.config';
 
+// Database module
+import { DatabaseModule } from '../database/database.module';
+
 // Feature modules
 import { DashboardsModule } from '../dashboards/dashboards.module';
 import { GitHubModule } from '../github/github.module';
@@ -11,7 +14,7 @@ import { GitHubModule } from '../github/github.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, load: [databaseConfig] }),
-    // DatabaseModule (global) will be added when defined
+    DatabaseModule, // Global database module
     DashboardsModule,
     GitHubModule,
   ],
