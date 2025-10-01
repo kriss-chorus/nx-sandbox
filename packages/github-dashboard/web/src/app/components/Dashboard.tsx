@@ -126,7 +126,7 @@ export const Dashboard: React.FC = () => {
 
   const [organizationRepos, setOrganizationRepos] = useState<OrganizationRepository[]>([]);
   const [selectedRepoToAdd, setSelectedRepoToAdd] = useState<string>('');
-  const [dashboardRepositories, setDashboardRepositories] = useState<string[]>([]);
+  const [dashboardRepositories, setDashboardRepositories] = useState<{name: string}[]>([]);
 
   const [activityConfig, setActivityConfig] = useState({
     trackPRsCreated: true,
@@ -684,7 +684,10 @@ export const Dashboard: React.FC = () => {
   };
 
   const sortedActivities = [...userActivities].sort((a, b) => {
-    return b.activity[sortBy] - a.activity[sortBy];
+    const aValue = a.activity[sortBy] || 0;
+    const bValue = b.activity[sortBy] || 0;
+    console.log(`Sorting: ${a.user.login} (${sortBy}: ${aValue}) vs ${b.user.login} (${sortBy}: ${bValue})`);
+    return bValue - aValue;
   });
 
   return (
@@ -918,7 +921,8 @@ export const Dashboard: React.FC = () => {
                       padding: '8px 12px', 
                       borderRadius: '4px', 
                       border: '1px solid #ccc',
-                      fontSize: '14px'
+                      fontSize: '14px',
+                      backgroundColor: '#f5f5f5'
                     }}
                   >
                     <option value="totalActivity">Total Activity</option>
@@ -926,6 +930,11 @@ export const Dashboard: React.FC = () => {
                     <option value="prsReviewed">PRs Reviewed</option>
                     <option value="prsMerged">PRs Merged</option>
                   </select>
+                  <Typography variant="caption" color="text.secondary">
+                    (Currently sorting by: {sortBy === 'totalActivity' ? 'Total Activity' : 
+                     sortBy === 'prsCreated' ? 'PRs Created' :
+                     sortBy === 'prsReviewed' ? 'PRs Reviewed' : 'PRs Merged'})
+                  </Typography>
                 </Box>
               )}
 
