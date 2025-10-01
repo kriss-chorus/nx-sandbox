@@ -2,9 +2,11 @@ import { Injectable, NotFoundException, ConflictException } from '@nestjs/common
 import { DashboardRepository } from '../database/repositories/dashboard.repository';
 import { DashboardUserRepository } from '../database/repositories/dashboard-user.repository';
 import { DashboardRepositoryRepository } from '../database/repositories/dashboard-repository.repository';
+import { ActivityTypeRepository } from '../database/repositories/activity-type.repository';
+import { DashboardActivityConfigRepository } from '../database/repositories/dashboard-activity-config.repository';
 import { GitHubService } from '../github/github.service';
-import { CreateDashboardDto, UpdateDashboardDto, AddUserToDashboardDto } from './dto';
-import { Dashboard, DashboardGithubUser } from '../database/entities';
+import { CreateDashboardDto, UpdateDashboardDto, AddUserToDashboardDto, UpdateActivityConfigDto, ActivityConfigDto } from './dto';
+import { Dashboard, DashboardGithubUser, ActivityType, DashboardActivityConfig } from '../database/entities';
 
 @Injectable()
 export class DashboardsService {
@@ -12,6 +14,8 @@ export class DashboardsService {
     private readonly dashboardRepository: DashboardRepository,
     private readonly dashboardUserRepository: DashboardUserRepository,
     private readonly dashboardRepositoryRepository: DashboardRepositoryRepository,
+    private readonly activityTypeRepository: ActivityTypeRepository,
+    private readonly dashboardActivityConfigRepository: DashboardActivityConfigRepository,
     private readonly githubService: GitHubService
   ) {}
 
@@ -192,6 +196,71 @@ export class DashboardsService {
 
     const repos = await this.dashboardRepositoryRepository.getDashboardRepositories(dashboardId);
     return repos; // getDashboardRepositories already returns string[]
+  }
+
+  // Activity Configuration Methods
+  async getActivityConfiguration(dashboardId: string): Promise<ActivityConfigDto> {
+    const dashboard = await this.dashboardRepository.findById(dashboardId);
+    if (!dashboard) {
+      throw new NotFoundException(`Dashboard with ID '${dashboardId}' not found`);
+    }
+
+    // Get all activity types
+    const activityTypes = await this.activityTypeRepository.findAll();
+    
+    // Get dashboard-specific configurations
+    const configs = await this.dashboardActivityConfigRepository.getDashboardConfigs(dashboardId);
+    
+    // Create a map of activity type name to configuration
+    const configMap = new Map(
+      configs.map(config => [
+        activityTypes.find(type => type.id === config.activityTypeId)?.name,
+        config
+      ]).filter(([name]) => name) // Filter out undefined names
+    );
+
+    // Build the activity configuration object
+    const activityConfig: ActivityConfigDto = {
+      trackPRsOpened: configMap.get('prs_opened')?.enabled ?? true,
+      trackPRsMerged: configMap.get('prs_merged')?.enabled ?? true,
+      trackPRReviews: configMap.get('pr_reviews')?.enabled ?? true,
+      trackCommits: configMap.get('commits')?.enabled ?? false,
+      trackIssues: configMap.get('issues')?.enabled ?? false,
+      dateRange: {
+        start: configMap.get('prs_opened')?.dateRangeStart || '',
+        end: configMap.get('prs_opened')?.dateRangeEnd || ''
+      }
+    };
+
+    return activityConfig;
+  }
+
+  async updateActivityConfiguration(dashboardId: string, updateDto: UpdateActivityConfigDto): Promise<ActivityConfigDto> {
+    const dashboard = await this.dashboardRepository.findById(dashboardId);
+    if (!dashboard) {
+      throw new NotFoundException(`Dashboard with ID '${dashboardId}' not found`);
+    }
+
+    // Get all activity types
+    const activityTypes = await this.activityTypeRepository.findAll();
+    const activityTypeMap = new Map(activityTypes.map(type => [type.name, type]));
+
+    // Update configurations
+    const configsToUpdate = updateDto.configs.map(config => ({
+      activityTypeId: activityTypeMap.get(config.activityTypeName)?.id,
+      enabled: config.enabled,
+      dateRangeStart: config.dateRangeStart,
+      dateRangeEnd: config.dateRangeEnd
+    })).filter(config => config.activityTypeId); // Filter out invalid activity types
+
+    await this.dashboardActivityConfigRepository.updateDashboardConfigs(dashboardId, configsToUpdate);
+
+    // Return the updated configuration
+    return this.getActivityConfiguration(dashboardId);
+  }
+
+  async getAvailableActivityTypes(): Promise<ActivityType[]> {
+    return await this.activityTypeRepository.findAll();
   }
 
   private generateSlug(name: string): string {

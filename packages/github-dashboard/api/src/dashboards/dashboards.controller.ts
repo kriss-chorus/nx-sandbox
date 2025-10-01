@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Put, Delete, Param, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { DashboardsService } from './dashboards.service';
-import { CreateDashboardDto, UpdateDashboardDto, AddUserToDashboardDto, RemoveUserFromDashboardDto } from './dto';
+import { CreateDashboardDto, UpdateDashboardDto, AddUserToDashboardDto, RemoveUserFromDashboardDto, UpdateActivityConfigDto } from './dto';
 
 @Controller('dashboards')
 export class DashboardsController {
@@ -15,6 +15,12 @@ export class DashboardsController {
   @Get()
   async findAll() {
     return this.dashboardsService.findAllPublic();
+  }
+
+  @Get('activity-types')
+  @HttpCode(HttpStatus.OK)
+  async getAvailableActivityTypes() {
+    return this.dashboardsService.getAvailableActivityTypes();
   }
 
   @Get(':slug')
@@ -74,5 +80,21 @@ export class DashboardsController {
   @HttpCode(HttpStatus.OK)
   async getDashboardRepositories(@Param('id') id: string) {
     return this.dashboardsService.getDashboardRepositories(id);
+  }
+
+  // Activity Configuration Endpoints
+  @Get(':id/activity-config')
+  @HttpCode(HttpStatus.OK)
+  async getActivityConfiguration(@Param('id') id: string) {
+    return this.dashboardsService.getActivityConfiguration(id);
+  }
+
+  @Put(':id/activity-config')
+  @HttpCode(HttpStatus.OK)
+  async updateActivityConfiguration(
+    @Param('id') id: string,
+    @Body() updateDto: UpdateActivityConfigDto
+  ) {
+    return this.dashboardsService.updateActivityConfiguration(id, updateDto);
   }
 }

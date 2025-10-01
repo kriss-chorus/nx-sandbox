@@ -206,6 +206,62 @@ export const Dashboard: React.FC = () => {
     }
   };
 
+  // Load activity configuration for a dashboard
+  const loadActivityConfiguration = async (dashboardId: string) => {
+    try {
+      const response = await fetch(`http://localhost:3001/api/dashboards/${dashboardId}/activity-config`);
+      if (response.ok) {
+        const config = await response.json();
+        setActivityConfig(config);
+      }
+    } catch (err) {
+      console.error('Failed to load activity configuration:', err);
+    }
+  };
+
+  // Save activity configuration for a dashboard
+  const saveActivityConfiguration = async (dashboardId: string, config: typeof activityConfig) => {
+    try {
+      // Convert the frontend config format to the API format
+      const apiConfig = {
+        configs: [
+          { activityTypeName: 'prs_opened', enabled: config.trackPRsOpened, dateRangeStart: config.dateRange.start, dateRangeEnd: config.dateRange.end },
+          { activityTypeName: 'prs_merged', enabled: config.trackPRsMerged, dateRangeStart: config.dateRange.start, dateRangeEnd: config.dateRange.end },
+          { activityTypeName: 'pr_reviews', enabled: config.trackPRReviews, dateRangeStart: config.dateRange.start, dateRangeEnd: config.dateRange.end },
+          { activityTypeName: 'commits', enabled: config.trackCommits, dateRangeStart: config.dateRange.start, dateRangeEnd: config.dateRange.end },
+          { activityTypeName: 'issues', enabled: config.trackIssues, dateRangeStart: config.dateRange.start, dateRangeEnd: config.dateRange.end }
+        ]
+      };
+
+      const response = await fetch(`http://localhost:3001/api/dashboards/${dashboardId}/activity-config`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(apiConfig),
+      });
+
+      if (response.ok) {
+        const updatedConfig = await response.json();
+        setActivityConfig(updatedConfig);
+        console.log('Activity configuration saved successfully');
+      } else {
+        console.error('Failed to save activity configuration');
+      }
+    } catch (err) {
+      console.error('Failed to save activity configuration:', err);
+    }
+  };
+
+  // Handle activity configuration changes and auto-save
+  const handleActivityConfigChange = (newConfig: typeof activityConfig) => {
+    setActivityConfig(newConfig);
+    // Auto-save when configuration changes
+    if (selectedDashboard) {
+      saveActivityConfiguration(selectedDashboard.id, newConfig);
+    }
+  };
+
   const loadDashboardUsers = async (dashboard: Dashboard) => {
     setSelectedDashboard(dashboard);
     setCurrentView('dashboard'); // Navigate to dashboard view
@@ -215,6 +271,9 @@ export const Dashboard: React.FC = () => {
     // Clear previous state immediately to prevent showing wrong users
     setGithubUsers([]);
     setUserActivities([]);
+    
+    // Load activity configuration for this dashboard
+    await loadActivityConfiguration(dashboard.id);
     
     try {
       const users: GitHubUser[] = [];
@@ -690,10 +749,10 @@ export const Dashboard: React.FC = () => {
                         type="date"
                         size="small"
                         value={activityConfig.dateRange.start}
-                        onChange={(e) => setActivityConfig(prev => ({
-                          ...prev,
-                          dateRange: { ...prev.dateRange, start: e.target.value }
-                        }))}
+                        onChange={(e) => handleActivityConfigChange({
+                          ...activityConfig,
+                          dateRange: { ...activityConfig.dateRange, start: e.target.value }
+                        })}
                         InputLabelProps={{ shrink: true }}
                         sx={{ minWidth: 140 }}
                       />
@@ -703,10 +762,10 @@ export const Dashboard: React.FC = () => {
                         type="date"
                         size="small"
                         value={activityConfig.dateRange.end}
-                        onChange={(e) => setActivityConfig(prev => ({
-                          ...prev,
-                          dateRange: { ...prev.dateRange, end: e.target.value }
-                        }))}
+                        onChange={(e) => handleActivityConfigChange({
+                          ...activityConfig,
+                          dateRange: { ...activityConfig.dateRange, end: e.target.value }
+                        })}
                         InputLabelProps={{ shrink: true }}
                         sx={{ minWidth: 140 }}
                       />
@@ -727,10 +786,10 @@ export const Dashboard: React.FC = () => {
                           control={
                             <Checkbox
                               checked={activityConfig.trackPRsOpened}
-                              onChange={(e) => setActivityConfig(prev => ({
-                                ...prev,
+                              onChange={(e) => handleActivityConfigChange({
+                                ...activityConfig,
                                 trackPRsOpened: e.target.checked
-                              }))}
+                              })}
                             />
                           }
                           label="Track PRs Opened"
@@ -739,10 +798,10 @@ export const Dashboard: React.FC = () => {
                           control={
                             <Checkbox
                               checked={activityConfig.trackPRsMerged}
-                              onChange={(e) => setActivityConfig(prev => ({
-                                ...prev,
+                              onChange={(e) => handleActivityConfigChange({
+                                ...activityConfig,
                                 trackPRsMerged: e.target.checked
-                              }))}
+                              })}
                             />
                           }
                           label="Track PRs Merged"
@@ -763,10 +822,10 @@ export const Dashboard: React.FC = () => {
                           control={
                             <Checkbox
                               checked={activityConfig.trackPRReviews}
-                              onChange={(e) => setActivityConfig(prev => ({
-                                ...prev,
+                              onChange={(e) => handleActivityConfigChange({
+                                ...activityConfig,
                                 trackPRReviews: e.target.checked
-                              }))}
+                              })}
                             />
                           }
                           label="Track PR Reviews"
@@ -787,10 +846,10 @@ export const Dashboard: React.FC = () => {
                           control={
                             <Checkbox
                               checked={activityConfig.trackCommits}
-                              onChange={(e) => setActivityConfig(prev => ({
-                                ...prev,
+                              onChange={(e) => handleActivityConfigChange({
+                                ...activityConfig,
                                 trackCommits: e.target.checked
-                              }))}
+                              })}
                             />
                           }
                           label="Track Commits"
@@ -799,10 +858,10 @@ export const Dashboard: React.FC = () => {
                           control={
                             <Checkbox
                               checked={activityConfig.trackIssues}
-                              onChange={(e) => setActivityConfig(prev => ({
-                                ...prev,
+                              onChange={(e) => handleActivityConfigChange({
+                                ...activityConfig,
                                 trackIssues: e.target.checked
-                              }))}
+                              })}
                             />
                           }
                           label="Track Issues"
