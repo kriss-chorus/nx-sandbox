@@ -1,10 +1,10 @@
 # Root Tiltfile for GitHub Dashboard dev
 
-# Bring up Postgres via docker compose
-# This defines a Tilt resource named 'postgres'
+# Database Services (PostgreSQL + PostGraphile)
+# Using docker_compose to manage both services together
 docker_compose('github-dashboard/docker-compose.yml')
 
-# API (NestJS) - depends on postgres
+# API (NestJS) - depends on database
 local_resource(
   'github-dashboard-api',
   serve_cmd='npx nx serve api',
@@ -25,7 +25,7 @@ local_resource(
 )
 
 # Aggregate resource so you can run: `tilt up github-dashboard`
-# This will bring up postgres, api, and web together
+# This will bring up database, api, and web together
 local_resource(
   'github-dashboard',
   serve_cmd='echo "GitHub Dashboard stack running" && sleep 3600000',
