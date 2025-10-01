@@ -509,33 +509,6 @@ TILT_PORT=10360 tilt trigger <resource-name>
 TILT_PORT=10360 tilt get uiresources -o yaml
 ```
 
-### When to Use These Commands:
-- **`tilt get uiresources`**: When services aren't starting or you need to see what Tilt is managing
-- **`tilt logs <resource>`**: When a service fails to start or behaves unexpectedly
-- **`tilt enable/disable`**: When services get auto-disabled (common with Docker Compose)
-- **`tilt trigger`**: When you need to force restart a specific service
-
-## 🔧 Useful Tilt Commands for Debugging
-
-### Essential Tilt Debugging Commands
-```bash
-# List all Tilt resources and their status
-TILT_PORT=10360 tilt get uiresources
-
-# Check logs for a specific resource
-TILT_PORT=10360 tilt logs <resource-name>
-
-# Enable/disable a resource
-TILT_PORT=10360 tilt enable <resource-name>
-TILT_PORT=10360 tilt disable <resource-name>
-
-# Trigger a resource update
-TILT_PORT=10360 tilt trigger <resource-name>
-
-# Check resource status in detail
-TILT_PORT=10360 tilt get uiresources -o yaml
-```
-
 ### When to Use These Commands
 - **`tilt get uiresources`**: When services aren't starting or you need to see what resources exist
 - **`tilt logs <resource>`**: When a service is failing or not behaving as expected
