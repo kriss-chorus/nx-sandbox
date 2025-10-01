@@ -153,6 +153,7 @@ export const Dashboard: React.FC = () => {
 
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [tempActivityConfig, setTempActivityConfig] = useState(activityConfig);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     loadDashboards();
@@ -193,8 +194,7 @@ export const Dashboard: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: newDashboardName,
-          description: newDashboardDescription,
-          isPublic: true
+          description: newDashboardDescription
         })
       });
       
@@ -314,18 +314,61 @@ export const Dashboard: React.FC = () => {
     setCurrentView('dashboard');
     setLoading(true);
     setError(null);
+    setIsUpdating(false);
     
     navigate(`/dashboard/${dashboard.slug}`);
     
     setGithubUsers([]);
     setUserActivities([]);
+
+    // Hydrate from sessionStorage for instant render
+    try {
+      const cachedKey = `batch:${dashboard.id}`;
+      const cached = sessionStorage.getItem(cachedKey);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const users: GitHubUser[] = parsed.map((item: any) => ({
+            id: item.user.id,
+            login: item.user.login,
+            name: item.user.name || item.user.login,
+            avatar_url: item.user.avatar_url,
+            html_url: `https://github.com/${item.user.login}`,
+            public_repos: item.user.public_repos ?? 0,
+            followers: item.user.followers ?? 0,
+            following: item.user.following ?? 0,
+            public_gists: item.user.public_gists ?? 0,
+            created_at: item.user.created_at ?? '',
+            updated_at: item.user.updated_at ?? ''
+          }));
+          const activities: UserActivity[] = parsed.map((item: any) => ({
+            user: {
+              id: item.user.id,
+              login: item.user.login,
+              name: item.user.name || item.user.login,
+              avatar_url: item.user.avatar_url,
+              html_url: `https://github.com/${item.user.login}`,
+              public_repos: item.user.public_repos ?? 0,
+              followers: item.user.followers ?? 0,
+              following: item.user.following ?? 0,
+              public_gists: item.user.public_gists ?? 0,
+              created_at: item.user.created_at ?? '',
+              updated_at: item.user.updated_at ?? ''
+            } as GitHubUser,
+            activity: item.activity,
+            repos: item.activity?.repos
+          }));
+          setGithubUsers(users);
+          setUserActivities(activities);
+        }
+      }
+    } catch {}
     
     // Load activity configuration first
     const configResponse = await fetch(`http://localhost:3001/api/dashboards/${dashboard.id}/activity-config`);
     let currentConfig = activityConfig;
     if (configResponse.ok) {
       const dbConfig = await configResponse.json();
-      // Convert UTC timestamps back to date strings for the UI
       currentConfig = {
         ...dbConfig,
         dateRange: {
@@ -337,128 +380,117 @@ export const Dashboard: React.FC = () => {
     }
     
     try {
-      // Load dashboard users and repositories in parallel for better performance
+      // Load users and repositories in parallel
       const [dashboardUsersResponse, repositoriesResponse] = await Promise.all([
         fetch(`http://localhost:3001/api/dashboards/${dashboard.id}/users`),
         fetch(`http://localhost:3001/api/dashboards/${dashboard.id}/repositories`)
       ]);
-      
-      if (!dashboardUsersResponse.ok) {
-        throw new Error(`Failed to load dashboard users: ${dashboardUsersResponse.statusText}`);
-      }
-      
+      if (!dashboardUsersResponse.ok) throw new Error(`Failed to load dashboard users: ${dashboardUsersResponse.statusText}`);
       const dashboardUsers = await dashboardUsersResponse.json();
-      console.log('Dashboard users:', dashboardUsers);
-      
-      // Load repositories immediately (fast database call)
+
+      let fetchedRepos: any[] = [];
       if (repositoriesResponse.ok) {
         const repos = await repositoriesResponse.json();
+        fetchedRepos = Array.isArray(repos) ? repos : [];
         setDashboardRepositories(repos);
-        console.log('Dashboard repositories loaded:', repos);
       }
-      
-      console.log(`Fetching batch activity for dashboard ${dashboard.id}`);
-      
+
       const dateRangeParams = currentConfig.dateRange.start && currentConfig.dateRange.end 
         ? `&start_date=${new Date(currentConfig.dateRange.start + 'T00:00:00.000Z').toISOString()}&end_date=${new Date(currentConfig.dateRange.end + 'T23:59:59.999Z').toISOString()}`
         : '';
-      
-      const batchResponse = await fetch(
-        `http://localhost:3001/api/github/users/cached-batch-activity-summary?dashboard_id=${dashboard.id}&repos=ChorusInnovations/platform${dateRangeParams}`
+      const reposSource = fetchedRepos.length > 0 ? fetchedRepos : (dashboardRepositories || []);
+      const reposParam = reposSource
+        .map((r: any) => typeof r === 'string' ? r : r.name)
+        .filter(Boolean)
+        .join(',');
+      const reposQuery = reposParam ? `&repos=${encodeURIComponent(reposParam)}` : '';
+
+      // Stage 1: fast pass (skip reviews) for quick paint
+      setIsUpdating(true);
+      const fastResponse = await fetch(
+        `http://localhost:3001/api/github/users/cached-batch-activity-summary?dashboard_id=${dashboard.id}${dateRangeParams}${reposQuery}&include_reviews=false`
       );
-      
-      const users: GitHubUser[] = [];
-      const activities: UserActivity[] = [];
-      
-      if (batchResponse.ok) {
-        const batchData = await batchResponse.json();
-        console.log(`Batch API returned data for ${batchData.length} users`);
-        console.log('Batch data structure:', batchData[0]);
-        
-        batchData.forEach((userActivity: any, index: number) => {
-          setLoadingProgress({ current: index + 1, total: batchData.length });
-          
-          const dashboardUser = dashboardUsers.find((du: any) => du.user.githubUsername === userActivity.user.login);
-          if (dashboardUser) {
-            const user = dashboardUser.user;
-            const userData = {
-              id: user.githubUserId,
-              login: user.githubUsername,
-              name: user.displayName || user.githubUsername,
-              avatar_url: user.avatarUrl || `https://avatars.githubusercontent.com/u/${user.githubUserId}?v=4`,
-              html_url: user.profileUrl,
-              public_repos: userActivity.user.public_repos || 0,
-              public_gists: 0,
-              followers: userActivity.user.followers || 0,
-              following: userActivity.user.following || 0,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            };
-            
-            users.push(userData);
-            const transformedActivity = {
-              user: userData,
-              activity: userActivity.activity,
-              repos: userActivity.repos || []
-            };
-            console.log(`Transformed activity for ${userData.login}:`, transformedActivity);
-            activities.push(transformedActivity);
-          }
-        });
-      } else {
-        console.error(`Batch API failed:`, batchResponse.status);
-        dashboardUsers.forEach((dashboardUser: any, index: number) => {
-          setLoadingProgress({ current: index + 1, total: dashboardUsers.length });
-          const user = dashboardUser.user;
-          const userData = {
-            id: user.githubUserId,
-            login: user.githubUsername,
-            name: user.displayName || user.githubUsername,
-            avatar_url: user.avatarUrl,
-            html_url: user.profileUrl,
-            public_repos: 0,
-            public_gists: 0,
-            followers: 0,
-            following: 0,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          };
-          users.push(userData);
-          activities.push({
-            user: userData,
-            activity: { prsCreated: 0, prsReviewed: 0, prsMerged: 0, totalActivity: 0 },
-            repos: []
-          });
-        });
+      if (fastResponse.ok) {
+        const fastData = await fastResponse.json();
+        const users: GitHubUser[] = fastData.map((item: any) => ({
+          id: item.user.id,
+          login: item.user.login,
+          name: item.user.name || item.user.login,
+          avatar_url: item.user.avatar_url,
+          html_url: `https://github.com/${item.user.login}`,
+          public_repos: item.user.public_repos ?? 0,
+          followers: item.user.followers ?? 0,
+          following: item.user.following ?? 0,
+          public_gists: item.user.public_gists ?? 0,
+          created_at: item.user.created_at ?? '',
+          updated_at: item.user.updated_at ?? ''
+        }));
+        const activities: UserActivity[] = fastData.map((item: any) => ({
+          user: {
+            id: item.user.id,
+            login: item.user.login,
+            name: item.user.name || item.user.login,
+            avatar_url: item.user.avatar_url,
+            html_url: `https://github.com/${item.user.login}`,
+            public_repos: item.user.public_repos ?? 0,
+            followers: item.user.followers ?? 0,
+            following: item.user.following ?? 0,
+            public_gists: item.user.public_gists ?? 0,
+            created_at: item.user.created_at ?? '',
+            updated_at: item.user.updated_at ?? ''
+          } as GitHubUser,
+          activity: item.activity,
+          repos: item.activity?.repos
+        }));
+        setGithubUsers(users);
+        setUserActivities(activities);
+        // Save to sessionStorage for next first paint
+        try { sessionStorage.setItem(`batch:${dashboard.id}`, JSON.stringify(fastData)); } catch {}
       }
-      
-      /*
-      console.log(`DEVELOPMENT MODE: Creating mock data for ${githubUsers.length} users`);
-      githubUsers.forEach((username, index) => {
-        const mockUser = {
-          id: index + 1,
-          login: username,
-          name: username,
-          avatar_url: `https://github.com/${username}.png`,
-          html_url: `https://github.com/${username}`,
-          public_repos: 0,
-          followers: 0,
-          following: 0
-        };
-        
-        const mockActivity = {
-          user: mockUser,
-          activity: { prsCreated: 0, prsReviewed: 0, prsMerged: 0, totalActivity: 0 },
-          repos: []
-        };
-        
-        users.push(mockUser);
-        activities.push(mockActivity);
-      });
-      */
-      
-      setGithubUsers(users);
-      setUserActivities(activities);
+
+      // Stage 2: full pass per configuration
+      const includeReviewsQuery = `&include_reviews=${currentConfig.trackPRReviews}`;
+      const fullResponse = await fetch(
+        `http://localhost:3001/api/github/users/cached-batch-activity-summary?dashboard_id=${dashboard.id}${dateRangeParams}${reposQuery}${includeReviewsQuery}`
+      );
+      if (fullResponse.ok) {
+        const fullData = await fullResponse.json();
+        // Replace state with full data
+        const users: GitHubUser[] = fullData.map((item: any) => ({
+          id: item.user.id,
+          login: item.user.login,
+          name: item.user.name || item.user.login,
+          avatar_url: item.user.avatar_url,
+          html_url: `https://github.com/${item.user.login}`,
+          public_repos: item.user.public_repos ?? 0,
+          followers: item.user.followers ?? 0,
+          following: item.user.following ?? 0,
+          public_gists: item.user.public_gists ?? 0,
+          created_at: item.user.created_at ?? '',
+          updated_at: item.user.updated_at ?? ''
+        }));
+        const activities: UserActivity[] = fullData.map((item: any) => ({
+          user: {
+            id: item.user.id,
+            login: item.user.login,
+            name: item.user.name || item.user.login,
+            avatar_url: item.user.avatar_url,
+            html_url: `https://github.com/${item.user.login}`,
+            public_repos: item.user.public_repos ?? 0,
+            followers: item.user.followers ?? 0,
+            following: item.user.following ?? 0,
+            public_gists: item.user.public_gists ?? 0,
+            created_at: item.user.created_at ?? '',
+            updated_at: item.user.updated_at ?? ''
+          } as GitHubUser,
+          activity: item.activity,
+          repos: item.activity?.repos
+        }));
+        setGithubUsers(users);
+        setUserActivities(activities);
+        try { sessionStorage.setItem(`batch:${dashboard.id}`, JSON.stringify(fullData)); } catch {}
+      }
+      setIsUpdating(false);
     } catch (err) {
       setError('Failed to load dashboard users');
     } finally {
@@ -469,61 +501,82 @@ export const Dashboard: React.FC = () => {
 
   const addUserToDashboard = async () => {
     if (!newUsername.trim() || !selectedDashboard) return;
-    
-    const existingUsers = selectedDashboard.githubUsers || [];
-    if (existingUsers.includes(newUsername.trim())) {
-      setError(`User '${newUsername}' is already in this dashboard`);
+
+    const username = newUsername.trim();
+    // Client-side guard: prevent duplicate adds
+    if (githubUsers.some(u => u.login.toLowerCase() === username.toLowerCase())) {
+      setError(`User ${username} is already in this dashboard`);
       return;
     }
     
     try {
-      /*
-      const userResponse = await fetch(`http://localhost:3001/api/github/users/${newUsername}`);
-      if (!userResponse.ok) {
-        if (userResponse.status === 404) {
-          throw new Error(`GitHub user '${newUsername}' not found. Please check the username and try again.`);
-        } else if (userResponse.status === 429) {
-          throw new Error(`GitHub API rate limit exceeded. Please wait a few minutes and try again.`);
-        } else {
-          throw new Error(`Failed to verify user: ${userResponse.status} ${userResponse.statusText}`);
-        }
-      }
-      */
-      
-      console.log(`DEVELOPMENT MODE: Skipping user verification for ${newUsername}`);
-      
-      const addUserResponse = await fetch(`http://localhost:3001/api/dashboards/${selectedDashboard.id}/users`, {
+      const response = await fetch(`http://localhost:3001/api/dashboards/${selectedDashboard.id}/users`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          githubUsername: newUsername.trim(),
-          displayName: newUsername.trim()
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ githubUsername: username })
       });
 
-      if (!addUserResponse.ok) {
-        if (addUserResponse.status === 409) {
-          throw new Error(`User '${newUsername}' is already in this dashboard`);
+      if (!response.ok) {
+        if (response.status === 409) {
+          setError(`User ${username} is already in this dashboard`);
+          return;
+        }
+        throw new Error(`Failed to add user: ${response.status} ${response.statusText}`);
+      }
+
+      // Optimistically fetch the user's profile and activity, then add to state without needing a full reload
+      // Fetch user profile details (followers, public_repos, following)
+      const userProfilePromise = fetch(`http://localhost:3001/api/github/users/${encodeURIComponent(username)}`)
+        .then(r => r.ok ? r.json() : null)
+        .catch(() => null);
+
+      // Compute repos and date range for activity
+      const reposParam = (dashboardRepositories || [])
+        .map(r => typeof r === 'string' ? r : r.name)
+        .filter(Boolean)
+        .join(',');
+      const start = activityConfig.dateRange.start ? new Date(activityConfig.dateRange.start + 'T00:00:00.000Z').toISOString() : '';
+      const end = activityConfig.dateRange.end ? new Date(activityConfig.dateRange.end + 'T23:59:59.999Z').toISOString() : '';
+      const rangeParams = start && end ? `&start_date=${start}&end_date=${end}` : '';
+
+      // Fetch activity summary for the single user
+      const activityPromise = fetch(`http://localhost:3001/api/github/users/${encodeURIComponent(username)}/activity-summary?repos=${encodeURIComponent(reposParam)}${rangeParams}`)
+        .then(r => r.ok ? r.json() : null)
+        .catch(() => null);
+
+      const [profile, activity] = await Promise.all([userProfilePromise, activityPromise]);
+
+      if (profile) {
+        const newUser = {
+          id: profile.id,
+          login: profile.login,
+          name: profile.name || profile.login,
+          avatar_url: profile.avatar_url,
+          html_url: profile.html_url,
+          public_repos: profile.public_repos ?? 0,
+          followers: profile.followers ?? 0,
+          following: profile.following ?? 0,
+          public_gists: profile.public_gists ?? 0,
+          created_at: profile.created_at ?? '',
+          updated_at: profile.updated_at ?? ''
+        } as GitHubUser;
+
+        setGithubUsers(prev => {
+          if (prev.find(u => u.login.toLowerCase() === newUser.login.toLowerCase())) return prev;
+          return [newUser, ...prev];
+        });
+
+        if (activity && activity.activity) {
+          setUserActivities(prev => [{ user: newUser, activity: activity.activity, repos: activity.activity.repos }, ...prev]);
         } else {
-          throw new Error(`Failed to add user to dashboard: ${addUserResponse.status} ${addUserResponse.statusText}`);
+          setUserActivities(prev => [{ user: newUser, activity: { prsCreated: 0, prsReviewed: 0, prsMerged: 0, totalActivity: 0 }, repos: [] }, ...prev]);
         }
       }
 
-      const updatedDashboard = {
-        ...selectedDashboard,
-        githubUsers: [...(selectedDashboard.githubUsers || []), newUsername.trim()]
-      };
-      setSelectedDashboard(updatedDashboard);
-      
-      setDashboards(dashboards.map(d => 
-        d.id === selectedDashboard.id ? updatedDashboard : d
-      ));
-      
       setNewUsername('');
       setAddUserDialogOpen(false);
-      
+      setError(null);
+
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add user');
     }
@@ -701,13 +754,8 @@ export const Dashboard: React.FC = () => {
             Create and customize dashboards to track GitHub users and their activity
           </Typography>
         </Box>
-        <Fab 
-          color="primary" 
-          aria-label="create dashboard"
-          onClick={() => setCreateDialogOpen(true)}
-        >
-          <Add />
-        </Fab>
+        {/* Header and Create button only on dashboards list view */}
+        
       </Box>
 
       {/* Navigation Header */}
@@ -726,6 +774,21 @@ export const Dashboard: React.FC = () => {
       {/* My Dashboards View */}
       {currentView === 'dashboards' && (
         <Grid container spacing={3}>
+          {/* Header and Create button only on dashboards list view */}
+          {currentView === 'dashboards' && (
+            <Grid item xs={12}>
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                <Typography variant="h5">My Dashboards</Typography>
+                <Button 
+                  variant="contained" 
+                  startIcon={<Add />}
+                  onClick={() => setCreateDialogOpen(true)}
+                >
+                  Create Dashboard
+                </Button>
+              </Box>
+            </Grid>
+          )}
           {dashboards.map((dashboard) => (
             <Grid item xs={12} sm={6} md={4} key={dashboard.id}>
               <DashboardCard>
@@ -739,11 +802,7 @@ export const Dashboard: React.FC = () => {
                         </Typography>
                       )}
                     </Box>
-                    <Chip 
-                      label={dashboard.isPublic ? 'Public' : 'Private'} 
-                      size="small" 
-                      color={dashboard.isPublic ? 'primary' : 'default'}
-                    />
+                    
                   </Box>
                   
                   <Typography variant="body2" color="text.secondary" mb={2}>
@@ -1268,37 +1327,43 @@ export const Dashboard: React.FC = () => {
       )}
 
       {/* Create Dashboard Dialog */}
-      <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Create New Dashboard</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Dashboard Name"
-            fullWidth
-            variant="outlined"
-            value={newDashboardName}
-            onChange={(e) => setNewDashboardName(e.target.value)}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            margin="dense"
-            label="Description (optional)"
-            fullWidth
-            multiline
-            rows={3}
-            variant="outlined"
-            value={newDashboardDescription}
-            onChange={(e) => setNewDashboardDescription(e.target.value)}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setCreateDialogOpen(false)}>Cancel</Button>
-          <Button onClick={createDashboard} variant="contained" disabled={!newDashboardName.trim()}>
-            Create
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {currentView === 'dashboards' && (
+        <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="sm" fullWidth>
+          <DialogTitle>Create New Dashboard</DialogTitle>
+          <DialogContent>
+            <TextField
+              autoFocus
+              margin="dense"
+              label="Dashboard Name"
+              fullWidth
+              variant="outlined"
+              value={newDashboardName}
+              onChange={(e) => setNewDashboardName(e.target.value)}
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              margin="dense"
+              label="Description (Optional)"
+              fullWidth
+              multiline
+              rows={3}
+              variant="outlined"
+              value={newDashboardDescription}
+              onChange={(e) => setNewDashboardDescription(e.target.value)}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setCreateDialogOpen(false)}>Cancel</Button>
+            <Button 
+              onClick={createDashboard}
+              variant="contained"
+              disabled={!newDashboardName.trim()}
+            >
+              Create Dashboard
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
 
 
       {/* Add User Dialog */}

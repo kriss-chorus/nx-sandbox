@@ -14,11 +14,13 @@ export class GitHubController {
   @HttpCode(HttpStatus.OK)
   async getBatchUserActivitySummary(
     @Query('dashboard_id') dashboardId: string,
-    @Query('repos') repos?: string,
+    @Query('repos') repos?: string | string[],
     @Query('start_date') startDate?: string,
     @Query('end_date') endDate?: string
   ) {
-    const repoList = repos ? repos.split(',').map(r => r.trim()) : [];
+    const repoList = Array.isArray(repos)
+      ? (repos as string[]).map(r => r.trim()).filter(Boolean)
+      : (repos ? (repos as string).split(',').map(r => r.trim()).filter(Boolean) : []);
     return this.githubService.getBatchUserActivitySummaryByDashboard(dashboardId, repoList, startDate, endDate);
   }
 
@@ -31,12 +33,22 @@ export class GitHubController {
   @HttpCode(HttpStatus.OK)
   async getCachedBatchUserActivitySummary(
     @Query('dashboard_id') dashboardId: string,
-    @Query('repos') repos?: string,
+    @Query('repos') repos?: string | string[],
     @Query('start_date') startDate?: string,
-    @Query('end_date') endDate?: string
+    @Query('end_date') endDate?: string,
+    @Query('include_reviews') includeReviews?: string,
+    @Query('users') users?: string | string[],
+    @Query('no_cache') noCache?: string
   ) {
-    const repoList = repos ? repos.split(',').map(r => r.trim()) : [];
-    return this.githubService.getCachedBatchUserActivitySummaryByDashboard(dashboardId, repoList, startDate, endDate);
+    const repoList = Array.isArray(repos)
+      ? (repos as string[]).map(r => r.trim()).filter(Boolean)
+      : (repos ? (repos as string).split(',').map(r => r.trim()).filter(Boolean) : []);
+    const include = includeReviews !== 'false';
+    const userList = Array.isArray(users)
+      ? (users as string[]).map(u => u.trim()).filter(Boolean)
+      : (users ? (users as string).split(',').map(u => u.trim()).filter(Boolean) : []);
+    const bypassCache = noCache === 'true' || noCache === '1';
+    return this.githubService.getCachedBatchUserActivitySummaryByDashboard(dashboardId, repoList, startDate, endDate, include, userList, bypassCache);
   }
 
   /**
