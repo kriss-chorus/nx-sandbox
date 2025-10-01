@@ -1,11 +1,15 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { DashboardRepository } from '../database/repositories/dashboard.repository';
-import { CreateDashboardDto, UpdateDashboardDto } from './dto';
-import { Dashboard } from '../database/entities';
+import { DashboardUserRepository } from '../database/repositories/dashboard-user.repository';
+import { CreateDashboardDto, UpdateDashboardDto, AddUserToDashboardDto } from './dto';
+import { Dashboard, DashboardGithubUser } from '../database/entities';
 
 @Injectable()
 export class DashboardsService {
-  constructor(private readonly dashboardRepository: DashboardRepository) {}
+  constructor(
+    private readonly dashboardRepository: DashboardRepository,
+    private readonly dashboardUserRepository: DashboardUserRepository
+  ) {}
 
   async create(createDashboardDto: CreateDashboardDto): Promise<Dashboard> {
     const { name, description, isPublic } = createDashboardDto;
@@ -25,16 +29,37 @@ export class DashboardsService {
     });
   }
 
-  async findAllPublic(): Promise<Dashboard[]> {
-    return this.dashboardRepository.findPublicDashboards();
+  async findAllPublic(): Promise<any[]> {
+    const dashboards = await this.dashboardRepository.findPublicDashboards();
+    
+    // Add user count for each dashboard
+    const dashboardsWithUserCount = await Promise.all(
+      dashboards.map(async (dashboard) => {
+        const users = await this.dashboardUserRepository.getUsersForDashboard(dashboard.id);
+        return {
+          ...dashboard,
+          githubUsers: users.map(user => user.githubUsername),
+          userCount: users.length
+        };
+      })
+    );
+    
+    return dashboardsWithUserCount;
   }
 
-  async findBySlug(slug: string): Promise<Dashboard> {
+  async findBySlug(slug: string): Promise<any> {
     const dashboard = await this.dashboardRepository.findBySlug(slug);
     if (!dashboard) {
       throw new NotFoundException(`Dashboard with slug '${slug}' not found`);
     }
-    return dashboard;
+    
+    // Add user count and github users list
+    const users = await this.dashboardUserRepository.getUsersForDashboard(dashboard.id);
+    return {
+      ...dashboard,
+      githubUsers: users.map(user => user.githubUsername),
+      userCount: users.length
+    };
   }
 
   async update(id: string, updateDashboardDto: UpdateDashboardDto): Promise<Dashboard> {
@@ -69,6 +94,49 @@ export class DashboardsService {
     if (!deleted) {
       throw new NotFoundException(`Dashboard with id '${id}' not found`);
     }
+  }
+
+  async addUserToDashboard(dashboardId: string, addUserDto: AddUserToDashboardDto): Promise<DashboardGithubUser> {
+    // Verify dashboard exists
+    const dashboard = await this.dashboardRepository.findById(dashboardId);
+    if (!dashboard) {
+      throw new NotFoundException(`Dashboard with id '${dashboardId}' not found`);
+    }
+
+    // Check if user is already in dashboard
+    const existing = await this.dashboardUserRepository.isUserInDashboard(dashboardId, addUserDto.githubUsername);
+    if (existing) {
+      throw new ConflictException(`User '${addUserDto.githubUsername}' is already in this dashboard`);
+    }
+
+    return this.dashboardUserRepository.addUserToDashboard({
+      dashboardId,
+      githubUsername: addUserDto.githubUsername,
+      displayName: addUserDto.displayName || addUserDto.githubUsername,
+    });
+  }
+
+  async removeUserFromDashboard(dashboardId: string, username: string): Promise<void> {
+    // Verify dashboard exists
+    const dashboard = await this.dashboardRepository.findById(dashboardId);
+    if (!dashboard) {
+      throw new NotFoundException(`Dashboard with id '${dashboardId}' not found`);
+    }
+
+    const removed = await this.dashboardUserRepository.removeUserFromDashboard(dashboardId, username);
+    if (!removed) {
+      throw new NotFoundException(`User '${username}' not found in dashboard '${dashboardId}'`);
+    }
+  }
+
+  async getDashboardUsers(dashboardId: string): Promise<DashboardGithubUser[]> {
+    // Verify dashboard exists
+    const dashboard = await this.dashboardRepository.findById(dashboardId);
+    if (!dashboard) {
+      throw new NotFoundException(`Dashboard with id '${dashboardId}' not found`);
+    }
+
+    return this.dashboardUserRepository.getUsersForDashboard(dashboardId);
   }
 
   private generateSlug(name: string): string {

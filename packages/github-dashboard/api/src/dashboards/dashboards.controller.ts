@@ -32,4 +32,21 @@ export class DashboardsController {
   async remove(@Param('id') id: string) {
     await this.dashboardsService.remove(id);
   }
+
+  @Post(':id/users')
+  @HttpCode(HttpStatus.CREATED)
+  async addUser(@Param('id') id: string, @Body() addUserDto: AddUserToDashboardDto) {
+    return this.dashboardsService.addUserToDashboard(id, addUserDto);
+  }
+
+  @Delete(':id/users/:username')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async removeUser(@Param('id') id: string, @Param('username') username: string) {
+    await this.dashboardsService.removeUserFromDashboard(id, username);
+  }
+
+  @Get(':id/users')
+  async getUsers(@Param('id') id: string) {
+    return this.dashboardsService.getDashboardUsers(id);
+  }
 }

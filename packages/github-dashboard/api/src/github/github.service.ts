@@ -2,13 +2,44 @@ import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { GitHubUser, GitHubRepo, GitHubPullRequest } from './interfaces';
+import { RateLimitService } from './rate-limit.service';
 
 @Injectable()
 export class GitHubService {
   private readonly logger = new Logger(GitHubService.name);
   private readonly baseUrl = 'https://api.github.com';
 
-  constructor(private readonly httpService: HttpService) {}
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly rateLimitService: RateLimitService
+  ) {}
+
+  /**
+   * Make a rate-limited request to GitHub API
+   */
+  private async makeRateLimitedRequest<T>(url: string): Promise<T> {
+    // Check if we can make the request
+    if (!this.rateLimitService.canMakeRequest()) {
+      const message = this.rateLimitService.getRateLimitMessage();
+      this.logger.warn(`Rate limit exceeded: ${message}`);
+      throw new HttpException(message, HttpStatus.TOO_MANY_REQUESTS);
+    }
+
+    try {
+      const response = await firstValueFrom(this.httpService.get(url));
+      
+      // Update rate limit info from response headers
+      this.rateLimitService.updateRateLimitInfo(response.headers);
+      
+      return response.data;
+    } catch (error) {
+      // Update rate limit info even on error
+      if (error.response?.headers) {
+        this.rateLimitService.updateRateLimitInfo(error.response.headers);
+      }
+      throw error;
+    }
+  }
 
   /**
    * Get user information from GitHub API
@@ -18,10 +49,7 @@ export class GitHubService {
   async getUser(username: string): Promise<GitHubUser> {
     try {
       this.logger.log(`Fetching user: ${username}`);
-      const response = await firstValueFrom(
-        this.httpService.get(`${this.baseUrl}/users/${username}`)
-      );
-      return response.data;
+      return await this.makeRateLimitedRequest<GitHubUser>(`${this.baseUrl}/users/${username}`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Failed to fetch user ${username}:`, errorMessage);
