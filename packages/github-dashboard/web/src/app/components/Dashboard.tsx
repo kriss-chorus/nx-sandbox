@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import styled from '@emotion/styled';
 import { 
   Box, 
@@ -109,6 +110,9 @@ interface Dashboard {
 
 
 export const Dashboard: React.FC = () => {
+  const { dashboardSlug } = useParams<{ dashboardSlug?: string }>();
+  const navigate = useNavigate();
+  
   const [dashboards, setDashboards] = useState<Dashboard[]>([]);
   const [selectedDashboard, setSelectedDashboard] = useState<Dashboard | null>(null);
   const [githubUsers, setGithubUsers] = useState<GitHubUser[]>([]);
@@ -167,6 +171,23 @@ export const Dashboard: React.FC = () => {
   useEffect(() => {
     loadDashboards();
   }, []);
+
+  // Handle URL parameter changes
+  useEffect(() => {
+    if (dashboardSlug && dashboards.length > 0) {
+      const dashboard = dashboards.find(d => d.slug === dashboardSlug);
+      if (dashboard) {
+        loadDashboardUsers(dashboard);
+      } else {
+        // Dashboard not found, navigate back to dashboard list
+        navigate('/');
+      }
+    } else if (!dashboardSlug) {
+      // No dashboard in URL, show dashboard list
+      setCurrentView('dashboards');
+      setSelectedDashboard(null);
+    }
+  }, [dashboardSlug, dashboards, navigate]);
 
   const loadDashboards = async () => {
     try {
@@ -267,6 +288,9 @@ export const Dashboard: React.FC = () => {
     setCurrentView('dashboard'); // Navigate to dashboard view
     setLoading(true);
     setError(null);
+    
+    // Update URL to include dashboard slug
+    navigate(`/dashboard/${dashboard.slug}`);
     
     // Clear previous state immediately to prevent showing wrong users
     setGithubUsers([]);
@@ -450,6 +474,7 @@ export const Dashboard: React.FC = () => {
   const navigateToDashboards = () => {
     setCurrentView('dashboards');
     setSelectedDashboard(null);
+    navigate('/');
   };
 
 

@@ -1,4 +1,5 @@
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { Dashboard } from './components/Dashboard';
@@ -21,10 +22,15 @@ const theme = createTheme({
 
 export function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Dashboard />
-    </ThemeProvider>
+    <Router>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/dashboard/:dashboardSlug" element={<Dashboard />} />
+        </Routes>
+      </ThemeProvider>
+    </Router>
   );
 }
 
