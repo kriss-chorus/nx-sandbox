@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { DashboardRepository } from '../database/repositories/dashboard.repository';
 import { DashboardUserRepository } from '../database/repositories/dashboard-user.repository';
+import { DashboardRepositoryRepository } from '../database/repositories/dashboard-repository.repository';
+import { GitHubService } from '../github/github.service';
 import { CreateDashboardDto, UpdateDashboardDto, AddUserToDashboardDto } from './dto';
 import { Dashboard, DashboardGithubUser } from '../database/entities';
 
@@ -8,7 +10,9 @@ import { Dashboard, DashboardGithubUser } from '../database/entities';
 export class DashboardsService {
   constructor(
     private readonly dashboardRepository: DashboardRepository,
-    private readonly dashboardUserRepository: DashboardUserRepository
+    private readonly dashboardUserRepository: DashboardUserRepository,
+    private readonly dashboardRepositoryRepository: DashboardRepositoryRepository,
+    private readonly githubService: GitHubService
   ) {}
 
   async create(createDashboardDto: CreateDashboardDto): Promise<Dashboard> {
@@ -137,6 +141,57 @@ export class DashboardsService {
     }
 
     return this.dashboardUserRepository.getUsersForDashboard(dashboardId);
+  }
+
+  // Repository Management Methods
+  async addRepositoryToDashboard(dashboardId: string, name: string): Promise<void> {
+    const dashboard = await this.dashboardRepository.findById(dashboardId);
+    if (!dashboard) {
+      throw new NotFoundException(`Dashboard with ID '${dashboardId}' not found`);
+    }
+
+    // Check if repository is already in dashboard
+    const exists = await this.dashboardRepositoryRepository.isRepositoryInDashboard(dashboardId, name);
+    if (exists) {
+      throw new ConflictException(`Repository '${name}' is already in this dashboard`);
+    }
+
+    // Fetch repository information from GitHub to get the repository ID
+    const [owner, repoName] = name.split('/');
+    if (!owner || !repoName) {
+      throw new ConflictException(`Invalid repository format: ${name}`);
+    }
+
+    try {
+      // Get repository information from GitHub API
+      const repoInfo = await this.githubService.getRepository(owner, repoName);
+      await this.dashboardRepositoryRepository.addRepositoryToDashboard(
+        dashboardId, 
+        name, 
+        repoInfo.id
+      );
+    } catch (error) {
+      throw new ConflictException(`Failed to fetch repository information: ${error.message}`);
+    }
+  }
+
+  async removeRepositoryFromDashboard(dashboardId: string, name: string): Promise<void> {
+    const dashboard = await this.dashboardRepository.findById(dashboardId);
+    if (!dashboard) {
+      throw new NotFoundException(`Dashboard with ID '${dashboardId}' not found`);
+    }
+
+    await this.dashboardRepositoryRepository.removeRepositoryFromDashboard(dashboardId, name);
+  }
+
+  async getDashboardRepositories(dashboardId: string): Promise<string[]> {
+    const dashboard = await this.dashboardRepository.findById(dashboardId);
+    if (!dashboard) {
+      throw new NotFoundException(`Dashboard with ID '${dashboardId}' not found`);
+    }
+
+    const repos = await this.dashboardRepositoryRepository.getDashboardRepositories(dashboardId);
+    return repos; // getDashboardRepositories already returns string[]
   }
 
   private generateSlug(name: string): string {

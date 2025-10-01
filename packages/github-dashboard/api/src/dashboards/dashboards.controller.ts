@@ -49,4 +49,30 @@ export class DashboardsController {
   async getUsers(@Param('id') id: string) {
     return this.dashboardsService.getDashboardUsers(id);
   }
+
+  // Repository Management Endpoints
+  @Post(':id/repositories')
+  @HttpCode(HttpStatus.CREATED)
+  async addRepositoryToDashboard(
+    @Param('id') id: string,
+    @Body() body: { name: string }
+  ) {
+    await this.dashboardsService.addRepositoryToDashboard(id, body.name);
+    return { message: 'Repository added to dashboard successfully' };
+  }
+
+  @Delete(':id/repositories/:name')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async removeRepositoryFromDashboard(
+    @Param('id') id: string,
+    @Param('name') name: string
+  ) {
+    await this.dashboardsService.removeRepositoryFromDashboard(id, name);
+  }
+
+  @Get(':id/repositories')
+  @HttpCode(HttpStatus.OK)
+  async getDashboardRepositories(@Param('id') id: string) {
+    return this.dashboardsService.getDashboardRepositories(id);
+  }
 }

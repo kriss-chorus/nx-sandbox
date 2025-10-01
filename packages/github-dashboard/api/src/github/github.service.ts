@@ -722,4 +722,31 @@ export class GitHubService {
       throw new HttpException('Failed to fetch organization members from GitHub', HttpStatus.BAD_GATEWAY);
     }
   }
+
+  /**
+   * Get repository information by owner and repo name
+   * @param owner Repository owner
+   * @param repo Repository name
+   * @returns Repository information including ID
+   */
+  async getRepository(owner: string, repo: string): Promise<any> {
+    try {
+      this.logger.log(`Fetching repository: ${owner}/${repo}`);
+      const url = `${this.baseUrl}/repos/${owner}/${repo}`;
+      return await this.makeRateLimitedRequest<any>(url);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Failed to fetch repository ${owner}/${repo}:`, errorMessage);
+      
+      if (error.response?.status === 404) {
+        throw new HttpException(`Repository '${owner}/${repo}' not found`, HttpStatus.NOT_FOUND);
+      }
+      
+      if (error.response?.status === 403) {
+        throw new HttpException(`Access denied to repository '${owner}/${repo}'. Check SAML authorization.`, HttpStatus.FORBIDDEN);
+      }
+      
+      throw new HttpException('Failed to fetch repository from GitHub', HttpStatus.BAD_GATEWAY);
+    }
+  }
 }
