@@ -58,39 +58,7 @@ This project demonstrates building a modern full-stack application using:
 ```
 
 ## 📁 **Project Structure**
-
-```
-nx-sandbox/
-├── packages/
-│   ├── common/                    # Shared utilities (existing)
-│   ├── test-app/                  # Legacy projects (existing)
-│   │   ├── api/                   # Express API (reference)
-│   │   └── client/                # React client (reference)
-│   │
-│   └── github-dashboard/          # NEW: GitHub Dashboard
-│       ├── api/                   # NestJS Backend
-│       │   ├── src/
-│       │   │   ├── modules/       # Feature modules
-│       │   │   ├── database/      # Drizzle ORM setup
-│       │   │   ├── github/        # GitHub API integration
-│       │   │   └── main.ts        # Application entry point
-│       │   └── Dockerfile
-│       │
-│       └── web/                   # React Frontend
-│           ├── src/
-│           │   ├── components/    # React components
-│           │   ├── pages/         # Application pages
-│           │   ├── store/         # Redux store
-│           │   └── services/      # API services
-│           └── Dockerfile
-│
-├── github-dashboard/
-│   ├── Tiltfile                   # Development orchestration
-│   ├── docker-compose.yml         # Database services
-│   └── .env.example              # Environment variables
-│
-└── Tiltfile                       # Main orchestrator
-```
+See the root README for the current repository layout: [README.md](../README.md)
 
 ## 🗄️ **Database Schema**
 
