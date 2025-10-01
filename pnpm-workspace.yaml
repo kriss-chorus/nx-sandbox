@@ -1,0 +1,10 @@
+packages:
+  - packages/*
+  - packages/github-dashboard/*
+ignoredBuiltDependencies:
+  - '@nestjs/core'
+  - '@parcel/watcher'
+  - '@swc/core'
+  - esbuild
+  - nx
+  - unrs-resolver

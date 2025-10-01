@@ -7,8 +7,8 @@
     "tilt:down": "TILT_PORT=${TILT_PORT:-10360} tilt down",
     "cleanup:ports": "lsof -ti tcp:3001,4202,5001 | xargs kill -9 2>/dev/null || true",
     "cleanup:nx": "pkill -f 'nx serve' 2>/dev/null || true",
-    "cleanup:all": "npm run cleanup:ports && npm run cleanup:nx",
-    "dev:start": "npm run cleanup:all && npm run tilt:up:github-dashboard"
+    "cleanup:all": "pnpm run cleanup:ports && pnpm run cleanup:nx",
+    "dev:start": "pnpm run cleanup:all && pnpm run tilt:up:github-dashboard"
   },
   "private": true,
   "devDependencies": {
@@ -16,6 +16,12 @@
     "@eslint/js": "^9.8.0",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.0",
+    "@nestjs/mapped-types": "^2.1.0",
+    "@nestjs/config": "^3.2.3",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.2",
+    "drizzle-orm": "^0.44.5",
+    "postgres": "^3.4.4",
     "@nx/devkit": "21.4.0",
     "@nx/esbuild": "21.4.0",
     "@nx/eslint": "21.4.0",
