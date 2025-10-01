@@ -136,22 +136,20 @@ export class DashboardsService {
   }
 
   async removeUserFromDashboard(dashboardId: string, username: string): Promise<void> {
-    // Verify dashboard exists
     const dashboard = await this.dashboardRepository.findById(dashboardId);
     if (!dashboard) {
       throw new NotFoundException(`Dashboard with id '${dashboardId}' not found`);
     }
 
-    // Find the user in our database
     const githubUser = await this.githubUserRepository.findByGitHubUsername(username);
     if (!githubUser) {
-      throw new NotFoundException(`User '${username}' not found in database`);
+      // Idempotent: user not in our db, treat as already removed
+      return;
     }
 
     const removed = await this.dashboardUserRepository.removeUserFromDashboard(dashboardId, githubUser.id);
-    if (!removed) {
-      throw new NotFoundException(`User '${username}' not found in dashboard '${dashboardId}'`);
-    }
+    // Idempotent: if link not found, treat as success
+    return;
   }
 
   async getDashboardUsers(dashboardId: string): Promise<(DashboardGithubUser & { user: GitHubUser })[]> {

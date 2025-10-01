@@ -533,14 +533,15 @@ export const Dashboard: React.FC = () => {
     if (!selectedDashboard) return;
     
     try {
-      const removeUserResponse = await fetch(`http://localhost:3001/api/dashboards/${selectedDashboard.id}/users/${username}`, {
+      const removeUserResponse = await fetch(`http://localhost:3001/api/dashboards/${selectedDashboard.id}/users/${encodeURIComponent(username)}`, {
         method: 'DELETE',
       });
 
-      if (!removeUserResponse.ok) {
+      if (!removeUserResponse.ok && removeUserResponse.status !== 404) {
         throw new Error(`Failed to remove user from dashboard: ${removeUserResponse.status} ${removeUserResponse.statusText}`);
       }
 
+      // Update local state to remove the user regardless (idempotent UX)
       setGithubUsers(prev => prev.filter(user => user.login !== username));
       setUserActivities(prev => prev.filter(activity => activity.user.login !== username));
       
@@ -549,7 +550,6 @@ export const Dashboard: React.FC = () => {
         githubUsers: (selectedDashboard.githubUsers || []).filter((user: string) => user !== username)
       };
       setSelectedDashboard(updatedDashboard);
-      
       setDashboards(dashboards.map(d => 
         d.id === selectedDashboard.id ? updatedDashboard : d
       ));
