@@ -18,8 +18,8 @@ async function bootstrap() {
   await app.listen(port);
 
   Logger.log(`🚀 GitHub Dashboard API is running on: http://localhost:${port}/${globalPrefix}`);
-  Logger.log(`🚀 PostGraphile GraphQL endpoint is available at: http://localhost:5000/graphql`);
-  Logger.log(`🚀 PostGraphile GraphiQL playground is available at: http://localhost:5000/graphiql`);
+  Logger.log(`🚀 PostGraphile GraphQL endpoint is available at: http://localhost:5001/graphql`);
+  Logger.log(`🚀 PostGraphile GraphiQL playground is available at: http://localhost:5001/graphiql`);
   Logger.log(`🚀 React Web App is available at: http://localhost:4202`);
 }
 
