@@ -52,7 +52,7 @@ Base: http://localhost:3001/api
 - SWR cache (server) + sessionStorage hydration (client) + two-stage fetch (fast then full)
 
 ## Challenges & Notes
-See GITHUB_DASHBOARD_LEARNING.md for:
+See [docs/github-dashboard.md](../../docs/github-dashboard.md) for:
 - PostGraphile + Tilt visibility (resource/health)
 - Batch performance approaches
 - Rate-limiting and caching strategies
