@@ -1,15 +1,30 @@
-import styled from '@emotion/styled';
-import NxWelcome from './nx-welcome';
+import React from 'react';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import { Dashboard } from './components/Dashboard';
 
-const StyledApp = styled.div`
-  // Your style here
-`;
+// Create Material-UI theme
+const theme = createTheme({
+  palette: {
+    mode: 'light',
+    primary: {
+      main: '#1976d2',
+    },
+    secondary: {
+      main: '#dc004e',
+    },
+  },
+  typography: {
+    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+  },
+});
 
 export function App() {
   return (
-    <StyledApp>
-      <NxWelcome title="web" />
-    </StyledApp>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Dashboard />
+    </ThemeProvider>
   );
 }
 
