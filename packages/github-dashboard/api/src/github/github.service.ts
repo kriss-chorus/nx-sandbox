@@ -25,7 +25,18 @@ export class GitHubService {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Failed to fetch user ${username}:`, errorMessage);
-      if (error.response?.status === 404) {
+      
+      // Check for rate limit issues
+      if (error.response?.data?.message?.includes('rate limit exceeded') ||
+          errorMessage.includes('rate limit exceeded')) {
+        throw new HttpException('GitHub API rate limit exceeded. Please try again later or add authentication.', HttpStatus.TOO_MANY_REQUESTS);
+      }
+      
+      // Check for various "not found" scenarios
+      if (error.response?.status === 404 || 
+          error.response?.status === 403 || 
+          errorMessage.includes('404') ||
+          errorMessage.includes('Not Found')) {
         throw new HttpException(`User '${username}' not found`, HttpStatus.NOT_FOUND);
       }
       throw new HttpException('Failed to fetch user from GitHub', HttpStatus.BAD_GATEWAY);
@@ -173,6 +184,7 @@ export class GitHubService {
       prsOpened: number;
       prsReviewed: number;
       prsMerged: number;
+      totalRecentPRs: number;
     }>;
   }> {
     const oneWeekAgo = new Date();
@@ -189,6 +201,7 @@ export class GitHubService {
         prsOpened: number;
         prsReviewed: number;
         prsMerged: number;
+        totalRecentPRs: number;
       }>
     };
 
@@ -220,6 +233,10 @@ export class GitHubService {
           new Date(pr.merged_at) >= oneWeekAgo
         ).length;
 
+        // For demonstration purposes, let's also count total recent PRs in the repo
+        // This gives a better sense of activity even if the user didn't open them
+        const totalRecentPRs = recentPRs.length;
+
         // For PRs reviewed, we need to check review comments
         // This is a simplified approach - in reality, we'd need to fetch review data
         const prsReviewed = await this.getUserReviewCount(owner, repoName, username, oneWeekAgoISO);
@@ -228,7 +245,8 @@ export class GitHubService {
           repo,
           prsOpened,
           prsReviewed,
-          prsMerged
+          prsMerged,
+          totalRecentPRs // Add this for better visibility
         };
 
         stats.repos.push(repoStats);

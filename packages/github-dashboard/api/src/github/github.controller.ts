@@ -90,6 +90,7 @@ export class GitHubController {
       prsOpened: number;
       prsReviewed: number;
       prsMerged: number;
+      totalRecentPRs: number;
     }>;
   }> {
     const repoList = repos ? repos.split(',').map(r => r.trim()) : [];

@@ -159,6 +159,7 @@ export const Dashboard: React.FC = () => {
 
   const loadDashboardUsers = async (dashboard: Dashboard) => {
     setSelectedDashboard(dashboard);
+    setTabValue(1); // Switch to the dashboard tab
     setLoading(true);
     setError(null);
     
@@ -181,13 +182,27 @@ export const Dashboard: React.FC = () => {
               const repos = await reposResponse.json();
               const repoList = repos.map((repo: any) => `${repo.owner.login}/${repo.name}`).slice(0, 5); // Limit to 5 repos
               
-              // Get activity summary
-              const activityResponse = await fetch(
-                `http://localhost:3001/api/github/users/${username}/activity-summary?repos=${repoList.join(',')}`
-              );
-              if (activityResponse.ok) {
-                const activityData = await activityResponse.json();
-                activities.push(activityData);
+              // Get activity summary with repositories
+              if (repoList.length > 0) {
+                console.log(`Fetching activity for ${username} with repos:`, repoList);
+                const activityResponse = await fetch(
+                  `http://localhost:3001/api/github/users/${username}/activity-summary?repos=${repoList.join(',')}`
+                );
+                if (activityResponse.ok) {
+                  const activityData = await activityResponse.json();
+                  console.log(`Activity data for ${username}:`, activityData);
+                  activities.push(activityData);
+                } else {
+                  console.error(`Failed to get activity for ${username}:`, activityResponse.status);
+                }
+              } else {
+                // If no repos, create empty activity data
+                activities.push({
+                  user: userData,
+                  weeklyActivity: { prsOpened: 0, prsReviewed: 0, prsMerged: 0, totalActivity: 0 },
+                  overallStats: { totalPRs: 0, openPRs: 0, closedPRs: 0, mergedPRs: 0 },
+                  repos: []
+                });
               }
             }
           }
@@ -207,11 +222,24 @@ export const Dashboard: React.FC = () => {
   const addUserToDashboard = async () => {
     if (!newUsername.trim() || !selectedDashboard) return;
     
+    // Check if user is already in the dashboard
+    const existingUsers = selectedDashboard.githubUsers || [];
+    if (existingUsers.includes(newUsername.trim())) {
+      setError(`User '${newUsername}' is already in this dashboard`);
+      return;
+    }
+    
     try {
       // First verify the user exists
       const userResponse = await fetch(`http://localhost:3001/api/github/users/${newUsername}`);
       if (!userResponse.ok) {
-        throw new Error('User not found');
+        if (userResponse.status === 404) {
+          throw new Error(`GitHub user '${newUsername}' not found. Please check the username and try again.`);
+        } else if (userResponse.status === 429) {
+          throw new Error(`GitHub API rate limit exceeded. Please wait a few minutes and try again.`);
+        } else {
+          throw new Error(`Failed to verify user: ${userResponse.status} ${userResponse.statusText}`);
+        }
       }
       
       // Add user to dashboard (this would need a new API endpoint)
@@ -425,6 +453,14 @@ export const Dashboard: React.FC = () => {
                                 color="success" 
                                 variant="outlined"
                               />
+                              {activity.repos.length > 0 && (
+                                <Chip 
+                                  label={`${activity.repos.reduce((sum, repo) => sum + (repo.totalRecentPRs || 0), 0)} total PRs in repos`} 
+                                  size="small" 
+                                  color="info" 
+                                  variant="outlined"
+                                />
+                              )}
                             </Box>
                           </Box>
                           
