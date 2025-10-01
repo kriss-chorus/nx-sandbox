@@ -1,84 +1,95 @@
 import { Injectable } from '@nestjs/common';
 import { eq, and } from 'drizzle-orm';
 import { BaseRepository } from '../base.repository';
-import { dashboardGithubUsers, DashboardGithubUser, NewDashboardGithubUser } from '../entities';
+import { dashboardGithubUsers, githubUsers, DashboardGithubUser, NewDashboardGithubUser, GitHubUser } from '../entities';
 
 @Injectable()
-export class DashboardUserRepository extends BaseRepository<DashboardGithubUser, NewDashboardGithubUser, Partial<NewDashboardGithubUser>> {
+export class DashboardUserRepository extends BaseRepository<typeof dashboardGithubUsers> {
   constructor() {
     super(dashboardGithubUsers);
   }
+
   /**
    * Add a GitHub user to a dashboard
    */
-  async addUserToDashboard(data: NewDashboardGithubUser): Promise<DashboardGithubUser> {
-    const [user] = await this.db
+  async addUserToDashboard(dashboardId: string, githubUserId: string): Promise<DashboardGithubUser> {
+    const newRelation: NewDashboardGithubUser = {
+      dashboardId,
+      githubUserId,
+    };
+    
+    const [relation] = await this.db
       .insert(dashboardGithubUsers)
-      .values(data)
+      .values(newRelation)
       .returning();
-    return user;
+    return relation;
   }
 
   /**
    * Remove a GitHub user from a dashboard
    */
-  async removeUserFromDashboard(dashboardId: string, githubUsername: string): Promise<boolean> {
+  async removeUserFromDashboard(dashboardId: string, githubUserId: string): Promise<boolean> {
     const result = await this.db
       .delete(dashboardGithubUsers)
       .where(
         and(
           eq(dashboardGithubUsers.dashboardId, dashboardId),
-          eq(dashboardGithubUsers.githubUsername, githubUsername)
+          eq(dashboardGithubUsers.githubUserId, githubUserId)
         )
       );
     return result.rowCount > 0;
   }
 
   /**
-   * Get all GitHub users for a dashboard
+   * Get all GitHub users for a dashboard with their user information
    */
-  async getUsersForDashboard(dashboardId: string): Promise<DashboardGithubUser[]> {
+  async getUsersForDashboard(dashboardId: string): Promise<(DashboardGithubUser & { user: GitHubUser })[]> {
     return this.db
-      .select()
+      .select({
+        id: dashboardGithubUsers.id,
+        dashboardId: dashboardGithubUsers.dashboardId,
+        githubUserId: dashboardGithubUsers.githubUserId,
+        addedAt: dashboardGithubUsers.addedAt,
+        user: {
+          id: githubUsers.id,
+          githubUserId: githubUsers.githubUserId,
+          githubUsername: githubUsers.githubUsername,
+          displayName: githubUsers.displayName,
+          avatarUrl: githubUsers.avatarUrl,
+          profileUrl: githubUsers.profileUrl,
+          createdAt: githubUsers.createdAt,
+          updatedAt: githubUsers.updatedAt,
+        }
+      })
       .from(dashboardGithubUsers)
+      .innerJoin(githubUsers, eq(dashboardGithubUsers.githubUserId, githubUsers.id))
       .where(eq(dashboardGithubUsers.dashboardId, dashboardId));
   }
 
   /**
    * Check if a user is already in a dashboard
    */
-  async isUserInDashboard(dashboardId: string, githubUsername: string): Promise<boolean> {
-    const [user] = await this.db
+  async isUserInDashboard(dashboardId: string, githubUserId: string): Promise<boolean> {
+    const [relation] = await this.db
       .select()
       .from(dashboardGithubUsers)
       .where(
         and(
           eq(dashboardGithubUsers.dashboardId, dashboardId),
-          eq(dashboardGithubUsers.githubUsername, githubUsername)
+          eq(dashboardGithubUsers.githubUserId, githubUserId)
         )
       )
       .limit(1);
-    return !!user;
+    return !!relation;
   }
 
   /**
-   * Update user display name in dashboard
+   * Get dashboard-user relations only (without user details)
    */
-  async updateUserDisplayName(
-    dashboardId: string, 
-    githubUsername: string, 
-    displayName: string
-  ): Promise<DashboardGithubUser | null> {
-    const [user] = await this.db
-      .update(dashboardGithubUsers)
-      .set({ displayName })
-      .where(
-        and(
-          eq(dashboardGithubUsers.dashboardId, dashboardId),
-          eq(dashboardGithubUsers.githubUsername, githubUsername)
-        )
-      )
-      .returning();
-    return user || null;
+  async getDashboardUserRelations(dashboardId: string): Promise<DashboardGithubUser[]> {
+    return this.db
+      .select()
+      .from(dashboardGithubUsers)
+      .where(eq(dashboardGithubUsers.dashboardId, dashboardId));
   }
 }

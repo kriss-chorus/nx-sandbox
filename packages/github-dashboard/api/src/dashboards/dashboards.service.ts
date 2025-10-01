@@ -1,17 +1,19 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { DashboardRepository } from '../database/repositories/dashboard.repository';
+import { GitHubUserRepository } from '../database/repositories/github-user.repository';
 import { DashboardUserRepository } from '../database/repositories/dashboard-user.repository';
 import { DashboardRepositoryRepository } from '../database/repositories/dashboard-repository.repository';
 import { ActivityTypeRepository } from '../database/repositories/activity-type.repository';
 import { DashboardActivityConfigRepository } from '../database/repositories/dashboard-activity-config.repository';
 import { GitHubService } from '../github/github.service';
 import { CreateDashboardDto, UpdateDashboardDto, AddUserToDashboardDto, UpdateActivityConfigDto, ActivityConfigDto } from './dto';
-import { Dashboard, DashboardGithubUser, ActivityType, DashboardActivityConfig } from '../database/entities';
+import { Dashboard, DashboardGithubUser, GitHubUser, ActivityType, DashboardActivityConfig } from '../database/entities';
 
 @Injectable()
 export class DashboardsService {
   constructor(
     private readonly dashboardRepository: DashboardRepository,
+    private readonly githubUserRepository: GitHubUserRepository,
     private readonly dashboardUserRepository: DashboardUserRepository,
     private readonly dashboardRepositoryRepository: DashboardRepositoryRepository,
     private readonly activityTypeRepository: ActivityTypeRepository,
@@ -111,17 +113,26 @@ export class DashboardsService {
       throw new NotFoundException(`Dashboard with id '${dashboardId}' not found`);
     }
 
+    // Get user info from GitHub
+    const userInfo = await this.githubService.getUser(addUserDto.githubUsername);
+    
+    // Create or update the GitHub user in our database
+    const githubUser = await this.githubUserRepository.upsertUser({
+      githubUserId: userInfo.id.toString(),
+      githubUsername: userInfo.login,
+      displayName: addUserDto.displayName || userInfo.name || userInfo.login,
+      avatarUrl: userInfo.avatar_url,
+      profileUrl: userInfo.html_url,
+    });
+
     // Check if user is already in dashboard
-    const existing = await this.dashboardUserRepository.isUserInDashboard(dashboardId, addUserDto.githubUsername);
+    const existing = await this.dashboardUserRepository.isUserInDashboard(dashboardId, githubUser.id);
     if (existing) {
       throw new ConflictException(`User '${addUserDto.githubUsername}' is already in this dashboard`);
     }
 
-    return this.dashboardUserRepository.addUserToDashboard({
-      dashboardId,
-      githubUsername: addUserDto.githubUsername,
-      displayName: addUserDto.displayName || addUserDto.githubUsername,
-    });
+    // Add the user to the dashboard
+    return this.dashboardUserRepository.addUserToDashboard(dashboardId, githubUser.id);
   }
 
   async removeUserFromDashboard(dashboardId: string, username: string): Promise<void> {
@@ -131,13 +142,19 @@ export class DashboardsService {
       throw new NotFoundException(`Dashboard with id '${dashboardId}' not found`);
     }
 
-    const removed = await this.dashboardUserRepository.removeUserFromDashboard(dashboardId, username);
+    // Find the user in our database
+    const githubUser = await this.githubUserRepository.findByGitHubUsername(username);
+    if (!githubUser) {
+      throw new NotFoundException(`User '${username}' not found in database`);
+    }
+
+    const removed = await this.dashboardUserRepository.removeUserFromDashboard(dashboardId, githubUser.id);
     if (!removed) {
       throw new NotFoundException(`User '${username}' not found in dashboard '${dashboardId}'`);
     }
   }
 
-  async getDashboardUsers(dashboardId: string): Promise<DashboardGithubUser[]> {
+  async getDashboardUsers(dashboardId: string): Promise<(DashboardGithubUser & { user: GitHubUser })[]> {
     // Verify dashboard exists
     const dashboard = await this.dashboardRepository.findById(dashboardId);
     if (!dashboard) {

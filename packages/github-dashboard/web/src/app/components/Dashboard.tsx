@@ -15,14 +15,10 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
-  IconButton,
   Fab,
   FormControl,
   InputLabel,
+  IconButton,
   Select,
   MenuItem,
   OutlinedInput,
@@ -37,23 +33,20 @@ import {
   TableHead,
   TableRow
 } from '@mui/material';
-import { Add, Assessment, ArrowBack } from '@mui/icons-material';
+import { Add, Assessment, ArrowBack, Settings as SettingsIcon, Close } from '@mui/icons-material';
 import { GitHubUser } from '../../types/github';
 
 interface UserActivity {
   user: GitHubUser;
-  weeklyActivity: {
+  activity: {
     prsOpened: number;
     prsReviewed: number;
     prsMerged: number;
     totalActivity: number;
+    commits?: number;
+    issues?: number;
   };
-  overallStats: {
-    totalPRs: number;
-    openPRs: number;
-    closedPRs: number;
-    mergedPRs: number;
-  };
+  repos?: any[];
 }
 
 interface OrganizationRepository {
@@ -96,6 +89,7 @@ const UserCard = styled(Card)`
   display: flex;
   align-items: center;
   padding: 16px;
+  position: relative;
 `;
 
 interface Dashboard {
@@ -134,7 +128,6 @@ export const Dashboard: React.FC = () => {
 
   // Repository Management (per dashboard)
   const [organizationRepos, setOrganizationRepos] = useState<OrganizationRepository[]>([]);
-  const [addRepoDialogOpen, setAddRepoDialogOpen] = useState(false);
   const [selectedRepoToAdd, setSelectedRepoToAdd] = useState<string>('');
   const [dashboardRepositories, setDashboardRepositories] = useState<string[]>([]);
 
@@ -166,6 +159,10 @@ export const Dashboard: React.FC = () => {
   const [endDate, setEndDate] = useState<string>('');
   const [reviewSummary, setReviewSummary] = useState<ReviewSummary | null>(null);
   const [loadingReviewSummary, setLoadingReviewSummary] = useState(false);
+
+  // Activity Configuration Modal
+  const [configModalOpen, setConfigModalOpen] = useState(false);
+  const [tempActivityConfig, setTempActivityConfig] = useState(activityConfig);
 
   // Load dashboards on component mount
   useEffect(() => {
@@ -274,13 +271,38 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  // Handle activity configuration changes and auto-save
-  const handleActivityConfigChange = (newConfig: typeof activityConfig) => {
-    setActivityConfig(newConfig);
-    // Auto-save when configuration changes
-    if (selectedDashboard) {
-      saveActivityConfiguration(selectedDashboard.id, newConfig);
+  // Handle activity configuration modal
+  const openConfigModal = async () => {
+    setTempActivityConfig(activityConfig);
+    setConfigModalOpen(true);
+    
+    // Load organization data if not already loaded
+    if (organizationRepos.length === 0) {
+      await loadOrganizationData();
     }
+  };
+
+  const closeConfigModal = () => {
+    setConfigModalOpen(false);
+    setTempActivityConfig(activityConfig); // Reset to current config
+  };
+
+  const saveConfigModal = async () => {
+    if (selectedDashboard) {
+      // Save activity configuration
+      await saveActivityConfiguration(selectedDashboard.id, tempActivityConfig);
+      setActivityConfig(tempActivityConfig);
+      
+      // Reload dashboard repositories to reflect any changes
+      await loadDashboardRepositories(selectedDashboard.id);
+      
+      setConfigModalOpen(false);
+    }
+  };
+
+  // Handle temporary activity configuration changes (no auto-save)
+  const handleTempActivityConfigChange = (newConfig: typeof activityConfig) => {
+    setTempActivityConfig(newConfig);
   };
 
   const loadDashboardUsers = async (dashboard: Dashboard) => {
@@ -300,71 +322,90 @@ export const Dashboard: React.FC = () => {
     await loadActivityConfiguration(dashboard.id);
     
     try {
+      // Get dashboard users from the new normalized API
+      const dashboardUsersResponse = await fetch(`http://localhost:3001/api/dashboards/${dashboard.id}/users`);
+      if (!dashboardUsersResponse.ok) {
+        throw new Error(`Failed to load dashboard users: ${dashboardUsersResponse.statusText}`);
+      }
+      
+      const dashboardUsers = await dashboardUsersResponse.json();
+      console.log('Dashboard users:', dashboardUsers);
+      
       const users: GitHubUser[] = [];
       const activities: UserActivity[] = [];
-      const githubUsers = dashboard.githubUsers || [];
       
-      // DEVELOPMENT MODE: Comment out expensive API calls to preserve rate limits
-      // TODO: Uncomment when ready to load real user data
-      /*
       // OPTIMIZATION: Load users sequentially with progress updates to reduce API pressure
-      for (let i = 0; i < githubUsers.length; i++) {
-        const username = githubUsers[i];
-        setLoadingProgress({ current: i + 1, total: githubUsers.length });
-        console.log(`Loading user ${i + 1}/${githubUsers.length}: ${username}`);
+      for (let i = 0; i < dashboardUsers.length; i++) {
+        const dashboardUser = dashboardUsers[i];
+        const user = dashboardUser.user; // Extract user from the nested structure
+        setLoadingProgress({ current: i + 1, total: dashboardUsers.length });
+        console.log(`Loading user ${i + 1}/${dashboardUsers.length}: ${user.githubUsername}`);
         
         try {
-          // Get user basic info (1 API call)
-          const userResponse = await fetch(`http://localhost:3001/api/github/users/${username}`);
-          if (userResponse.ok) {
-            const userData = await userResponse.json();
-            
-            // OPTIMIZATION: Use a much smaller repo limit to reduce API calls
-            const reposResponse = await fetch(`http://localhost:3001/api/github/users/${username}/repos?per_page=3&sort=updated`);
-            if (reposResponse.ok) {
-              const repos = await reposResponse.json();
-              const repoList = repos.map((repo: any) => `${repo.owner.login}/${repo.name}`).slice(0, 2); // Only 2 most recent repos
-              
-              // Get activity summary with limited repositories (1 API call)
-              if (repoList.length > 0) {
-                console.log(`Fetching activity for ${username} with repos:`, repoList);
-                const activityResponse = await fetch(
-                  `http://localhost:3001/api/github/users/${username}/activity-summary?repos=${repoList.join(',')}`
-                );
-                if (activityResponse.ok) {
-                  const activityData = await activityResponse.json();
-                  users.push(userData);
-                  activities.push(activityData);
-                  continue; // Success, move to next user
-                } else {
-                  console.error(`Failed to get activity for ${username}:`, activityResponse.status);
-                }
-              }
-            }
-            
-            // Fallback: create empty activity data (no additional API calls)
+          // Use user data from our database instead of making GitHub API calls
+          const userData = {
+            id: user.githubUserId, // Use GitHub user ID
+            login: user.githubUsername,
+            name: user.displayName || user.githubUsername,
+            avatar_url: user.avatarUrl,
+            html_url: user.profileUrl,
+            public_repos: 0, // We'll get this from activity summary if needed
+            followers: 0,
+            following: 0
+          };
+          
+          // Get activity summary (this will also fetch repos)
+          console.log(`Fetching activity for ${user.githubUsername}`);
+          const dateRangeParams = activityConfig.dateRange.start && activityConfig.dateRange.end 
+            ? `&start_date=${activityConfig.dateRange.start}&end_date=${activityConfig.dateRange.end}`
+            : '';
+          const activityResponse = await fetch(
+            `http://localhost:3001/api/github/users/${user.githubUsername}/activity-summary?repos=ChorusInnovations/platform${dateRangeParams}`
+          );
+          
+          if (activityResponse.ok) {
+            const activityData = await activityResponse.json();
+            users.push(userData);
+            activities.push(activityData);
+          } else {
+            console.error(`Failed to get activity for ${user.githubUsername}:`, activityResponse.status);
+            // Fallback: create empty activity data
             users.push(userData);
             activities.push({
               user: userData,
-              weeklyActivity: { prsOpened: 0, prsReviewed: 0, prsMerged: 0, totalActivity: 0 },
-              overallStats: { totalPRs: 0, openPRs: 0, closedPRs: 0, mergedPRs: 0 },
+              activity: { prsOpened: 0, prsReviewed: 0, prsMerged: 0, totalActivity: 0 },
               repos: []
             });
-          } else {
-            console.error(`Failed to get user ${username}:`, userResponse.status);
           }
         } catch (err) {
-          console.error(`Failed to load user ${username}:`, err);
+          console.error(`Failed to load user ${user.githubUsername}:`, err);
+          // Create fallback data even on error
+          const userData = {
+            id: user.githubUserId,
+            login: user.githubUsername,
+            name: user.displayName || user.githubUsername,
+            avatar_url: user.avatarUrl,
+            html_url: user.profileUrl,
+            public_repos: 0,
+            followers: 0,
+            following: 0
+          };
+          users.push(userData);
+          activities.push({
+            user: userData,
+            activity: { prsOpened: 0, prsReviewed: 0, prsMerged: 0, totalActivity: 0 },
+            repos: []
+          });
         }
         
         // Small delay between users to be respectful to GitHub API
-        if (i < githubUsers.length - 1) {
+        if (i < dashboardUsers.length - 1) {
           await new Promise(resolve => setTimeout(resolve, 100));
         }
       }
-      */
       
-      // DEVELOPMENT MODE: Create mock data for users
+      // DEVELOPMENT MODE: Create mock data for users (DISABLED - using real API calls)
+      /*
       console.log(`DEVELOPMENT MODE: Creating mock data for ${githubUsers.length} users`);
       githubUsers.forEach((username, index) => {
         const mockUser = {
@@ -380,14 +421,14 @@ export const Dashboard: React.FC = () => {
         
         const mockActivity = {
           user: mockUser,
-          weeklyActivity: { prsOpened: 0, prsReviewed: 0, prsMerged: 0, totalActivity: 0 },
-          overallStats: { totalPRs: 0, openPRs: 0, closedPRs: 0, mergedPRs: 0 },
+          activity: { prsOpened: 0, prsReviewed: 0, prsMerged: 0, totalActivity: 0 },
           repos: []
         };
         
         users.push(mockUser);
         activities.push(mockActivity);
       });
+      */
       
       setGithubUsers(users);
       setUserActivities(activities);
@@ -471,6 +512,42 @@ export const Dashboard: React.FC = () => {
     }
   };
 
+  const removeUserFromDashboard = async (username: string) => {
+    if (!selectedDashboard) return;
+    
+    try {
+      const removeUserResponse = await fetch(`http://localhost:3001/api/dashboards/${selectedDashboard.id}/users/${username}`, {
+        method: 'DELETE',
+      });
+
+      if (!removeUserResponse.ok) {
+        throw new Error(`Failed to remove user from dashboard: ${removeUserResponse.status} ${removeUserResponse.statusText}`);
+      }
+
+      // Update local state to remove the user
+      setGithubUsers(prev => prev.filter(user => user.login !== username));
+      setUserActivities(prev => prev.filter(activity => activity.user.login !== username));
+      
+      // Also update the dashboard's githubUsers array
+      const updatedDashboard = {
+        ...selectedDashboard,
+        githubUsers: (selectedDashboard.githubUsers || []).filter((user: string) => user !== username)
+      };
+      setSelectedDashboard(updatedDashboard);
+      
+      // Update the dashboards list locally too
+      setDashboards(dashboards.map(d => 
+        d.id === selectedDashboard.id ? updatedDashboard : d
+      ));
+      
+      setError(null);
+      
+    } catch (err) {
+      console.error('Error removing user from dashboard:', err);
+      setError(err instanceof Error ? err.message : 'Failed to remove user from dashboard');
+    }
+  };
+
   const navigateToDashboards = () => {
     setCurrentView('dashboards');
     setSelectedDashboard(null);
@@ -509,7 +586,6 @@ export const Dashboard: React.FC = () => {
         // Refresh dashboard repositories
         await loadDashboardRepositories(selectedDashboard.id);
         setSelectedRepoToAdd('');
-        setAddRepoDialogOpen(false);
       } else {
         throw new Error(`Failed to add repository: ${response.status}`);
       }
@@ -597,7 +673,7 @@ export const Dashboard: React.FC = () => {
   };
 
   const sortedActivities = [...userActivities].sort((a, b) => {
-    return b.weeklyActivity[sortBy] - a.weeklyActivity[sortBy];
+    return b.activity[sortBy] - a.activity[sortBy];
   });
 
   return (
@@ -707,230 +783,99 @@ export const Dashboard: React.FC = () => {
                   )}
                 </Box>
                 <Box display="flex" gap={2}>
-                  <Button 
-                    variant="outlined" 
-                    startIcon={<Add />}
-                    onClick={() => setAddRepoDialogOpen(true)}
-                  >
-                    Add Repository
-                  </Button>
-                  <Button 
-                    variant="outlined" 
-                    startIcon={<Add />}
-                    onClick={() => setAddUserDialogOpen(true)}
-                  >
-                    Add GitHub User
-                  </Button>
+                  {/* Add User button moved to bottom of user cards */}
                 </Box>
               </Box>
 
-              {/* Repository Management Section */}
-              <Card sx={{ mb: 3 }}>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    Dashboard Repositories
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" mb={2}>
-                    Repositories used for organization review summaries
-                  </Typography>
-                  
-                  {dashboardRepositories.length > 0 ? (
-                    <Box display="flex" flexWrap="wrap" gap={1}>
-                      {dashboardRepositories.map((repo) => (
-                        <Chip
-                          key={repo}
-                          label={repo}
-                          onDelete={() => removeRepositoryFromDashboard(repo)}
-                          color="primary"
-                          variant="outlined"
-                        />
-                      ))}
-                    </Box>
-                  ) : (
-                    <Typography variant="body2" color="text.secondary">
-                      No repositories configured. Add repositories to enable organization review summaries.
-                    </Typography>
-                  )}
-                </CardContent>
-              </Card>
 
-              {/* Activity Configuration Section */}
+              {/* Dashboard Configuration Section */}
               <Card sx={{ mb: 3 }}>
                 <CardContent>
-                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
                     <Box>
                       <Typography variant="h6" gutterBottom>
-                        Activity Tracking Configuration
+                        Dashboard Configuration
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Configure what types of GitHub activity to track and display
+                        Configure repositories and activity tracking for this dashboard
                       </Typography>
                     </Box>
-                    
-                    {/* Date Range - Inline with title */}
-                    <Box display="flex" gap={2} alignItems="center">
-                      <TextField
-                        label="Start Date"
-                        type="date"
-                        size="small"
-                        value={activityConfig.dateRange.start}
-                        onChange={(e) => handleActivityConfigChange({
-                          ...activityConfig,
-                          dateRange: { ...activityConfig.dateRange, start: e.target.value }
-                        })}
-                        InputLabelProps={{ shrink: true }}
-                        sx={{ minWidth: 140 }}
-                      />
-                      <Typography variant="body2" color="text.secondary">to</Typography>
-                      <TextField
-                        label="End Date"
-                        type="date"
-                        size="small"
-                        value={activityConfig.dateRange.end}
-                        onChange={(e) => handleActivityConfigChange({
-                          ...activityConfig,
-                          dateRange: { ...activityConfig.dateRange, end: e.target.value }
-                        })}
-                        InputLabelProps={{ shrink: true }}
-                        sx={{ minWidth: 140 }}
-                      />
-                    </Box>
+                    <Button
+                      variant="outlined"
+                      startIcon={<SettingsIcon />}
+                      onClick={openConfigModal}
+                    >
+                      Configure Settings
+                    </Button>
                   </Box>
                   
                   <Grid container spacing={3}>
-                    {/* PR Creation & Management */}
+                    {/* Tracked Repositories */}
                     <Grid item xs={12} md={6}>
                       <Typography variant="subtitle2" gutterBottom>
-                        PR Creation & Management
+                        Tracked Repositories
                       </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                        Track when team members create and merge pull requests
+                      <Typography variant="body2" color="text.secondary" mb={2}>
+                        Repositories used for activity tracking and organization review summaries
                       </Typography>
-                      <FormGroup>
-                        <FormControlLabel
-                          control={
-                            <Checkbox
-                              checked={activityConfig.trackPRsOpened}
-                              onChange={(e) => handleActivityConfigChange({
-                                ...activityConfig,
-                                trackPRsOpened: e.target.checked
-                              })}
+                      
+                      {dashboardRepositories.length > 0 ? (
+                        <Box display="flex" flexWrap="wrap" gap={1}>
+                          {dashboardRepositories.map((repo) => (
+                            <Chip
+                              key={repo}
+                              label={repo}
+                              color="primary"
+                              variant="outlined"
+                              size="small"
                             />
-                          }
-                          label="Track PRs Opened"
-                        />
-                        <FormControlLabel
-                          control={
-                            <Checkbox
-                              checked={activityConfig.trackPRsMerged}
-                              onChange={(e) => handleActivityConfigChange({
-                                ...activityConfig,
-                                trackPRsMerged: e.target.checked
-                              })}
-                            />
-                          }
-                          label="Track PRs Merged"
-                        />
-                      </FormGroup>
+                          ))}
+                        </Box>
+                      ) : (
+                        <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                          No repositories configured yet
+                        </Typography>
+                      )}
                     </Grid>
 
-                    {/* PR Review Activity */}
+                    {/* Activity Tracking Summary */}
                     <Grid item xs={12} md={6}>
                       <Typography variant="subtitle2" gutterBottom>
-                        PR Review Activity
+                        Activity Tracking
                       </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                        Includes: comments, approvals, change requests, emoji reactions on PRs
+                      <Typography variant="body2" color="text.secondary" mb={2}>
+                        Types of GitHub activity being tracked
                       </Typography>
-                      <FormGroup>
-                        <FormControlLabel
-                          control={
-                            <Checkbox
-                              checked={activityConfig.trackPRReviews}
-                              onChange={(e) => handleActivityConfigChange({
-                                ...activityConfig,
-                                trackPRReviews: e.target.checked
-                              })}
-                            />
+                      
+                      <Box>
+                        <Typography variant="body2" color="text.secondary">
+                          <strong>Enabled:</strong> {
+                            Object.entries(activityConfig)
+                              .filter(([key, value]) => key !== 'dateRange' && value === true)
+                              .map(([key]) => {
+                                switch(key) {
+                                  case 'trackPRsOpened': return 'PRs Opened';
+                                  case 'trackPRsMerged': return 'PRs Merged';
+                                  case 'trackPRReviews': return 'PR Reviews';
+                                  case 'trackCommits': return 'Commits';
+                                  case 'trackIssues': return 'Issues';
+                                  default: return key.replace('track', '').replace(/([A-Z])/g, ' $1').trim();
+                                }
+                              })
+                              .join(', ') || 'None'
                           }
-                          label="Track PR Reviews"
-                        />
-                      </FormGroup>
-                    </Grid>
-
-                    {/* General Activity */}
-                    <Grid item xs={12} md={6}>
-                      <Typography variant="subtitle2" gutterBottom>
-                        General Activity
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                        Other GitHub activities
-                      </Typography>
-                      <FormGroup>
-                        <FormControlLabel
-                          control={
-                            <Checkbox
-                              checked={activityConfig.trackCommits}
-                              onChange={(e) => handleActivityConfigChange({
-                                ...activityConfig,
-                                trackCommits: e.target.checked
-                              })}
-                            />
-                          }
-                          label="Track Commits"
-                        />
-                        <FormControlLabel
-                          control={
-                            <Checkbox
-                              checked={activityConfig.trackIssues}
-                              onChange={(e) => handleActivityConfigChange({
-                                ...activityConfig,
-                                trackIssues: e.target.checked
-                              })}
-                            />
-                          }
-                          label="Track Issues"
-                        />
-                      </FormGroup>
-                    </Grid>
-
-
-                    {/* Configuration Summary */}
-                    <Grid item xs={12}>
-                      <Card variant="outlined" sx={{ bgcolor: 'grey.50' }}>
-                        <CardContent>
-                          <Typography variant="subtitle2" gutterBottom>
-                            Current Configuration Summary
+                        </Typography>
+                        {activityConfig.dateRange.start && activityConfig.dateRange.end && (
+                          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                            <strong>Date Range:</strong> {activityConfig.dateRange.start} to {activityConfig.dateRange.end}
                           </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            <strong>Enabled:</strong> {
-                              Object.entries(activityConfig)
-                                .filter(([key, value]) => key !== 'dateRange' && value === true)
-                                .map(([key]) => {
-                                  switch(key) {
-                                    case 'trackPRsOpened': return 'PRs Opened';
-                                    case 'trackPRsMerged': return 'PRs Merged';
-                                    case 'trackPRReviews': return 'PR Reviews';
-                                    case 'trackCommits': return 'Commits';
-                                    case 'trackIssues': return 'Issues';
-                                    default: return key.replace('track', '').replace(/([A-Z])/g, ' $1').trim();
-                                  }
-                                })
-                                .join(', ') || 'None'
-                            }
+                        )}
+                        {(!activityConfig.dateRange.start || !activityConfig.dateRange.end) && (
+                          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                            <strong>Date Range:</strong> All time
                           </Typography>
-                          {activityConfig.dateRange.start && activityConfig.dateRange.end && (
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                              <strong>Date Range:</strong> {activityConfig.dateRange.start} to {activityConfig.dateRange.end}
-                            </Typography>
-                          )}
-                          {(!activityConfig.dateRange.start || !activityConfig.dateRange.end) && (
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                              <strong>Date Range:</strong> All time (no date range set)
-                            </Typography>
-                          )}
-                        </CardContent>
-                      </Card>
+                        )}
+                      </Box>
                     </Grid>
                   </Grid>
                 </CardContent>
@@ -1009,14 +954,30 @@ export const Dashboard: React.FC = () => {
           )}
 
               <Grid container spacing={3}>
-                {sortedActivities.map((activity) => {
-                  const user = activity.user;
-                  const weekly = activity.weeklyActivity;
-                  const overall = activity.overallStats;
+                {sortedActivities.map((activityData) => {
+                  const user = activityData.user;
+                  const activity = activityData.activity;
                   
                   return (
-                    <Grid item xs={12} sm={6} md={4} key={user.id}>
+                    <Grid item xs={12} sm={6} md={4} key={`${user.id}-${user.login}`}>
                       <UserCard>
+                        {/* Remove User Button */}
+                        <IconButton
+                          size="small"
+                          onClick={() => removeUserFromDashboard(user.login)}
+                          sx={{
+                            position: 'absolute',
+                            top: 8,
+                            right: 8,
+                            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                            '&:hover': {
+                              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            }
+                          }}
+                        >
+                          <Close fontSize="small" />
+                        </IconButton>
+                        
                         <Avatar src={user.avatar_url} sx={{ width: 48, height: 48, mr: 2 }} />
                         <Box flex={1}>
                           <Typography variant="h6">{user.name || user.login}</Typography>
@@ -1032,7 +993,7 @@ export const Dashboard: React.FC = () => {
                             <Box display="flex" gap={1} flexWrap="wrap">
                               {activityConfig.trackPRsOpened && (
                                 <Chip 
-                                  label={`${weekly.prsOpened} opened`} 
+                                  label={`${activity.prsOpened} opened`} 
                                   size="small" 
                                   color="primary" 
                                   variant="outlined"
@@ -1040,7 +1001,7 @@ export const Dashboard: React.FC = () => {
                               )}
                               {activityConfig.trackPRsMerged && (
                                 <Chip 
-                                  label={`${weekly.prsMerged} merged`} 
+                                  label={`${activity.prsMerged} merged`} 
                                   size="small" 
                                   color="success" 
                                   variant="outlined"
@@ -1048,7 +1009,7 @@ export const Dashboard: React.FC = () => {
                               )}
                               {activityConfig.trackPRReviews && (
                                 <Chip 
-                                  label={`${weekly.prsReviewed} reviewed`} 
+                                  label={`${activity.prsReviewed} reviewed`} 
                                   size="small" 
                                   color="secondary" 
                                   variant="outlined"
@@ -1056,7 +1017,7 @@ export const Dashboard: React.FC = () => {
                               )}
                               {activityConfig.trackCommits && (
                                 <Chip 
-                                  label={`${weekly.commits || 0} commits`} 
+                                  label={`${activity.commits || 0} commits`} 
                                   size="small" 
                                   color="default" 
                                   variant="outlined"
@@ -1064,7 +1025,7 @@ export const Dashboard: React.FC = () => {
                               )}
                               {activityConfig.trackIssues && (
                                 <Chip 
-                                  label={`${weekly.issues || 0} issues`} 
+                                  label={`${activity.issues || 0} issues`} 
                                   size="small" 
                                   color="error" 
                                   variant="outlined"
@@ -1073,36 +1034,32 @@ export const Dashboard: React.FC = () => {
                             </Box>
                           </Box>
                           
-                          {/* Overall Stats - Dynamic based on configuration */}
+                          {/* User Metadata */}
                           <Box mt={1}>
-                            <Typography variant="body2" color="text.secondary" gutterBottom>
-                              📈 Overall:
+                            <Typography variant="caption" color="text.secondary">
+                              {user.public_repos} repos • {user.followers} followers • {user.following} following
                             </Typography>
-                            <Box display="flex" gap={1} flexWrap="wrap">
-                              <Chip label={`${user.public_repos} repos`} size="small" />
-                              <Chip label={`${user.followers} followers`} size="small" />
-                              {activityConfig.trackPRsOpened && (
-                                <Chip label={`${overall.totalPRs} total PRs`} size="small" />
-                              )}
-                              {activityConfig.trackPRsMerged && (
-                                <Chip label={`${overall.mergedPRs} merged`} size="small" />
-                              )}
-                              {activityConfig.trackPRReviews && (
-                                <Chip label={`${overall.totalReviews || 0} reviews`} size="small" />
-                              )}
-                              {activityConfig.trackCommits && (
-                                <Chip label={`${overall.totalCommits || 0} commits`} size="small" />
-                              )}
-                              {activityConfig.trackIssues && (
-                                <Chip label={`${overall.totalIssues || 0} issues`} size="small" />
-                              )}
-                            </Box>
                           </Box>
                         </Box>
                       </UserCard>
                     </Grid>
                   );
                 })}
+            
+            {/* Add User Button - Show when there are users */}
+            {sortedActivities.length > 0 && (
+              <Grid item xs={12}>
+                <Box textAlign="center" py={2}>
+                  <Button 
+                    variant="outlined" 
+                    startIcon={<Add />}
+                    onClick={() => setAddUserDialogOpen(true)}
+                  >
+                    Add Another GitHub User
+                  </Button>
+                </Box>
+              </Grid>
+            )}
             
             {sortedActivities.length === 0 && !loading && (
               <Grid item xs={12}>
@@ -1325,59 +1282,6 @@ export const Dashboard: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Add Repository Dialog */}
-      <Dialog open={addRepoDialogOpen} onClose={() => setAddRepoDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Add Repository to Dashboard</DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" color="text.secondary" mb={2}>
-            Select a repository from ChorusInnovations organization to add to this dashboard.
-          </Typography>
-          
-          {organizationRepos.length === 0 ? (
-            <Box textAlign="center" py={2}>
-              <Typography variant="body2" color="text.secondary" mb={2}>
-                No organization repositories loaded yet.
-              </Typography>
-              <Button 
-                variant="outlined" 
-                onClick={loadOrganizationData}
-              >
-                Load Organization Repositories
-              </Button>
-            </Box>
-          ) : (
-            <FormControl fullWidth>
-              <InputLabel>Select Repository</InputLabel>
-              <Select
-                value={selectedRepoToAdd}
-                onChange={(e) => setSelectedRepoToAdd(e.target.value)}
-                input={<OutlinedInput label="Select Repository" />}
-              >
-                {organizationRepos
-                  .filter(repo => !dashboardRepositories.includes(repo.full_name))
-                  .map((repo) => (
-                    <MenuItem key={repo.full_name} value={repo.full_name}>
-                      <Box display="flex" alignItems="center" gap={1}>
-                        <Typography>{repo.name}</Typography>
-                        {repo.private && <Chip label="Private" size="small" color="secondary" />}
-                      </Box>
-                    </MenuItem>
-                  ))}
-              </Select>
-            </FormControl>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setAddRepoDialogOpen(false)}>Cancel</Button>
-          <Button 
-            onClick={addRepositoryToDashboard} 
-            variant="contained" 
-            disabled={!selectedRepoToAdd || organizationRepos.length === 0}
-          >
-            Add Repository
-          </Button>
-        </DialogActions>
-      </Dialog>
 
       {/* Add User Dialog */}
       <Dialog open={addUserDialogOpen} onClose={() => setAddUserDialogOpen(false)} maxWidth="sm" fullWidth>
@@ -1398,6 +1302,220 @@ export const Dashboard: React.FC = () => {
           <Button onClick={() => setAddUserDialogOpen(false)}>Cancel</Button>
           <Button onClick={addUserToDashboard} variant="contained" disabled={!newUsername.trim()}>
             Add User
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dashboard Settings Modal */}
+      <Dialog open={configModalOpen} onClose={closeConfigModal} maxWidth="lg" fullWidth>
+        <DialogTitle>Dashboard Settings</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            Configure repositories and activity tracking for this dashboard
+          </Typography>
+          
+          {/* Repository Management Section */}
+          <Card variant="outlined" sx={{ mb: 3 }}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Repository Management
+              </Typography>
+              <Typography variant="body2" color="text.secondary" mb={2}>
+                Select repositories from ChorusInnovations organization for organization review summaries
+              </Typography>
+              
+              {/* Current Repositories */}
+              {dashboardRepositories.length > 0 ? (
+                <Box display="flex" flexWrap="wrap" gap={1} mb={2}>
+                  {dashboardRepositories.map((repo) => (
+                    <Chip
+                      key={repo}
+                      label={repo}
+                      onDelete={() => removeRepositoryFromDashboard(repo)}
+                      color="primary"
+                      variant="outlined"
+                    />
+                  ))}
+                </Box>
+              ) : (
+                <Typography variant="body2" color="text.secondary" mb={2}>
+                  No repositories configured. Add repositories to enable organization review summaries.
+                </Typography>
+              )}
+              
+              {/* Add Repository */}
+              <Box display="flex" gap={2} alignItems="center">
+                <FormControl fullWidth size="small">
+                  <InputLabel>Select Repository</InputLabel>
+                  <Select
+                    value={selectedRepoToAdd || ''}
+                    onChange={(e) => setSelectedRepoToAdd(e.target.value)}
+                    input={<OutlinedInput label="Select Repository" />}
+                  >
+                    {organizationRepos
+                      .filter(repo => !dashboardRepositories.includes(repo.full_name))
+                      .map((repo) => (
+                        <MenuItem key={repo.full_name} value={repo.full_name}>
+                          {repo.full_name}
+                        </MenuItem>
+                      ))}
+                  </Select>
+                </FormControl>
+                <Button 
+                  variant="outlined" 
+                  startIcon={<Add />}
+                  onClick={addRepositoryToDashboard}
+                  disabled={!selectedRepoToAdd}
+                >
+                  Add
+                </Button>
+              </Box>
+            </CardContent>
+          </Card>
+
+          {/* Activity Configuration Section */}
+          <Card variant="outlined">
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Activity Tracking Configuration
+              </Typography>
+              <Typography variant="body2" color="text.secondary" mb={3}>
+                Configure what types of GitHub activity to track and display
+              </Typography>
+              
+              {/* Date Range */}
+              <Box display="flex" gap={2} alignItems="center" mb={3}>
+                <TextField
+                  label="Start Date"
+                  type="date"
+                  size="small"
+                  value={tempActivityConfig.dateRange.start}
+                  onChange={(e) => handleTempActivityConfigChange({
+                    ...tempActivityConfig,
+                    dateRange: { ...tempActivityConfig.dateRange, start: e.target.value }
+                  })}
+                  InputLabelProps={{ shrink: true }}
+                  sx={{ minWidth: 140 }}
+                />
+                <Typography variant="body2" color="text.secondary">to</Typography>
+                <TextField
+                  label="End Date"
+                  type="date"
+                  size="small"
+                  value={tempActivityConfig.dateRange.end}
+                  onChange={(e) => handleTempActivityConfigChange({
+                    ...tempActivityConfig,
+                    dateRange: { ...tempActivityConfig.dateRange, end: e.target.value }
+                  })}
+                  InputLabelProps={{ shrink: true }}
+                  sx={{ minWidth: 140 }}
+                />
+              </Box>
+              
+              <Grid container spacing={3}>
+                {/* PR Creation & Management */}
+                <Grid item xs={12} md={6}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    PR Creation & Management
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    Track when team members create and merge pull requests
+                  </Typography>
+                  <FormGroup>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={tempActivityConfig.trackPRsOpened}
+                          onChange={(e) => handleTempActivityConfigChange({
+                            ...tempActivityConfig,
+                            trackPRsOpened: e.target.checked
+                          })}
+                        />
+                      }
+                      label="Track PRs Opened"
+                    />
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={tempActivityConfig.trackPRsMerged}
+                          onChange={(e) => handleTempActivityConfigChange({
+                            ...tempActivityConfig,
+                            trackPRsMerged: e.target.checked
+                          })}
+                        />
+                      }
+                      label="Track PRs Merged"
+                    />
+                  </FormGroup>
+                </Grid>
+
+                {/* PR Review Activity */}
+                <Grid item xs={12} md={6}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    PR Review Activity
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    Includes: comments, approvals, change requests, emoji reactions on PRs
+                  </Typography>
+                  <FormGroup>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={tempActivityConfig.trackPRReviews}
+                          onChange={(e) => handleTempActivityConfigChange({
+                            ...tempActivityConfig,
+                            trackPRReviews: e.target.checked
+                          })}
+                        />
+                      }
+                      label="Track PR Reviews"
+                    />
+                  </FormGroup>
+                </Grid>
+
+                {/* General Activity */}
+                <Grid item xs={12} md={6}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    General Activity
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    Other GitHub activities
+                  </Typography>
+                  <FormGroup>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={tempActivityConfig.trackCommits}
+                          onChange={(e) => handleTempActivityConfigChange({
+                            ...tempActivityConfig,
+                            trackCommits: e.target.checked
+                          })}
+                        />
+                      }
+                      label="Track Commits"
+                    />
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={tempActivityConfig.trackIssues}
+                          onChange={(e) => handleTempActivityConfigChange({
+                            ...tempActivityConfig,
+                            trackIssues: e.target.checked
+                          })}
+                        />
+                      }
+                      label="Track Issues"
+                    />
+                  </FormGroup>
+                </Grid>
+              </Grid>
+            </CardContent>
+          </Card>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeConfigModal}>Cancel</Button>
+          <Button onClick={saveConfigModal} variant="contained">
+            Save Settings
           </Button>
         </DialogActions>
       </Dialog>
