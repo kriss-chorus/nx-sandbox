@@ -70,4 +70,71 @@ export class GitHubController {
     const repoList = repos ? repos.split(',').map(r => r.trim()) : [];
     return this.githubService.getUserPRStats(username, repoList);
   }
+
+  /**
+   * Get weekly PR activity for a user
+   * GET /api/github/users/:username/weekly-activity?repos=owner/repo1,owner/repo2
+   */
+  @Get('users/:username/weekly-activity')
+  @HttpCode(HttpStatus.OK)
+  async getUserWeeklyActivity(
+    @Param('username') username: string,
+    @Query('repos') repos: string
+  ): Promise<{
+    prsOpened: number;
+    prsReviewed: number;
+    prsMerged: number;
+    totalActivity: number;
+    repos: Array<{
+      repo: string;
+      prsOpened: number;
+      prsReviewed: number;
+      prsMerged: number;
+    }>;
+  }> {
+    const repoList = repos ? repos.split(',').map(r => r.trim()) : [];
+    return this.githubService.getUserWeeklyActivity(username, repoList);
+  }
+
+  /**
+   * Get comprehensive activity summary for a user
+   * GET /api/github/users/:username/activity-summary?repos=owner/repo1,owner/repo2
+   */
+  @Get('users/:username/activity-summary')
+  @HttpCode(HttpStatus.OK)
+  async getUserActivitySummary(
+    @Param('username') username: string,
+    @Query('repos') repos: string
+  ): Promise<{
+    user: GitHubUser;
+    weeklyActivity: {
+      prsOpened: number;
+      prsReviewed: number;
+      prsMerged: number;
+      totalActivity: number;
+    };
+    overallStats: {
+      totalPRs: number;
+      openPRs: number;
+      closedPRs: number;
+      mergedPRs: number;
+    };
+    repos: Array<{
+      repo: string;
+      weeklyActivity: {
+        prsOpened: number;
+        prsReviewed: number;
+        prsMerged: number;
+      };
+      overallStats: {
+        prCount: number;
+        openCount: number;
+        closedCount: number;
+        mergedCount: number;
+      };
+    }>;
+  }> {
+    const repoList = repos ? repos.split(',').map(r => r.trim()) : [];
+    return this.githubService.getUserActivitySummary(username, repoList);
+  }
 }

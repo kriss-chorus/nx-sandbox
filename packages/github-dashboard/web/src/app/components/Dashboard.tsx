@@ -26,6 +26,22 @@ import {
 import { Add, Delete, Visibility, VisibilityOff } from '@mui/icons-material';
 import { GitHubUser } from '../../types/github';
 
+interface UserActivity {
+  user: GitHubUser;
+  weeklyActivity: {
+    prsOpened: number;
+    prsReviewed: number;
+    prsMerged: number;
+    totalActivity: number;
+  };
+  overallStats: {
+    totalPRs: number;
+    openPRs: number;
+    closedPRs: number;
+    mergedPRs: number;
+  };
+}
+
 const DashboardContainer = styled(Box)`
   padding: 24px;
   max-width: 1200px;
@@ -83,9 +99,11 @@ export const Dashboard: React.FC = () => {
   const [dashboards, setDashboards] = useState<Dashboard[]>([]);
   const [selectedDashboard, setSelectedDashboard] = useState<Dashboard | null>(null);
   const [githubUsers, setGithubUsers] = useState<GitHubUser[]>([]);
+  const [userActivities, setUserActivities] = useState<UserActivity[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tabValue, setTabValue] = useState(0);
+  const [sortBy, setSortBy] = useState<'prsOpened' | 'prsReviewed' | 'prsMerged' | 'totalActivity'>('totalActivity');
   
   // Create Dashboard Dialog
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -146,20 +164,39 @@ export const Dashboard: React.FC = () => {
     
     try {
       const users: GitHubUser[] = [];
+      const activities: UserActivity[] = [];
       const githubUsers = dashboard.githubUsers || [];
       
       for (const username of githubUsers) {
         try {
-          const response = await fetch(`http://localhost:3001/api/github/users/${username}`);
-          if (response.ok) {
-            const userData = await response.json();
+          // Get user basic info
+          const userResponse = await fetch(`http://localhost:3001/api/github/users/${username}`);
+          if (userResponse.ok) {
+            const userData = await userResponse.json();
             users.push(userData);
+            
+            // Get user's repositories for activity tracking
+            const reposResponse = await fetch(`http://localhost:3001/api/github/users/${username}/repos?per_page=10`);
+            if (reposResponse.ok) {
+              const repos = await reposResponse.json();
+              const repoList = repos.map((repo: any) => `${repo.owner.login}/${repo.name}`).slice(0, 5); // Limit to 5 repos
+              
+              // Get activity summary
+              const activityResponse = await fetch(
+                `http://localhost:3001/api/github/users/${username}/activity-summary?repos=${repoList.join(',')}`
+              );
+              if (activityResponse.ok) {
+                const activityData = await activityResponse.json();
+                activities.push(activityData);
+              }
+            }
           }
         } catch (err) {
           console.error(`Failed to load user ${username}:`, err);
         }
       }
       setGithubUsers(users);
+      setUserActivities(activities);
     } catch (err) {
       setError('Failed to load dashboard users');
     } finally {
@@ -198,6 +235,14 @@ export const Dashboard: React.FC = () => {
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
+
+  const handleSortChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setSortBy(event.target.value as any);
+  };
+
+  const sortedActivities = [...userActivities].sort((a, b) => {
+    return b.weeklyActivity[sortBy] - a.weeklyActivity[sortBy];
+  });
 
   return (
     <DashboardContainer>
@@ -286,25 +331,49 @@ export const Dashboard: React.FC = () => {
         </Grid>
       </TabPanel>
 
-      {selectedDashboard && (
-        <TabPanel value={tabValue} index={1}>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-            <Box>
-              <Typography variant="h4">{selectedDashboard.name}</Typography>
-              {selectedDashboard.description && (
-                <Typography variant="body1" color="text.secondary">
-                  {selectedDashboard.description}
-                </Typography>
+          {selectedDashboard && (
+            <TabPanel value={tabValue} index={1}>
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+                <Box>
+                  <Typography variant="h4">{selectedDashboard.name}</Typography>
+                  {selectedDashboard.description && (
+                    <Typography variant="body1" color="text.secondary">
+                      {selectedDashboard.description}
+                    </Typography>
+                  )}
+                </Box>
+                <Button 
+                  variant="outlined" 
+                  startIcon={<Add />}
+                  onClick={() => setAddUserDialogOpen(true)}
+                >
+                  Add GitHub User
+                </Button>
+              </Box>
+
+              {/* Sorting Controls */}
+              {userActivities.length > 0 && (
+                <Box display="flex" alignItems="center" gap={2} mb={3}>
+                  <Typography variant="body2" color="text.secondary">
+                    Sort by:
+                  </Typography>
+                  <select 
+                    value={sortBy} 
+                    onChange={handleSortChange}
+                    style={{ 
+                      padding: '8px 12px', 
+                      borderRadius: '4px', 
+                      border: '1px solid #ccc',
+                      fontSize: '14px'
+                    }}
+                  >
+                    <option value="totalActivity">Total Activity</option>
+                    <option value="prsOpened">PRs Opened</option>
+                    <option value="prsReviewed">PRs Reviewed</option>
+                    <option value="prsMerged">PRs Merged</option>
+                  </select>
+                </Box>
               )}
-            </Box>
-            <Button 
-              variant="outlined" 
-              startIcon={<Add />}
-              onClick={() => setAddUserDialogOpen(true)}
-            >
-              Add GitHub User
-            </Button>
-          </Box>
 
           {loading && <Typography>Loading users...</Typography>}
           
@@ -316,26 +385,67 @@ export const Dashboard: React.FC = () => {
             </Box>
           )}
 
-          <Grid container spacing={3}>
-            {githubUsers.map((user) => (
-              <Grid item xs={12} sm={6} md={4} key={user.id}>
-                <UserCard>
-                  <Avatar src={user.avatar_url} sx={{ width: 48, height: 48, mr: 2 }} />
-                  <Box flex={1}>
-                    <Typography variant="h6">{user.name || user.login}</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      @{user.login}
-                    </Typography>
-                    <Box display="flex" gap={1} mt={1}>
-                      <Chip label={`${user.public_repos} repos`} size="small" />
-                      <Chip label={`${user.followers} followers`} size="small" />
-                    </Box>
-                  </Box>
-                </UserCard>
-              </Grid>
-            ))}
+              <Grid container spacing={3}>
+                {sortedActivities.map((activity) => {
+                  const user = activity.user;
+                  const weekly = activity.weeklyActivity;
+                  const overall = activity.overallStats;
+                  
+                  return (
+                    <Grid item xs={12} sm={6} md={4} key={user.id}>
+                      <UserCard>
+                        <Avatar src={user.avatar_url} sx={{ width: 48, height: 48, mr: 2 }} />
+                        <Box flex={1}>
+                          <Typography variant="h6">{user.name || user.login}</Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            @{user.login}
+                          </Typography>
+                          
+                          {/* Weekly Activity Stats */}
+                          <Box mt={2}>
+                            <Typography variant="body2" color="text.secondary" gutterBottom>
+                              📊 This Week:
+                            </Typography>
+                            <Box display="flex" gap={1} flexWrap="wrap">
+                              <Chip 
+                                label={`${weekly.prsOpened} opened`} 
+                                size="small" 
+                                color="primary" 
+                                variant="outlined"
+                              />
+                              <Chip 
+                                label={`${weekly.prsReviewed} reviewed`} 
+                                size="small" 
+                                color="secondary" 
+                                variant="outlined"
+                              />
+                              <Chip 
+                                label={`${weekly.prsMerged} merged`} 
+                                size="small" 
+                                color="success" 
+                                variant="outlined"
+                              />
+                            </Box>
+                          </Box>
+                          
+                          {/* Overall Stats */}
+                          <Box mt={1}>
+                            <Typography variant="body2" color="text.secondary" gutterBottom>
+                              📈 Overall:
+                            </Typography>
+                            <Box display="flex" gap={1} flexWrap="wrap">
+                              <Chip label={`${user.public_repos} repos`} size="small" />
+                              <Chip label={`${user.followers} followers`} size="small" />
+                              <Chip label={`${overall.totalPRs} total PRs`} size="small" />
+                            </Box>
+                          </Box>
+                        </Box>
+                      </UserCard>
+                    </Grid>
+                  );
+                })}
             
-            {githubUsers.length === 0 && !loading && (
+            {sortedActivities.length === 0 && !loading && (
               <Grid item xs={12}>
                 <Box textAlign="center" py={4}>
                   <Typography variant="h6" color="text.secondary" gutterBottom>
