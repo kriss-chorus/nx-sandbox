@@ -2,7 +2,7 @@
 # This file orchestrates all services using Kubernetes instead of Docker Compose
 # Migration from Docker Compose to K8s - January 2025
 
-# Load Kubernetes manifests
+# Load Kubernetes manifests (PostGraphile removed - now embedded in API)
 k8s_yaml([
     'k8s/01-namespace.yaml',
     'k8s/02-postgres-configmap.yaml',
@@ -10,9 +10,6 @@ k8s_yaml([
     'k8s/03-postgres-pvc.yaml',
     'k8s/04-postgres-deployment.yaml',
     'k8s/05-postgres-service.yaml',
-    'k8s/06-postgraphile-configmap.yaml',
-    'k8s/07-postgraphile-deployment.yaml',
-    'k8s/08-postgraphile-service.yaml',
     'k8s/09-api-configmap.yaml',
     'k8s/10-api-deployment.yaml',
     'k8s/11-api-service.yaml',
@@ -43,28 +40,23 @@ k8s_resource(
 
 k8s_resource(
     'postgres-deployment',
+    objects=['postgres-deployment'],
     resource_deps=['github-dashboard-db'],
     labels=['github-dashboard', 'db']
 )
 
 k8s_resource(
-    'postgraphile-deployment',
-    resource_deps=['postgres-deployment'],
-    port_forwards=5001,
-    labels=['github-dashboard', 'graphql'],
-    links=['http://localhost:5001/graphiql']
-)
-
-k8s_resource(
     'api-deployment',
+    objects=['api-deployment'],
     resource_deps=['postgres-deployment'],
     port_forwards=3001,
     labels=['github-dashboard', 'api'],
-    links=['http://localhost:3001/api']
+    links=['http://localhost:3001/api', 'http://localhost:3001/graphiql']
 )
 
 k8s_resource(
     'web-deployment',
+    objects=['web-deployment'],
     resource_deps=['api-deployment'],
     port_forwards=8080,
     labels=['github-dashboard', 'web'],
@@ -104,6 +96,6 @@ k8s_resource(
 local_resource(
     'github-dashboard-k8s',
     serve_cmd='echo "GitHub Dashboard Kubernetes stack running" && sleep 3600000',
-    resource_deps=['postgres-deployment', 'postgraphile-deployment', 'api-deployment', 'web-deployment'],
+    resource_deps=['postgres-deployment', 'api-deployment', 'web-deployment'],
     labels=['k8s', 'github-dashboard', 'full-stack']
 )
