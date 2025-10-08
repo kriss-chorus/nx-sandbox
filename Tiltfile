@@ -7,7 +7,7 @@ docker_compose('packages/github-dashboard/docker-compose.yml')
 # API (NestJS) - depends on database
 local_resource(
   'github-dashboard-api',
-  serve_cmd='npx nx serve api',
+  serve_cmd='npx nx serve github-dashboard-api',
   deps=['packages/github-dashboard/api/src'],
   resource_deps=['postgres'],
   env={
@@ -19,7 +19,7 @@ local_resource(
 # Web (React Vite) - depends on api
 local_resource(
   'github-dashboard-web',
-  serve_cmd='npx nx serve web',
+  serve_cmd='npx nx serve github-dashboard-web',
   deps=['packages/github-dashboard/web/src'],
   resource_deps=['github-dashboard-api']
 )
