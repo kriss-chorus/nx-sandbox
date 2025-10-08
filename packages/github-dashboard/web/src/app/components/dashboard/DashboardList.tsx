@@ -1,6 +1,6 @@
 import React from 'react';
-import { Box, Typography, Button, Grid, Card, CardContent, CardActions } from '@mui/material';
-import { Add, Visibility } from '@mui/icons-material';
+import { Box, Typography, Button, Grid, Card, CardContent, CardActions, Chip } from '@mui/material';
+import { Add, Visibility, Business, Star } from '@mui/icons-material';
 import { Dashboard as DashboardType } from '../types/dashboard';
 
 interface DashboardListProps {
@@ -31,32 +31,73 @@ export const DashboardList: React.FC<DashboardListProps> = ({
       </Grid>
 
       {/* Dashboard Cards */}
-      {dashboards.map((dashboard) => (
-        <Grid item xs={12} sm={6} md={4} key={dashboard.id}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                {dashboard.name}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                {dashboard.description || 'No description'}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {dashboard.dashboardGithubUsersByDashboardId?.totalCount || 0} GitHub users
-              </Typography>
-            </CardContent>
-            <CardActions>
-              <Button
-                size="small"
-                startIcon={<Visibility />}
-                onClick={() => onViewDashboard(dashboard)}
-              >
-                View Dashboard
-              </Button>
-            </CardActions>
-          </Card>
-        </Grid>
-      ))}
+      {dashboards.map((dashboard) => {
+        const isPremium = dashboard.clientByClientId?.tierTypeByTierTypeId?.code === 'premium';
+        
+        return (
+          <Grid item xs={12} sm={6} md={4} key={dashboard.id}>
+            <Card sx={{ 
+              border: isPremium ? '2px solid #667eea' : '1px solid #e0e0e0',
+              background: isPremium ? 'linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%)' : 'white'
+            }}>
+              <CardContent>
+                <Box display="flex" alignItems="center" gap={1} mb={1}>
+                  {dashboard.clientByClientId?.logoUrl ? (
+                    <img 
+                      src={dashboard.clientByClientId.logoUrl} 
+                      alt={`${dashboard.clientByClientId.name} logo`}
+                      style={{ width: 24, height: 24, borderRadius: '50%' }}
+                    />
+                  ) : (
+                    <Business sx={{ fontSize: 20 }} />
+                  )}
+                  <Typography variant="subtitle2" color="text.secondary">
+                    {dashboard.clientByClientId?.name || 'Unknown Client'}
+                  </Typography>
+                </Box>
+                
+                <Typography variant="h6" gutterBottom>
+                  {dashboard.name}
+                </Typography>
+                
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  {dashboard.description || 'No description'}
+                </Typography>
+                
+                <Box display="flex" gap={1} mb={1}>
+                  <Chip
+                    icon={isPremium ? <Star /> : undefined}
+                    label={dashboard.clientByClientId?.tierTypeByTierTypeId?.name || 'Unknown'}
+                    size="small"
+                    color={isPremium ? 'secondary' : 'default'}
+                    variant={isPremium ? 'filled' : 'outlined'}
+                  />
+                  {dashboard.dashboardType && (
+                    <Chip
+                      label={dashboard.dashboardType.name}
+                      size="small"
+                      variant="outlined"
+                    />
+                  )}
+                </Box>
+                
+                <Typography variant="caption" color="text.secondary">
+                  {dashboard.dashboardGithubUsersByDashboardId?.totalCount || 0} GitHub users
+                </Typography>
+              </CardContent>
+              <CardActions>
+                <Button
+                  size="small"
+                  startIcon={<Visibility />}
+                  onClick={() => onViewDashboard(dashboard)}
+                >
+                  View Dashboard
+                </Button>
+              </CardActions>
+            </Card>
+          </Grid>
+        );
+      })}
     </Grid>
   );
 };

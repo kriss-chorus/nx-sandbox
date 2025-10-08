@@ -38,7 +38,7 @@ Purpose: Implement and demo two distinct client experiences (frontend + backend)
 - tier_types: basic, premium
 - clients:
   - “Candy Corn Labs” (basic)  // icon_url/logo_url TBD
-  - “Haunted Hollow Ltd.” (premium)  // icon_url/logo_url TBD
+  - "Haunted Hollow" (premium)  // icon_url/logo_url TBD
 - Assign existing dashboards to one of the demo clients
 
 ### GraphQL (PostGraphile)
@@ -82,7 +82,7 @@ Purpose: Implement and demo two distinct client experiences (frontend + backend)
 ## Demo Flow (2–3 minutes)
 1) Active Client = Candy Corn Labs (Basic) → dashboards filter down
 2) Open basic dashboard → cards-only, no Export; refresh shows live proxy stats
-3) Active Client = Haunted Hollow Ltd. (Premium) → dashboards change
+3) Active Client = Haunted Hollow (Premium) → dashboards change
 4) Open premium dashboard → premium styling, Type Chips, Summary, Export works
 5) Export on basic client’s dashboard → 403 entitlement
 6) Deep-link cross-client dashboard → ownership guard
@@ -134,3 +134,14 @@ Purpose: Implement and demo two distinct client experiences (frontend + backend)
   - `tierType` → `tierTypeByTierTypeId`
   - `client` → `clientByClientId`
 - Files updated: `useClientData.ts`, `postgraphile-client.ts`, `dashboard.ts` types, `ClientSelector.tsx`, `DashboardList.tsx`
+
+**Issue: React DOM Prop Warning**
+- Problem: `React does not recognize the 'isPremium' prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase 'ispremium' instead.`
+- Root Cause: Styled components were passing custom props (`isPremium`) to DOM elements, which React doesn't recognize as valid HTML attributes
+- Solution: Added `shouldForwardProp` to styled components to filter out custom props:
+  ```typescript
+  const ClientCard = styled(Paper, {
+    shouldForwardProp: (prop) => prop !== 'isPremium',
+  })<{ isPremium: boolean }>`
+  ```
+- Files updated: `ClientSelectionPage.tsx` (ClientCard and ClientIcon styled components)

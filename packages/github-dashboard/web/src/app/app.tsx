@@ -1,8 +1,9 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { Dashboard } from './components/dashboard';
-import { ErrorBoundary } from './components/ErrorBoundary';
+import { ClientSelectionPage } from './pages/ClientSelectionPage';
+import { DashboardListPage } from './pages/DashboardListPage';
+import { DashboardDetailPage } from './pages/DashboardDetailPage';
 
 // Create Material-UI theme
 const theme = createTheme({
@@ -26,9 +27,9 @@ export function App() {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <Routes>
-          <Route path="/" element={<ErrorBoundary><Dashboard /></ErrorBoundary>} />
-          <Route path="/dashboard" element={<Navigate to="/" replace />} />
-          <Route path="/dashboard/:dashboardSlug" element={<ErrorBoundary><Dashboard /></ErrorBoundary>} />
+          <Route path="/" element={<ClientSelectionPage />} />
+          <Route path="/dashboards" element={<DashboardListPage />} />
+          <Route path="/dashboard/:dashboardSlug" element={<DashboardDetailPage />} />
         </Routes>
       </ThemeProvider>
     </Router>

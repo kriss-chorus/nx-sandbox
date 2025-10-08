@@ -6,6 +6,21 @@ export interface Dashboard {
   isPublic: boolean;
   createdAt: string;
   updatedAt: string;
+  clientByClientId?: {
+    id: string;
+    name: string;
+    logoUrl?: string;
+    tierTypeByTierTypeId: {
+      id: string;
+      code: string;
+      name: string;
+    };
+  };
+  dashboardTypeByDashboardTypeId?: {
+    id: string;
+    code: string;
+    name: string;
+  };
   dashboardGithubUsersByDashboardId?: {
     totalCount: number;
   };

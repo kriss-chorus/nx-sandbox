@@ -48,6 +48,21 @@ export const DASHBOARD_QUERIES = {
         isPublic
         createdAt
         updatedAt
+        clientByClientId {
+          id
+          name
+          logoUrl
+          tierTypeByTierTypeId {
+            id
+            code
+            name
+          }
+        }
+        dashboardTypeByDashboardTypeId {
+          id
+          code
+          name
+        }
         dashboardGithubUsersByDashboardId {
           totalCount
         }
@@ -69,6 +84,21 @@ export const DASHBOARD_QUERIES = {
       isPublic
       createdAt
       updatedAt
+      clientByClientId {
+        id
+        name
+        logoUrl
+        tierTypeByTierTypeId {
+          id
+          code
+          name
+        }
+      }
+      dashboardType {
+        id
+        code
+        name
+      }
     }
   }`,
 

@@ -18,7 +18,7 @@ import {
   DashboardData 
 } from '../types/dashboard';
 
-export function useDashboardDataPostGraphile(slug?: string): DashboardData {
+export function useDashboardDataPostGraphile(slug?: string, clientId?: string): DashboardData {
   const [data, setData] = useState<DashboardData>({
     dashboard: null,
     dashboards: [],
@@ -45,9 +45,12 @@ export function useDashboardDataPostGraphile(slug?: string): DashboardData {
         setData(prev => ({ ...prev, loading: true, error: null }));
 
         if (!slug) {
+          // Build filter for client if provided
+          const filter = clientId ? { clientId: { equalTo: clientId } } : undefined;
+          
           const dashboardsResponse = await executeGraphQL<{
             allDashboards: { nodes: Dashboard[] };
-          }>(DASHBOARD_QUERIES.getAll);
+          }>(DASHBOARD_QUERIES.getAll, { filter });
 
           if (dashboardsResponse.errors) {
             throw new Error(dashboardsResponse.errors[0].message);
@@ -138,7 +141,7 @@ export function useDashboardDataPostGraphile(slug?: string): DashboardData {
     };
 
     fetchDashboardData();
-  }, [slug]);
+  }, [slug, clientId]);
 
   return data;
 }
