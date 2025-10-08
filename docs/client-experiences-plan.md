@@ -90,13 +90,17 @@ Purpose: Implement and demo two distinct client experiences (frontend + backend)
 ---
 
 ## TODO (Working Checklist)
-- [ ] Backend: create `tier_types` table
-- [ ] Backend: create `clients` table (FK → tier_types)
-- [ ] Backend: alter `dashboards` (add `client_id`, `dashboard_type`)
-- [ ] Backend: seed Candy Corn Labs (basic) and Haunted Hollow Ltd. (premium)
-- [ ] Frontend: Active Client selector + persist selection
-- [ ] Frontend: filter dashboards by `clientId`
-- [ ] Frontend: include client (tier, logo/icon) and dashboardType in queries
+- [x] Backend: create `tier_types` table
+- [x] Backend: create `clients` table (FK → tier_types)
+- [x] Backend: create `dashboard_types` table
+- [x] Backend: create `features` table
+- [x] Backend: create `tier_type_features` junction table
+- [x] Backend: alter `dashboards` (add `client_id`, `dashboard_type`)
+- [x] Backend: seed Candy Corn Labs (basic) and Haunted Hollow (premium)
+- [x] Frontend: Active Client selector + persist selection
+- [x] Frontend: filter dashboards by `clientId`
+- [x] Frontend: include client (tier, logo/icon) and dashboardType in queries
+- [x] Frontend: Fix PostGraphile field naming (`tierTypeByTierTypeId` vs `tierType`)
 - [ ] Frontend: guard page on `clientId` mismatch
 - [ ] Frontend (premium): Type Chips + persist `dashboardType`
 - [ ] Frontend (premium): Summary bar (totals from `userActivities`)
@@ -114,3 +118,19 @@ Purpose: Implement and demo two distinct client experiences (frontend + backend)
 
 ## Work Log
 - Use this section for quick timestamps and changes as you implement.
+
+### Recent Issues and Solutions
+
+**Issue: Tilt Port Conflict**
+- Problem: `Error: Tilt cannot start because you already have another process on port 10360`
+- Solution: Use different port `tilt up --port 10361 github-dashboard` or kill existing process
+
+**Issue: PostGraphile Field Naming**
+- Problem: GraphQL queries failed with `Cannot query field "tierType" on type "Client"`
+- Root Cause: PostGraphile uses `tierTypeByTierTypeId` for foreign key relations, not `tierType`
+- Additional Issue: Dashboard queries failed with `Cannot query field "client" on type "Dashboard"`
+- Root Cause: PostGraphile uses `clientByClientId` for foreign key relations, not `client`
+- Solution: Updated all GraphQL queries and TypeScript types to use PostGraphile naming:
+  - `tierType` → `tierTypeByTierTypeId`
+  - `client` → `clientByClientId`
+- Files updated: `useClientData.ts`, `postgraphile-client.ts`, `dashboard.ts` types, `ClientSelector.tsx`, `DashboardList.tsx`
