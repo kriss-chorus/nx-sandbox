@@ -1,6 +1,5 @@
 import { pgTable, uuid, varchar, timestamp, unique } from 'drizzle-orm/pg-core';
 
-// Feature flags (normalized)
 export const features = pgTable('features', {
   id: uuid('id').primaryKey().defaultRandom(),
   code: varchar('code', { length: 64 }).notNull(), // e.g., 'export', 'summary', 'type_chips', 'premium_styles'

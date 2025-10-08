@@ -9,5 +9,7 @@ export * from './dashboard-activity-config.entity';
 export * from './tier-type.entity';
 export * from './client.entity';
 export * from './dashboard-type.entity';
+export * from './feature.entity';
+export * from './tier-type-feature.entity';
 
 
