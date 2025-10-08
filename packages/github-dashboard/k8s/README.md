@@ -4,12 +4,11 @@ This directory contains Kubernetes manifests for the GitHub Dashboard applicatio
 
 ## 🏗️ Architecture
 
-The application consists of 4 main services:
+The application consists of 3 main services:
 
 1. **PostgreSQL Database** - Data persistence layer
-2. **PostGraphile** - GraphQL API layer
-3. **GitHub Dashboard API** - NestJS backend service
-4. **GitHub Dashboard Web** - React frontend service
+2. **GitHub Dashboard API** - NestJS backend service with embedded PostGraphile
+3. **GitHub Dashboard Web** - React frontend service
 
 ## 📁 File Structure
 
@@ -21,15 +20,13 @@ k8s/
 ├── 03-postgres-pvc.yaml                # Persistent volume claim for data
 ├── 04-postgres-deployment.yaml         # PostgreSQL deployment
 ├── 05-postgres-service.yaml            # PostgreSQL service
-├── 06-postgraphile-configmap.yaml      # PostGraphile configuration
-├── 07-postgraphile-deployment.yaml     # PostGraphile deployment
-├── 08-postgraphile-service.yaml        # PostGraphile service
 ├── 09-api-configmap.yaml               # API configuration
-├── 10-api-deployment.yaml              # API deployment
+├── 10-api-deployment.yaml              # API deployment (with embedded PostGraphile)
 ├── 11-api-service.yaml                 # API service
 ├── 12-web-configmap.yaml               # Web configuration
 ├── 13-web-deployment.yaml              # Web deployment
 ├── 14-web-service.yaml                 # Web service
+├── 15-db-migrate-job.yaml              # Database migration job
 └── README.md                           # This file
 ```
 
@@ -45,19 +42,18 @@ k8s/
 
 1. **Start Tilt**:
    ```bash
-   cd github-dashboard
-   tilt up
+   pnpm run tilt:up:github-dashboard
    ```
 
 2. **Access the Application**:
    - **Web App**: http://localhost:8080
    - **API**: http://localhost:3001/api
-   - **PostGraphile GraphQL**: http://localhost:5001/graphql
-   - **PostGraphile GraphiQL**: http://localhost:5001/graphiql
+   - **PostGraphile GraphQL**: http://localhost:3001/graphql
+   - **PostGraphile GraphiQL**: http://localhost:3001/graphiql
 
 3. **Stop the Application**:
    ```bash
-   tilt down
+   pnpm run tilt:down
    ```
 
 ## 🔧 Configuration
@@ -67,16 +63,14 @@ k8s/
 Each service has its own ConfigMap with environment-specific variables:
 
 - **PostgreSQL**: Database credentials and configuration
-- **PostGraphile**: Database connection string
-- **API**: Database URL, port, and environment settings
+- **API**: Database URL, port, and environment settings (includes PostGraphile config)
 - **Web**: API endpoint configuration
 
 ### Port Forwarding
 
 Tilt automatically sets up port forwarding:
 - `5432` → PostgreSQL
-- `5001` → PostGraphile
-- `3001` → API
+- `3001` → API (includes PostGraphile GraphQL endpoints)
 - `8080` → Web
 
 ### Resource Limits
@@ -173,13 +167,14 @@ For production, replace hardcoded passwords with:
 
 ## 🔄 Migration Notes
 
-This setup was migrated from Docker Compose to Kubernetes. Key changes:
+This setup was migrated from Docker Compose to Kubernetes with PostGraphile embedded in the API. Key changes:
 
 1. **Service Discovery**: Services communicate via DNS names
 2. **Configuration**: Environment variables moved to ConfigMaps
 3. **Storage**: Docker volumes replaced with PersistentVolumeClaims
 4. **Networking**: Docker networking replaced with Kubernetes services
 5. **Orchestration**: Docker Compose replaced with Kubernetes deployments
+6. **PostGraphile Integration**: PostGraphile is now embedded within the NestJS API service instead of running as a separate service
 
 ## 📚 Additional Resources
 

@@ -2,7 +2,7 @@
 
 # Database Services (PostgreSQL + PostGraphile)
 # Using docker_compose to manage both services together
-docker_compose('github-dashboard/docker-compose.yml')
+docker_compose('packages/github-dashboard/docker-compose.yml')
 
 # API (NestJS) - depends on database
 local_resource(
