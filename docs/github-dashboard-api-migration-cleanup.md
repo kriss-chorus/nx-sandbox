@@ -1,586 +1,69 @@
-# GitHub Dashboard: API Migration & Cleanup
+# GitHub Dashboard: API Cleanup (PostGraphile + Frontend)
 
 ## Overview
-
-This document tracks the API migration and cleanup work done on the github-dashboard project. The work includes migrating REST API calls to PostGraphile GraphQL, component decomposition following SOLID principles, and extensive code cleanup to remove unused functionality and fix type issues.
-
-## Major Refactoring Phases
-
-### Phase 1: REST to GraphQL Migration (Attempted)
-- **Initial Goal**: Migrate from hybrid REST/PostGraphile to pure NestJS GraphQL
-- **What We Tried**: Apollo Server with NestJS GraphQL code-first approach
-- **Outcome**: Reverted back to PostGraphile due to complexity and existing infrastructure
-
-### Phase 2: PostGraphile CRUD Integration
-- **Goal**: Convert REST API calls to use PostGraphile GraphQL operations
-- **Achievement**: Successfully replaced all dashboard CRUD operations with PostGraphile
-- **Result**: Cleaner, more consistent API architecture
-
-### Phase 3: Component Refactoring (SOLID Principles)
-- **Goal**: Break down monolithic components into smaller, focused components
-- **Achievement**: Refactored `PostGraphileDashboard` into multiple focused components:
-  - `DashboardCard`: Individual dashboard display
-  - `DashboardList`: List of dashboards
-  - `CreateDashboardForm`: Dashboard creation form
-  - `DashboardDetails`: Individual dashboard details
-- **Result**: Better maintainability and single responsibility principle adherence
-
-### Phase 4: Code Cleanup and Optimization
-- **Goal**: Remove unused code, fix type issues, optimize API calls
-- **Achievements**:
-  - Removed unused REST API calls (organization members)
-  - Fixed PostGraphile relation field naming issues
-  - Resolved TypeScript type conflicts
-  - Eliminated circular dependencies
-  - Fixed React rendering errors
-- **Result**: Cleaner, more efficient codebase
-
-### Phase 5: Performance Optimization
-- **Goal**: Identify and fix duplicate API calls
-- **Issue Identified**: Duplicate `GetDashboardBySlug` GraphQL calls in HAR file analysis
-- **Root Cause**: Likely React StrictMode or multiple useEffect triggers
-- **Status**: Non-critical issue, but worth monitoring for future optimization
-
-## Current State Analysis
-
-### What We Have Now
-- **PostGraphile**: Auto-generates CRUD GraphQL from database schema
-- **Frontend GraphQL Client**: Custom PostGraphile client for frontend operations
-- **Refactored Components**: Smaller, focused components following SOLID principles
-- **Clean Codebase**: Removed unused code and fixed type issues
-
-### What We Achieved
-- **Consistent GraphQL API**: All operations through PostGraphile
-- **Better Component Architecture**: SOLID principles applied
-- **Optimized Performance**: Removed duplicate and unused API calls
-- **Type Safety**: Fixed TypeScript type conflicts and circular dependencies
-
-## Migration Steps
-
-### Step 1: Install Dependencies ✅
-```bash
-# In Nx monorepo, install dependencies at root level
-pnpm add -w @nestjs/graphql @nestjs/apollo @apollo/server @apollo/gateway @apollo/subgraph @as-integrations/express5 @as-integrations/fastify ts-morph graphql
-```
-
-**Key Dependencies:**
-- `@nestjs/graphql`: NestJS GraphQL integration
-- `@nestjs/apollo`: Apollo Server integration for NestJS
-- `@apollo/server`: Apollo Server v5 (latest)
-- `@as-integrations/express5`: Express integration for Apollo Server
-- `@as-integrations/fastify`: Fastify integration for Apollo Server
-- `@apollo/gateway`: Apollo Gateway for federation
-- `@apollo/subgraph`: Apollo Subgraph for federation
-- `ts-morph`: TypeScript AST manipulation (required by NestJS GraphQL)
-- `graphql`: Core GraphQL library
-
-**Important Nx Monorepo Notes:**
-- Always install dependencies at the root level using `pnpm add -w`
-- Individual packages should not have their own dependencies
-- This ensures consistent versions across the monorepo
-- Fix tsconfig.json paths: packages should extend `../../../tsconfig.base.json` (not `../../tsconfig.base.json`)
-- Nx monorepo structure: `packages/package-name/` requires 3 levels up to reach root
-
-### Step 2: Create GraphQL Types
-
-#### Object Types (Entities)
-```typescript
-// src/graphql/types/dashboard.type.ts
-@ObjectType()
-export class Dashboard {
-  @Field(() => ID)
-  id: string;
-
-  @Field()
-  name: string;
-
-  @Field()
-  slug: string;
-
-  @Field({ nullable: true })
-  description?: string;
-
-  @Field()
-  isPublic: boolean;
-
-  @Field(() => Date)
-  createdAt: Date;
-
-  @Field(() => Date)
-  updatedAt: Date;
-
-  @Field(() => [GitHubUser], { nullable: true })
-  users?: GitHubUser[];
-
-  @Field(() => [String], { nullable: true })
-  repositories?: string[];
-
-  @Field(() => ActivityConfig, { nullable: true })
-  activityConfig?: ActivityConfig;
-}
-```
-
-#### Input Types (DTOs)
-```typescript
-// src/graphql/inputs/dashboard.input.ts
-@InputType()
-export class CreateDashboardInput {
-  @Field()
-  @IsString()
-  @MaxLength(255)
-  name: string;
-
-  @Field({ nullable: true })
-  @IsOptional()
-  @IsString()
-  description?: string;
-
-  @Field({ nullable: true })
-  @IsOptional()
-  @IsBoolean()
-  isPublic?: boolean;
-}
-```
-
-**Key Learning Points:**
-- Use `@ObjectType()` for return types
-- Use `@InputType()` for mutation inputs
-- Always include validation decorators from `class-validator`
-- Use `@Field(() => Type)` for complex types and arrays
-- Use `@Field({ nullable: true })` for optional fields
-
-### Step 3: Convert Controllers to Resolvers
-
-#### Query Resolvers
-```typescript
-// src/graphql/resolvers/dashboard.resolver.ts
-@Resolver(() => Dashboard)
-export class DashboardResolver {
-  constructor(private readonly dashboardsService: DashboardsService) {}
-
-  @Query(() => [Dashboard], { name: 'dashboards' })
-  async getDashboards(): Promise<Dashboard[]> {
-    return this.dashboardsService.findAllPublic();
-  }
-
-  @Query(() => Dashboard, { name: 'dashboard', nullable: true })
-  async getDashboard(@Args('slug') slug: string): Promise<Dashboard | null> {
-    return this.dashboardsService.findBySlug(slug);
-  }
-}
-```
-
-#### Mutation Resolvers
-```typescript
-@Mutation(() => String, { name: 'createDashboard' })
-async createDashboard(
-  @Args('input') input: CreateDashboardInput
-): Promise<string> {
-  const dashboard = await this.dashboardsService.create(input);
-  return dashboard.id;
-}
-
-@Mutation(() => Boolean, { name: 'deleteDashboard' })
-async deleteDashboard(@Args('id') id: string): Promise<boolean> {
-  await this.dashboardsService.remove(id);
-  return true;
-}
-```
-
-**Key Learning Points:**
-- Use `@Query()` for read operations
-- Use `@Mutation()` for write operations
-- Return IDs from mutations, not full objects
-- Use `@Args()` to define input parameters
-- Keep resolvers thin - delegate to services
-
-### Step 4: Update App Module
-
-```typescript
-// src/app/app.module.ts
-import { GraphQLModule } from '@nestjs/graphql';
-import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
-
-@Module({
-  imports: [
-    // ... existing imports
-    GraphQLModule.forRoot<ApolloDriverConfig>({
-      driver: ApolloDriver,
-      autoSchemaFile: true, // Generates schema automatically
-      playground: true, // Enable GraphQL playground
-      introspection: true, // Allow introspection queries
-      context: ({ req }) => ({ req }), // Pass request context
-    }),
-    // ... other modules
-  ],
-})
-export class AppModule {}
-```
-
-**Key Learning Points:**
-- `autoSchemaFile: true` generates schema from decorators
-- `playground: true` enables GraphQL playground for testing
-- `context` function provides request context to resolvers
-- Apollo Driver is the recommended driver for NestJS
-
-### Step 5: Update Main.ts
-
-```typescript
-// src/main.ts
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app/app.module';
-
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  
-  // Enable CORS for frontend access
-  app.enableCors({
-    origin: ['http://localhost:4202', 'http://localhost:4201'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-  });
-  
-  const port = process.env.PORT || 3001;
-  await app.listen(port);
-
-  Logger.log(`🚀 GitHub Dashboard GraphQL API is running on: http://localhost:${port}/graphql`);
-  Logger.log(`🚀 GraphQL Playground is available at: http://localhost:${port}/graphql`);
-}
-```
-
-**Key Learning Points:**
-- Remove PostGraphile middleware
-- GraphQL endpoint is automatically available at `/graphql`
-- Playground is available at the same endpoint
-
-## Challenges and Solutions
-
-### Challenge 1: Complex Nested Queries
-**Problem**: Dashboard with users and repositories requires multiple database calls
-**Solution**: Use field resolvers to handle nested data loading
-
-```typescript
-@ResolveField(() => [GitHubUser], { name: 'users' })
-async getUsers(@Parent() dashboard: Dashboard): Promise<GitHubUser[]> {
-  return this.dashboardsService.getDashboardUsers(dashboard.id);
-}
-```
-
-### Challenge 2: Input Validation
-**Problem**: GraphQL inputs need validation like REST DTOs
-**Solution**: Use `class-validator` decorators on input types
-
-```typescript
-@InputType()
-export class CreateDashboardInput {
-  @Field()
-  @IsString()
-  @MaxLength(255)
-  name: string;
-}
-```
-
-### Challenge 3: Module Naming Conflicts
-**Problem**: Naming custom module `GraphQLModule` conflicts with NestJS `GraphQLModule`
-**Solution**: Use descriptive, unique module names
-
-```typescript
-// ❌ Wrong - conflicts with NestJS GraphQLModule
-export class GraphQLModule {}
-
-// ✅ Correct - unique, descriptive name
-export class GitHubDashboardGraphQLModule {}
-```
-
-### Challenge 4: Error Handling
-**Problem**: REST exceptions need to be converted to GraphQL errors
-**Solution**: Use GraphQL error formatting
-
-```typescript
-@Mutation(() => String)
-async createDashboard(@Args('input') input: CreateDashboardInput): Promise<string> {
-  try {
-    return await this.dashboardsService.create(input);
-  } catch (error) {
-    if (error instanceof ConflictException) {
-      throw new GraphQLError(error.message, {
-        extensions: { code: 'CONFLICT' }
-      });
-    }
-    throw error;
-  }
-}
-```
-
-## Key Learning Points
-
-### 1. GraphQL vs REST Mental Model
-- **REST**: Multiple endpoints, each with specific purpose
-- **GraphQL**: Single endpoint, flexible query structure
-- **Queries**: Read operations (like GET)
-- **Mutations**: Write operations (like POST/PUT/DELETE)
-
-### 2. Type Safety
-- GraphQL schema is strongly typed
-- TypeScript decorators generate schema automatically
-- Input validation happens at GraphQL layer
-- Return types must match schema exactly
-
-### 3. N+1 Query Problem
-- Field resolvers can cause N+1 queries
-- Use DataLoader pattern for batching
-- Consider eager loading for simple relationships
-
-### 4. Schema Design
-- Design schema based on client needs
-- Use connections for pagination
-- Keep mutations focused and atomic
-- Use enums for fixed value sets
-
-### 5. Testing Strategy
-- Test resolvers with GraphQL test utilities
-- Mock services, not database
-- Test error scenarios
-- Use GraphQL playground for manual testing
-
-## Migration Progress
-
-### ✅ COMPLETED: Dashboard Module Migration
-- [x] Install GraphQL dependencies
-- [x] Create object types for all entities
-- [x] Create input types for all DTOs
-- [x] Convert controllers to resolvers
-- [x] Update app module configuration
-- [x] Update main.ts
-- [x] Fix TypeScript configuration paths
-- [x] Fix module naming conflicts
-- [x] Test all GraphQL operations
-- [x] Remove old REST endpoints (Dashboard controller removed)
-- [x] Create comprehensive migration documentation
-
-### 🔄 REMAINING TASKS
-- [ ] Convert GitHub REST endpoints to GraphQL
-- [ ] Update frontend to use GraphQL
-
-## Migration Status: ✅ POSTGRAPHILE CRUD COMPLETE
-
-### What We Accomplished
-Successfully converted from REST API to PostGraphile CRUD operations while keeping the PostGraphile auto-generated GraphQL approach.
-
-### Current State: PostGraphile CRUD
-- **PostGraphile GraphQL** at `/graphql` - Auto-generated CRUD operations from database schema
-- **No REST endpoints** - All CRUD operations now use PostGraphile GraphQL
-- **PostGraphile UI** at `/graphiql` - For testing and exploration
-- **Frontend** uses PostGraphile GraphQL client for all operations
-
-### What Was Implemented
-- ✅ Removed REST dashboard controller
-- ✅ Created PostGraphile GraphQL client for frontend
-- ✅ Created React hooks for PostGraphile CRUD operations
-- ✅ Built new PostGraphileDashboard component
-- ✅ Updated routing to use PostGraphile component
-- ✅ Tested CRUD operations (Create, Read, Update, Delete)
-- ✅ Fixed missing data issue on home page (added dashboard list fetching)
-
-### Current Setup
-The API now uses pure PostGraphile CRUD:
-- **PostGraphile** provides all CRUD operations automatically
-- **Frontend** uses GraphQL queries and mutations
-- **No custom REST controllers** needed for basic CRUD
-- **Type-safe** operations with auto-generated schema
-
-## Issues Encountered and Solutions
-
-### Issue 1: TypeScript Configuration Paths
-**Problem**: `Cannot find base config file "../../tsconfig.base.json"`
-**Root Cause**: Incorrect relative paths in tsconfig.json files
-**Solution**: Update all tsconfig.json files to use correct relative paths
-```bash
-# Fixed paths in all packages
-"extends": "../../../tsconfig.base.json"  # Instead of "../../tsconfig.base.json"
-```
-
-### Issue 2: Module Naming Conflicts
-**Problem**: `TypeError: Cannot set property GraphQLModule of #<Object> which has only a getter`
-**Root Cause**: Custom module named `GraphQLModule` conflicts with NestJS `GraphQLModule`
-**Solution**: Rename custom module to avoid conflicts
-```typescript
-// Before (conflicting)
-export class GraphQLModule {}
-
-// After (unique)
-export class GitHubDashboardGraphQLModule {}
-```
-
-### Issue 3: Nx Monorepo Dependency Management
-**Problem**: Dependencies installed in individual packages instead of root
-**Root Cause**: Not following Nx monorepo best practices
-**Solution**: Move all dependencies to root level
-```bash
-# Remove from package
-pnpm remove @nestjs/graphql @nestjs/apollo ...
-
-# Add to root
-pnpm add -w @nestjs/graphql @nestjs/apollo ...
-```
-
-### Issue 4: Missing Data on Home Page
-**Problem**: Frontend showed no data on home page (`/`) because hook only fetched data when `slug` was provided
-**Solution**: Updated `useDashboardDataPostGraphile` hook to fetch all dashboards when no slug is provided
-**Implementation**:
-- Added `dashboards: Dashboard[]` to the `DashboardData` interface
-- Modified `useEffect` to call `DASHBOARD_QUERIES.getAll` when `slug` is undefined
-- Updated `PostGraphileDashboard` component to display dashboard list on home page
-**Learning**: Always consider both list and detail views when designing data fetching hooks
-
-### Issue 5: Component Violating SOLID Principles
-**Problem**: `PostGraphileDashboard` component was doing too much (displaying lists, forms, details, etc.)
-**Solution**: Refactored into smaller, focused components following Single Responsibility Principle
-**Implementation**:
-- `DashboardCard` - Display individual dashboard info
-- `DashboardList` - Display list of dashboards
-- `CreateDashboardForm` - Handle dashboard creation
-- `DashboardDetails` - Display single dashboard details
-- `PostGraphileDashboard` - Orchestrate the above components
-**Learning**: Break down large components into smaller, focused components for better maintainability
-
-### Issue 6: Partial Migration Scope
-**Problem**: GitHub controller still uses REST endpoints
-**Root Cause**: GitHub API integration is complex and used by frontend
-**Solution**: Keep GitHub REST endpoints for now, convert to GraphQL in future iteration
-**Note**: Dashboard functionality is fully migrated to GraphQL
-
-### Issue 7: PostGraphile Relation Field Naming
-**Problem**: GraphQL queries for dashboard users were failing because PostGraphile uses different field names for relations than expected
-**Root Cause**: PostGraphile auto-generates relation field names using `{tableName}By{ForeignKeyColumn}` pattern
-**Solution**: Updated GraphQL queries to use correct field names (`githubUserByGithubUserId` instead of `githubUser`)
-**Implementation**:
-- Used GraphQL introspection to discover actual schema field names
-- Updated `DASHBOARD_USER_QUERIES.getByDashboard` query
-- Updated TypeScript types to match actual response structure
-**Learning**: Always use GraphQL introspection to understand the actual schema, especially with auto-generated schemas like PostGraphile
-
-### Issue 8: PostGraphile Field Name Mismatches
-**Problem**: Multiple GraphQL queries were failing due to field name mismatches between expected and actual PostGraphile schema
-**Root Cause**: PostGraphile uses different field names than what was expected in the queries
-**Solution**: Updated all queries to use correct PostGraphile field names
-**Implementation**:
-- Fixed `ActivityConfig` queries: `activityType` → `activityTypeByActivityTypeId`
-- Fixed `DashboardRepository` queries: `repositoryName` → `name`, `githubRepositoryId` → `githubRepoId`
-- Added missing fields: `owner`, `fullName` for repositories
-- Updated TypeScript interfaces to match actual schema
-**Learning**: Always verify field names using GraphQL introspection, as PostGraphile field names may differ from database column names
-
-## SOLID Principles Applied
-
-### Single Responsibility Principle (SRP)
-Each file has a single, well-defined responsibility:
-
-- **Types**: Each type file defines one entity structure
-- **Inputs**: Each input file handles one type of input validation
-- **Resolvers**: Each resolver handles one domain (Dashboard, ActivityType)
-- **Modules**: Each module has one configuration responsibility
-
-### Open/Closed Principle (OCP)
-- GraphQL types are open for extension (new fields) but closed for modification
-- Resolvers can be extended with new queries/mutations without changing existing code
-
-### Liskov Substitution Principle (LSP)
-- All GraphQL types properly implement their interfaces
-- Input types can be substituted for their base types
-
-### Interface Segregation Principle (ISP)
-- Each resolver only depends on the services it actually needs
-- Input types are focused and don't include unnecessary fields
-
-### Dependency Inversion Principle (DIP)
-- Resolvers depend on abstractions (services) not concrete implementations
-- Services are injected through constructor injection
-
-## Testing the Migration
-
-### GraphQL Playground
-1. Start the API: `pnpm nx serve api`
-2. Open: `http://localhost:3001/graphql`
-3. Test queries and mutations
-
-### Troubleshooting
-
-#### "Fetching failed not found" Error
-**Problem**: Frontend still calling old REST endpoints
-**Solution**: Update frontend to use GraphQL or temporarily restore REST endpoints
-
-**Quick Fix**: Test GraphQL directly at `http://localhost:3001/graphql`
-
-**Frontend Update Needed**: Change API calls from:
-```typescript
-// Old REST calls
-fetch('/api/dashboards')
-fetch('/api/dashboards/123/users')
-```
-
-To GraphQL:
-```typescript
-// New GraphQL calls
-const { data } = useQuery(GET_DASHBOARDS);
-const [addUser] = useMutation(ADD_USER_TO_DASHBOARD);
-```
-
-### Example Queries
-```graphql
-# Get all dashboards
-query GetDashboards {
-  dashboards {
-    id
-    name
-    slug
-    description
-    isPublic
-    userCount
-  }
-}
-
-# Get specific dashboard
-query GetDashboard($slug: String!) {
-  dashboard(slug: $slug) {
-    id
-    name
-    slug
-    description
-    users {
-      githubUsername
-      displayName
-    }
-    repositories
-  }
-}
-```
-
-### Example Mutations
-```graphql
-# Create dashboard
-mutation CreateDashboard($input: CreateDashboardInput!) {
-  createDashboard(input: $input)
-}
-
-# Add user to dashboard
-mutation AddUserToDashboard($dashboardId: String!, $input: AddUserToDashboardInput!) {
-  addUserToDashboard(dashboardId: $dashboardId, input: $input)
-}
-```
-
-## Next Steps
-
-1. **Frontend Integration**: Update React app to use Apollo Client
-2. **Authentication**: Add GraphQL authentication guards
-3. **Subscriptions**: Add real-time updates for dashboard changes
-4. **Performance**: Implement DataLoader for N+1 query optimization
-5. **Documentation**: Generate GraphQL schema documentation
-
-## Resources
-
-- [NestJS GraphQL Documentation](https://docs.nestjs.com/graphql/quick-start)
-- [Apollo Server Documentation](https://www.apollographql.com/docs/apollo-server/)
-- [GraphQL Best Practices](https://graphql.org/learn/best-practices/)
-- [Agent Context GraphQL Patterns](../agent_context/graphql-architecture.md)
+This document reflects the current, kept architecture after cleanup:
+- Backend stays on PostGraphile for CRUD (auto-generated GraphQL at `/graphql`).
+- Frontend uses a lightweight PostGraphile client and custom hooks.
+- Components are decomposed (SRP) and configuration moved into a modal.
+- User activity stats are computed via backend GitHub proxy endpoints using explicit repositories and date ranges.
+
+All Apollo/NestJS GraphQL server work was removed. This file only documents what remains.
+
+## Final Architecture
+- PostGraphile provides CRUD for dashboards, users, repositories, and activity configs.
+- Frontend queries/mutations are in `postgraphile-client.ts` and consumed by hooks in `useDashboardDataPostGraphile.ts`.
+- React components are organized under:
+  - `components/dashboard` (list view, dashboard view, modals)
+  - `components/user` (user cards, activity grid)
+  - `components/activity` (date range/sort controls)
+- Dashboard configuration (repos, users, visibility, date range) is done via a modal and persisted to the DB.
+- An `ErrorBoundary` wraps routes for stability.
+
+## Key Frontend Files (kept)
+- `packages/github-dashboard/web/src/app/api/postgraphile-client.ts`
+  - `DASHBOARD_QUERIES`, `DASHBOARD_USER_*`, `DASHBOARD_REPOSITORY_*`, `ACTIVITY_CONFIG_QUERIES`
+  - `executeGraphQL`
+- `packages/github-dashboard/web/src/app/hooks/useDashboardDataPostGraphile.ts`
+  - Data: load dashboard by slug, dashboards list, users, repos, activity configs
+  - CRUD: create/update dashboard, add/remove users/repos, create/get GitHub users, save activity config
+  - Request de-dup to prevent duplicate loads
+- `packages/github-dashboard/web/src/app/components/dashboard/`
+  - `Dashboard.tsx`, `DashboardList.tsx`, `modals/DashboardConfigModal.tsx`, `modals/CreateDashboardDialog.tsx`, `index.ts`
+- `packages/github-dashboard/web/src/app/components/user/`
+  - `UserCard.tsx`, `UserActivityGrid.tsx`, `index.ts`
+- `packages/github-dashboard/web/src/app/components/activity/`
+  - `ActivitySettings.tsx`, `index.ts`
+- `packages/github-dashboard/web/src/app/app.tsx`
+  - Routes (`/`, `/dashboard/:dashboardSlug`) wrapped with `ErrorBoundary`
+
+## Important Behaviors
+- Date Range Persistence
+  - Saved via `saveActivityConfiguration` and reloaded on mount.
+- Repository Source for Stats
+  - After saving or on manual refresh, repositories are refetched from PostGraphile and explicitly passed into the stats fetch; if none, fall back to the modal selection.
+- Stats Fetch (created/merged/reviewed)
+  - `Dashboard.tsx` calls `/api/github/users/:username/activity-summary?repos=...&start_date=...&end_date=...` with explicit repos/dates. Calls are spaced to mitigate rate limiting.
+- Duplicate Call Prevention
+  - Data hook uses request de-dup to avoid double `GetDashboardBySlug`.
+- Error Visibility
+  - `ErrorBoundary` shows errors instead of blank screens; effects guarded to avoid infinite loops.
+
+## PostGraphile Queries (examples that we use)
+- Dashboards list: `allDashboards { nodes { id name slug isPublic dashboardGithubUsersByDashboardId { totalCount } } }`
+- Dashboard by slug: `dashboardBySlug(slug: ...) { id name slug description isPublic }`
+- Users by dashboard: `allDashboardGithubUsers(condition: { dashboardId: ... }) { nodes { id githubUserByGithubUserId { id githubUsername avatarUrl profileUrl } } }`
+- Repositories by dashboard: `allDashboardRepositories(condition: { dashboardId: ... }) { nodes { id fullName owner name githubRepoId } }`
+- Activity config by dashboard: `allDashboardActivityConfigs(condition: { dashboardId: ... }) { nodes { id dateRangeStart dateRangeEnd } }`
+
+## Recent Fixes
+- Persist and reload date range from DB.
+- Refetch repos from DB before computing stats; pass repos/dates explicitly to fetch.
+- Removed automatic effects that caused update loops; provide a manual refresh that is safe.
+- Moved configuration-only UI to modal; kept dashboard view focused.
+- Fixed PostGraphile relation names and added user counts in the dashboard list.
+- Removed unused REST calls (org members) and legacy components.
+
+## Nx / Workspace Notes
+- Use `pnpm` at repo root; dependencies are managed at the root level.
+- `tsconfig.*` extends root `tsconfig.base.json` with correct relative paths.
+- Serve with Nx: `nx serve github-dashboard-api`, `nx serve github-dashboard-web`.
