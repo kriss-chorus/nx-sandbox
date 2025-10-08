@@ -324,29 +324,32 @@ async createDashboard(@Args('input') input: CreateDashboardInput): Promise<strin
 - [ ] Convert GitHub REST endpoints to GraphQL
 - [ ] Update frontend to use GraphQL
 
-## Migration Status: ❌ REVERTED
+## Migration Status: ✅ POSTGRAPHILE CRUD COMPLETE
 
-### What Happened
-We attempted to migrate from PostGraphile to Apollo GraphQL but reverted back to the original setup per user request.
+### What We Accomplished
+Successfully converted from REST API to PostGraphile CRUD operations while keeping the PostGraphile auto-generated GraphQL approach.
 
-### Current State: Back to Original
-- **PostGraphile GraphQL** at `/graphql` - Auto-generated from database schema
-- **REST endpoints** at `/api/dashboards` - Custom business logic
-- **PostGraphile UI** at `/graphiql` - Original interface
+### Current State: PostGraphile CRUD
+- **PostGraphile GraphQL** at `/graphql` - Auto-generated CRUD operations from database schema
+- **No REST endpoints** - All CRUD operations now use PostGraphile GraphQL
+- **PostGraphile UI** at `/graphiql` - For testing and exploration
+- **Frontend** uses PostGraphile GraphQL client for all operations
 
-### What Was Reverted
-- Removed Apollo GraphQL dependencies
-- Removed custom GraphQL resolvers and types
-- Restored PostGraphile middleware in main.ts
-- Restored REST dashboard controller
-- Removed frontend Apollo Client setup
-- Restored original frontend structure
+### What Was Implemented
+- ✅ Removed REST dashboard controller
+- ✅ Created PostGraphile GraphQL client for frontend
+- ✅ Created React hooks for PostGraphile CRUD operations
+- ✅ Built new PostGraphileDashboard component
+- ✅ Updated routing to use PostGraphile component
+- ✅ Tested CRUD operations (Create, Read, Update, Delete)
+- ✅ Fixed missing data issue on home page (added dashboard list fetching)
 
 ### Current Setup
-The API is back to its original hybrid approach:
-- **PostGraphile** for auto-generated GraphQL from database
-- **REST controllers** for custom business logic
-- **Frontend** uses REST API calls (no more 404 errors)
+The API now uses pure PostGraphile CRUD:
+- **PostGraphile** provides all CRUD operations automatically
+- **Frontend** uses GraphQL queries and mutations
+- **No custom REST controllers** needed for basic CRUD
+- **Type-safe** operations with auto-generated schema
 
 ## Issues Encountered and Solutions
 
@@ -383,7 +386,16 @@ pnpm remove @nestjs/graphql @nestjs/apollo ...
 pnpm add -w @nestjs/graphql @nestjs/apollo ...
 ```
 
-### Issue 4: Partial Migration Scope
+### Issue 4: Missing Data on Home Page
+**Problem**: Frontend showed no data on home page (`/`) because hook only fetched data when `slug` was provided
+**Solution**: Updated `useDashboardDataPostGraphile` hook to fetch all dashboards when no slug is provided
+**Implementation**:
+- Added `dashboards: Dashboard[]` to the `DashboardData` interface
+- Modified `useEffect` to call `DASHBOARD_QUERIES.getAll` when `slug` is undefined
+- Updated `PostGraphileDashboard` component to display dashboard list on home page
+**Learning**: Always consider both list and detail views when designing data fetching hooks
+
+### Issue 5: Partial Migration Scope
 **Problem**: GitHub controller still uses REST endpoints
 **Root Cause**: GitHub API integration is complex and used by frontend
 **Solution**: Keep GitHub REST endpoints for now, convert to GraphQL in future iteration

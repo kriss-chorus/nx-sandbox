@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { Dashboard } from './components/Dashboard';
+import { PostGraphileDashboard } from './components/PostGraphileDashboard';
 
 // Create Material-UI theme
 const theme = createTheme({
@@ -26,9 +27,11 @@ export function App() {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <Routes>
-          <Route path="/" element={<Dashboard />} />
+          <Route path="/" element={<PostGraphileDashboard />} />
           <Route path="/dashboard" element={<Navigate to="/" replace />} />
-          <Route path="/dashboard/:dashboardSlug" element={<Dashboard />} />
+          <Route path="/dashboard/:slug" element={<PostGraphileDashboard />} />
+          <Route path="/legacy" element={<Dashboard />} />
+          <Route path="/legacy/dashboard/:dashboardSlug" element={<Dashboard />} />
         </Routes>
       </ThemeProvider>
     </Router>
