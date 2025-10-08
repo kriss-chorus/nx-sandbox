@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "nx": {
-    "name": "api",
+    "name": "github-dashboard-api",
     "targets": {
       "build": {
         "executor": "nx:run-commands",
@@ -64,16 +64,30 @@
           "build"
         ],
         "options": {
-          "buildTarget": "api:build",
+          "buildTarget": "github-dashboard-api:build",
           "runBuildTargetDependencies": false
         },
         "configurations": {
           "development": {
-            "buildTarget": "api:build:development"
+            "buildTarget": "github-dashboard-api:build:development"
           },
           "production": {
-            "buildTarget": "api:build:production"
+            "buildTarget": "github-dashboard-api:build:production"
           }
+        }
+      },
+      "db:generate": {
+        "executor": "@nx/workspace:run-commands",
+        "options": {
+          "command": "pnpm db:generate",
+          "cwd": "packages/github-dashboard/api"
+        }
+      },
+      "db:migrate": {
+        "executor": "@nx/workspace:run-commands",
+        "options": {
+          "command": "pnpm db:migrate",
+          "cwd": "packages/github-dashboard/api"
         }
       }
     },

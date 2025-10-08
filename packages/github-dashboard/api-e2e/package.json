@@ -5,7 +5,7 @@
   "nx": {
     "name": "api-e2e",
     "implicitDependencies": [
-      "api"
+      "github-dashboard-api"
     ],
     "targets": {
       "e2e": {
@@ -18,8 +18,8 @@
           "passWithNoTests": true
         },
         "dependsOn": [
-          "api:build",
-          "api:serve"
+          "github-dashboard-api:build",
+          "github-dashboard-api:serve"
         ]
       }
     }
