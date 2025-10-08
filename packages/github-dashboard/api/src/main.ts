@@ -1,11 +1,13 @@
 /**
- * GitHub Dashboard GraphQL API Server
- * Single Responsibility: Bootstrap the NestJS application with GraphQL support
+ * This is not a production server yet!
+ * This is only a minimal backend to get started.
  */
 
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
+import { postgraphile } from 'postgraphile';
+import databaseConfig from './config/database.config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -25,11 +27,35 @@ async function bootstrap() {
   // forbidNonWhitelisted rejects unexpected fields, transform converts types
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
   
+  // Add PostGraphile middleware (embedded in NestJS like client-demographic-api)
+  const dbConfig = databaseConfig();
+  app.use(
+    postgraphile(
+      {
+        host: dbConfig.host,
+        port: dbConfig.port,
+        database: dbConfig.database,
+        user: dbConfig.username,
+        password: dbConfig.password,
+        ssl: dbConfig.ssl,
+      },
+      ['public'], // Database schemas to expose
+      {
+        watchPg: true,
+        graphiql: true,
+        enhanceGraphiql: true,
+        graphqlRoute: '/graphql',
+        graphiqlRoute: '/graphiql',
+        cors: true,
+      }
+    )
+  );
+  
   const port = process.env.PORT || 3001;
   await app.listen(port);
 
-  Logger.log(`🚀 GitHub Dashboard GraphQL API is running on: http://localhost:${port}/${globalPrefix}`);
-  Logger.log(`🚀 GraphQL Playground is available at: http://localhost:${port}/graphql`);
+  Logger.log(`🚀 GitHub Dashboard API is running on: http://localhost:${port}/${globalPrefix}`);
+  Logger.log(`🚀 PostGraphile GraphiQL playground is available at: http://localhost:${port}/graphiql`);
   Logger.log(`🚀 React Web App is available at: http://localhost:4202`);
 }
 

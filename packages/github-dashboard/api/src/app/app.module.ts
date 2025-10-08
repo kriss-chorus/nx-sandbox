@@ -12,8 +12,6 @@ import { DatabaseModule } from '../database/database.module';
 import { DashboardsModule } from '../dashboards/dashboards.module';
 import { GitHubModule } from '../github/github.module';
 
-// GraphQL module
-import { GitHubDashboardGraphQLModule } from '../graphql/graphql.module';
 
 @Module({
   imports: [
@@ -25,7 +23,6 @@ import { GitHubDashboardGraphQLModule } from '../graphql/graphql.module';
     DatabaseModule, // Global database module
     DashboardsModule,
     GitHubModule,
-    GitHubDashboardGraphQLModule, // GraphQL module with resolvers
   ],
   controllers: [AppController],
   providers: [AppService],

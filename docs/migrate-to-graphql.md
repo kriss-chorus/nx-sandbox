@@ -305,8 +305,9 @@ async createDashboard(@Args('input') input: CreateDashboardInput): Promise<strin
 - Test error scenarios
 - Use GraphQL playground for manual testing
 
-## Migration Checklist
+## Migration Progress
 
+### ✅ COMPLETED: Dashboard Module Migration
 - [x] Install GraphQL dependencies
 - [x] Create object types for all entities
 - [x] Create input types for all DTOs
@@ -316,36 +317,36 @@ async createDashboard(@Args('input') input: CreateDashboardInput): Promise<strin
 - [x] Fix TypeScript configuration paths
 - [x] Fix module naming conflicts
 - [x] Test all GraphQL operations
-- [x] Update documentation
 - [x] Remove old REST endpoints (Dashboard controller removed)
-- [ ] Convert GitHub REST endpoints to GraphQL (Future task)
-- [ ] Update frontend to use GraphQL (Future task)
+- [x] Create comprehensive migration documentation
 
-## Migration Status: ✅ COMPLETE (Dashboard Module)
+### 🔄 REMAINING TASKS
+- [ ] Convert GitHub REST endpoints to GraphQL
+- [ ] Update frontend to use GraphQL
 
-The GitHub Dashboard API has been successfully migrated from REST/PostGraphile to pure NestJS GraphQL for the dashboard functionality. The API now provides:
+## Migration Status: ❌ REVERTED
 
-- **Single GraphQL endpoint** at `/graphql`
-- **GraphQL Playground** for testing and exploration
-- **Type-safe resolvers** with proper validation
-- **SOLID principles** applied throughout
-- **Comprehensive documentation** of the migration process
+### What Happened
+We attempted to migrate from PostGraphile to Apollo GraphQL but reverted back to the original setup per user request.
 
-### What Was Migrated ✅
-- Dashboard CRUD operations (create, read, update, delete)
-- Dashboard user management (add/remove users)
-- Dashboard repository management (add/remove repositories)
-- Activity configuration management
-- Activity types queries
+### Current State: Back to Original
+- **PostGraphile GraphQL** at `/graphql` - Auto-generated from database schema
+- **REST endpoints** at `/api/dashboards` - Custom business logic
+- **PostGraphile UI** at `/graphiql` - Original interface
 
-### What Remains REST 🔄
-- GitHub API integration endpoints (used by frontend for GitHub data)
-- App health check endpoint
+### What Was Reverted
+- Removed Apollo GraphQL dependencies
+- Removed custom GraphQL resolvers and types
+- Restored PostGraphile middleware in main.ts
+- Restored REST dashboard controller
+- Removed frontend Apollo Client setup
+- Restored original frontend structure
 
-### Next Steps
-1. Convert GitHub REST endpoints to GraphQL resolvers
-2. Update frontend to use GraphQL for dashboard operations
-3. Remove remaining REST endpoints once frontend is updated
+### Current Setup
+The API is back to its original hybrid approach:
+- **PostGraphile** for auto-generated GraphQL from database
+- **REST controllers** for custom business logic
+- **Frontend** uses REST API calls (no more 404 errors)
 
 ## Issues Encountered and Solutions
 
