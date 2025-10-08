@@ -21,27 +21,6 @@ k8s_yaml([
     'k8s/14-web-service.yaml'
 ])
 
-# Configure Kubernetes resources with dependencies and port forwarding
-k8s_resource('postgres-deployment', 
-    resource_deps=['postgres-config', 'postgres-init-sql', 'postgres-pvc'],
-    port_forwards='5432:5432'
-)
-
-k8s_resource('postgraphile-deployment',
-    resource_deps=['postgres-deployment', 'postgraphile-config'],
-    port_forwards='5001:5001'
-)
-
-k8s_resource('api-deployment',
-    resource_deps=['postgres-deployment', 'api-config'],
-    port_forwards='3001:80'
-)
-
-k8s_resource('web-deployment',
-    resource_deps=['api-deployment', 'web-config'],
-    port_forwards='8080:80'
-)
-
 # Build and deploy API image
 docker_build('github-dashboard-api:latest', 
     './packages/github-dashboard/api',
@@ -52,6 +31,44 @@ docker_build('github-dashboard-api:latest',
 docker_build('github-dashboard-web:latest',
     './packages/github-dashboard/web', 
     dockerfile='./packages/github-dashboard/web/Dockerfile'
+)
+
+# Configure Kubernetes resources with dependencies and port forwarding
+k8s_resource(
+    'github-dashboard-db',
+    objects=['postgres-pvc'],
+    port_forwards=5432,
+    labels=['github-dashboard', 'db']
+)
+
+k8s_resource(
+    'postgres-deployment',
+    resource_deps=['github-dashboard-db'],
+    labels=['github-dashboard', 'db']
+)
+
+k8s_resource(
+    'postgraphile-deployment',
+    resource_deps=['postgres-deployment'],
+    port_forwards=5001,
+    labels=['github-dashboard', 'graphql'],
+    links=['http://localhost:5001/graphiql']
+)
+
+k8s_resource(
+    'api-deployment',
+    resource_deps=['postgres-deployment'],
+    port_forwards=3001,
+    labels=['github-dashboard', 'api'],
+    links=['http://localhost:3001/api']
+)
+
+k8s_resource(
+    'web-deployment',
+    resource_deps=['api-deployment'],
+    port_forwards=8080,
+    labels=['github-dashboard', 'web'],
+    links=['http://localhost:8080']
 )
 
 # Database migration job (runs once)
@@ -76,9 +93,11 @@ spec:
 ''')
 
 # Configure the migration job
-k8s_resource('db-migrate',
-    resource_deps=['postgres-deployment', 'api-deployment'],
-    trigger_mode=TRIGGER_MODE_MANUAL
+k8s_resource(
+    'db-migrate',
+    resource_deps=['postgres-deployment'],
+    trigger_mode=TRIGGER_MODE_MANUAL,
+    labels=['github-dashboard', 'migrations']
 )
 
 # Aggregate resource for easy management
