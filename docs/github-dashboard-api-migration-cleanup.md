@@ -19,6 +19,13 @@ All Apollo/NestJS GraphQL server work was removed. This file only documents what
 - Dashboard configuration (repos, users, visibility, date range) is done via a modal and persisted to the DB.
 - An `ErrorBoundary` wraps routes for stability.
 
+### Nx migration commands (fix)
+- Added Nx targets on API to drive Drizzle:
+  - `github-dashboard-api:migrate:generate` → runs `drizzle-kit generate`
+  - `github-dashboard-api:migrate:up` → runs `drizzle-kit migrate`
+- Executor fix: use `nx:run-commands` (not `@nx/workspace:run-commands` or `@nx/run-commands`).
+- Location: `packages/github-dashboard/api/package.json` under `nx.targets`.
+
 ## Key Frontend Files (kept)
 - `packages/github-dashboard/web/src/app/api/postgraphile-client.ts`
   - `DASHBOARD_QUERIES`, `DASHBOARD_USER_*`, `DASHBOARD_REPOSITORY_*`, `ACTIVITY_CONFIG_QUERIES`

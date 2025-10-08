@@ -10,8 +10,8 @@ export const dashboardActivityConfigs = pgTable('dashboard_activity_configs', {
   enabled: boolean('enabled').default(true),
   dateRangeStart: timestamp('date_range_start', { withTimezone: true }), // UTC timestamp
   dateRangeEnd: timestamp('date_range_end', { withTimezone: true }), // UTC timestamp
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at'),
 }, (table) => ({
   // Unique constraint to prevent duplicate configs
   uniqueDashboardActivity: unique('dashboard_activity_configs_dashboard_id_activity_type_id_unique').on(table.dashboardId, table.activityTypeId),

@@ -4,8 +4,10 @@ CREATE TABLE "dashboards" (
 	"slug" varchar(255) NOT NULL,
 	"description" text,
 	"is_public" boolean DEFAULT true,
-	"created_at" timestamp DEFAULT now(),
-	"updated_at" timestamp DEFAULT now(),
+	"client_id" uuid,
+	"dashboard_type_id" uuid,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp,
 	CONSTRAINT "dashboards_slug_unique" UNIQUE("slug")
 );
 --> statement-breakpoint
@@ -66,16 +68,49 @@ CREATE TABLE "dashboard_activity_configs" (
 	"dashboard_id" uuid NOT NULL,
 	"activity_type_id" uuid NOT NULL,
 	"enabled" boolean DEFAULT true,
-	"date_range_start" varchar(10),
-	"date_range_end" varchar(10),
-	"created_at" timestamp DEFAULT now(),
-	"updated_at" timestamp DEFAULT now(),
+	"date_range_start" timestamp with time zone,
+	"date_range_end" timestamp with time zone,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp,
 	CONSTRAINT "dashboard_activity_configs_dashboard_id_activity_type_id_unique" UNIQUE("dashboard_id","activity_type_id")
 );
 --> statement-breakpoint
+CREATE TABLE "tier_types" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"code" varchar(32) NOT NULL,
+	"name" varchar(64) NOT NULL,
+	"features" jsonb DEFAULT '{}'::jsonb,
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now(),
+	CONSTRAINT "tier_types_code_unique" UNIQUE("code")
+);
+--> statement-breakpoint
+CREATE TABLE "clients" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"name" varchar(255) NOT NULL,
+	"tier_type_id" uuid NOT NULL,
+	"icon_url" varchar(500),
+	"logo_url" varchar(500),
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now()
+);
+--> statement-breakpoint
+CREATE TABLE "dashboard_types" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"code" varchar(32) NOT NULL,
+	"name" varchar(64) NOT NULL,
+	"layout_config" jsonb DEFAULT '{}'::jsonb,
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now(),
+	CONSTRAINT "dashboard_types_code_unique" UNIQUE("code")
+);
+--> statement-breakpoint
+ALTER TABLE "dashboards" ADD CONSTRAINT "dashboards_client_id_clients_id_fk" FOREIGN KEY ("client_id") REFERENCES "public"."clients"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "dashboards" ADD CONSTRAINT "dashboards_dashboard_type_id_dashboard_types_id_fk" FOREIGN KEY ("dashboard_type_id") REFERENCES "public"."dashboard_types"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "dashboard_github_users" ADD CONSTRAINT "dashboard_github_users_dashboard_id_dashboards_id_fk" FOREIGN KEY ("dashboard_id") REFERENCES "public"."dashboards"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "dashboard_github_users" ADD CONSTRAINT "dashboard_github_users_github_user_id_github_users_id_fk" FOREIGN KEY ("github_user_id") REFERENCES "public"."github_users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "dashboard_repositories" ADD CONSTRAINT "dashboard_repositories_dashboard_id_dashboards_id_fk" FOREIGN KEY ("dashboard_id") REFERENCES "public"."dashboards"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "dashboard_widgets" ADD CONSTRAINT "dashboard_widgets_dashboard_id_dashboards_id_fk" FOREIGN KEY ("dashboard_id") REFERENCES "public"."dashboards"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "dashboard_activity_configs" ADD CONSTRAINT "dashboard_activity_configs_dashboard_id_dashboards_id_fk" FOREIGN KEY ("dashboard_id") REFERENCES "public"."dashboards"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "dashboard_activity_configs" ADD CONSTRAINT "dashboard_activity_configs_activity_type_id_activity_types_id_fk" FOREIGN KEY ("activity_type_id") REFERENCES "public"."activity_types"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "dashboard_activity_configs" ADD CONSTRAINT "dashboard_activity_configs_activity_type_id_activity_types_id_fk" FOREIGN KEY ("activity_type_id") REFERENCES "public"."activity_types"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "clients" ADD CONSTRAINT "clients_tier_type_id_tier_types_id_fk" FOREIGN KEY ("tier_type_id") REFERENCES "public"."tier_types"("id") ON DELETE no action ON UPDATE no action;
