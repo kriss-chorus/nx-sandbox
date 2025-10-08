@@ -1,8 +1,7 @@
-import { pgTable, uuid, boolean, unique } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, unique } from 'drizzle-orm/pg-core';
 import { tierTypes } from './tier-type.entity';
 import { features } from './feature.entity';
 
-// Join: tier type ↔ feature (enabled)
 export const tierTypeFeatures = pgTable('tier_type_features', {
   id: uuid('id').primaryKey().defaultRandom(),
   tierTypeId: uuid('tier_type_id').references(() => tierTypes.id).notNull(),
@@ -13,5 +12,3 @@ export const tierTypeFeatures = pgTable('tier_type_features', {
 
 export type TierTypeFeature = typeof tierTypeFeatures.$inferSelect;
 export type NewTierTypeFeature = typeof tierTypeFeatures.$inferInsert;
-
-
