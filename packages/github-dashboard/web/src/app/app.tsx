@@ -1,9 +1,8 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { Dashboard } from './components/Dashboard';
-import { PostGraphileDashboard } from './components/PostGraphileDashboard';
+import { Dashboard } from './components/dashboard';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Create Material-UI theme
 const theme = createTheme({
@@ -27,11 +26,9 @@ export function App() {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <Routes>
-          <Route path="/" element={<PostGraphileDashboard />} />
+          <Route path="/" element={<ErrorBoundary><Dashboard /></ErrorBoundary>} />
           <Route path="/dashboard" element={<Navigate to="/" replace />} />
-          <Route path="/dashboard/:slug" element={<PostGraphileDashboard />} />
-          <Route path="/legacy" element={<Dashboard />} />
-          <Route path="/legacy/dashboard/:dashboardSlug" element={<Dashboard />} />
+          <Route path="/dashboard/:dashboardSlug" element={<ErrorBoundary><Dashboard /></ErrorBoundary>} />
         </Routes>
       </ThemeProvider>
     </Router>

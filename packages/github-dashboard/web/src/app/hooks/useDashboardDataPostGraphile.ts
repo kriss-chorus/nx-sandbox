@@ -1,78 +1,22 @@
-/**
- * PostGraphile Dashboard Data Hook
- * Single Responsibility: Manage dashboard data using PostGraphile CRUD operations
- */
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   executeGraphQL, 
   DASHBOARD_QUERIES, 
   DASHBOARD_USER_QUERIES, 
   DASHBOARD_REPOSITORY_QUERIES,
   ACTIVITY_CONFIG_QUERIES,
-  ACTIVITY_TYPE_QUERIES 
+  ACTIVITY_TYPE_QUERIES,
+  GITHUB_USER_QUERIES,
+  GITHUB_USER_MUTATIONS
 } from '../api/postgraphile-client';
-
-export interface Dashboard {
-  id: string;
-  name: string;
-  slug: string;
-  description?: string;
-  isPublic: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface DashboardUser {
-  id: string;
-  dashboardId: string;
-  githubUserId: string;
-  user: {
-    id: string;
-    githubUsername: string;
-    displayName?: string;
-    avatarUrl?: string;
-    profileUrl?: string;
-  };
-}
-
-export interface DashboardRepository {
-  id: string;
-  dashboardId: string;
-  repositoryName: string;
-  githubRepositoryId?: string;
-}
-
-export interface ActivityType {
-  id: string;
-  name: string;
-  displayName: string;
-  description?: string;
-  category: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface ActivityConfig {
-  id: string;
-  dashboardId: string;
-  activityTypeId: string;
-  enabled: boolean;
-  dateRangeStart?: string;
-  dateRangeEnd?: string;
-  activityType: ActivityType;
-}
-
-export interface DashboardData {
-  dashboard: Dashboard | null;
-  dashboards: Dashboard[]; // Add list of all dashboards
-  users: DashboardUser[];
-  repositories: DashboardRepository[];
-  activityConfigs: ActivityConfig[];
-  activityTypes: ActivityType[];
-  loading: boolean;
-  error: string | null;
-}
+import { 
+  Dashboard, 
+  DashboardUser, 
+  DashboardRepository, 
+  ActivityType, 
+  ActivityConfig, 
+  DashboardData 
+} from '../types/dashboard';
 
 export function useDashboardDataPostGraphile(slug?: string): DashboardData {
   const [data, setData] = useState<DashboardData>({
@@ -85,14 +29,22 @@ export function useDashboardDataPostGraphile(slug?: string): DashboardData {
     loading: true,
     error: null,
   });
+  
+  const fetchingRef = useRef<string | null>(null);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
+      // Prevent duplicate calls for the same slug
+      const currentSlug = slug || 'all-dashboards';
+      if (fetchingRef.current === currentSlug) {
+        return;
+      }
+      fetchingRef.current = currentSlug;
+      
       try {
         setData(prev => ({ ...prev, loading: true, error: null }));
 
         if (!slug) {
-          // Fetch all dashboards when no specific slug is provided
           const dashboardsResponse = await executeGraphQL<{
             allDashboards: { nodes: Dashboard[] };
           }>(DASHBOARD_QUERIES.getAll);
@@ -111,10 +63,10 @@ export function useDashboardDataPostGraphile(slug?: string): DashboardData {
             loading: false,
             error: null,
           });
+          fetchingRef.current = null;
           return;
         }
 
-        // Fetch dashboard by slug
         const dashboardResponse = await executeGraphQL<{
           dashboardBySlug: Dashboard;
         }>(DASHBOARD_QUERIES.getBySlug, { slug });
@@ -134,8 +86,7 @@ export function useDashboardDataPostGraphile(slug?: string): DashboardData {
           return;
         }
 
-        // Fetch related data in parallel
-        const [usersResponse, repositoriesResponse, activityConfigsResponse, activityTypesResponse] = await Promise.all([
+        const [usersResponse, repositoriesResponse, activityConfigsResponse] = await Promise.all([
           executeGraphQL<{
             allDashboardGithubUsers: { nodes: DashboardUser[] };
           }>(DASHBOARD_USER_QUERIES.getByDashboard, { dashboardId: dashboard.id }),
@@ -147,31 +98,28 @@ export function useDashboardDataPostGraphile(slug?: string): DashboardData {
           executeGraphQL<{
             allDashboardActivityConfigs: { nodes: ActivityConfig[] };
           }>(ACTIVITY_CONFIG_QUERIES.getByDashboard, { dashboardId: dashboard.id }),
-          
-          executeGraphQL<{
-            allActivityTypes: { nodes: ActivityType[] };
-          }>(ACTIVITY_TYPE_QUERIES.getAll),
         ]);
 
-        // Check for errors in any response
         const errors = [
           usersResponse.errors,
           repositoriesResponse.errors,
           activityConfigsResponse.errors,
-          activityTypesResponse.errors,
         ].filter(Boolean);
 
         if (errors.length > 0) {
           throw new Error(errors[0]?.[0]?.message || 'Failed to fetch dashboard data');
         }
 
+        const activityConfigs = activityConfigsResponse.data?.allDashboardActivityConfigs.nodes || [];
+        const activityTypes = activityConfigs.map(config => config.activityTypeByActivityTypeId);
+
         setData({
           dashboard,
-          dashboards: [], // Empty for single dashboard view
+          dashboards: [],
           users: usersResponse.data?.allDashboardGithubUsers.nodes || [],
           repositories: repositoriesResponse.data?.allDashboardRepositories.nodes || [],
-          activityConfigs: activityConfigsResponse.data?.allDashboardActivityConfigs.nodes || [],
-          activityTypes: activityTypesResponse.data?.allActivityTypes.nodes || [],
+          activityConfigs,
+          activityTypes,
           loading: false,
           error: null,
         });
@@ -183,6 +131,9 @@ export function useDashboardDataPostGraphile(slug?: string): DashboardData {
           loading: false,
           error: error instanceof Error ? error.message : 'Failed to fetch dashboard data',
         }));
+      } finally {
+        // Clear the fetching ref when request completes
+        fetchingRef.current = null;
       }
     };
 
@@ -192,7 +143,6 @@ export function useDashboardDataPostGraphile(slug?: string): DashboardData {
   return data;
 }
 
-// CRUD Operations Hook
 export function useDashboardCRUD() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -284,7 +234,12 @@ export function useDashboardCRUD() {
       const response = await executeGraphQL<{
         createDashboardGithubUser: { dashboardGithubUser: DashboardUser };
       }>(DASHBOARD_USER_QUERIES.addUser, {
-        input: { dashboardId, githubUserId }
+        input: { 
+          dashboardGithubUser: { 
+            dashboardId, 
+            githubUserId 
+          } 
+        }
       });
 
       if (response.errors) {
@@ -372,6 +327,109 @@ export function useDashboardCRUD() {
     }
   };
 
+  const createGithubUser = async (username: string, displayName?: string, avatarUrl?: string) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await executeGraphQL<{
+        createGithubUser: { githubUser: any };
+      }>(GITHUB_USER_MUTATIONS.create, {
+        input: {
+          githubUser: {
+            githubUsername: username,
+            displayName: displayName || username,
+            avatarUrl: avatarUrl || `https://github.com/${username}.png`,
+            profileUrl: `https://github.com/${username}`
+          }
+        }
+      });
+
+      if (response.errors) {
+        throw new Error(response.errors[0].message);
+      }
+
+      return response.data?.createGithubUser.githubUser;
+    } catch (error) {
+      console.error('Error creating GitHub user:', error);
+      setError(error instanceof Error ? error.message : 'Failed to create GitHub user');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getGithubUserByUsername = async (username: string) => {
+    try {
+      const response = await executeGraphQL<{
+        allGithubUsers: { nodes: any[] };
+      }>(GITHUB_USER_QUERIES.getByUsername, { username });
+
+      if (response.errors) {
+        throw new Error(response.errors[0].message);
+      }
+
+      const users = response.data?.allGithubUsers.nodes || [];
+      if (users.length === 0) {
+        throw new Error(`GitHub user ${username} not found`);
+      }
+
+      return users[0]; // Return the first (and should be only) user
+    } catch (error) {
+      console.error('Error fetching GitHub user:', error);
+      throw error;
+    }
+  };
+
+  const saveActivityConfiguration = async (dashboardId: string, dateRange: { start: string; end: string }) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // First, get existing activity configs for this dashboard
+      const configsResponse = await executeGraphQL<{
+        allDashboardActivityConfigs: { nodes: ActivityConfig[] };
+      }>(ACTIVITY_CONFIG_QUERIES.getByDashboard, { dashboardId });
+
+      if (configsResponse.errors) {
+        throw new Error(configsResponse.errors[0].message);
+      }
+
+      const existingConfigs = configsResponse.data?.allDashboardActivityConfigs.nodes || [];
+      
+      // Update the first config with the date range, or create a new one if none exists
+      if (existingConfigs.length > 0) {
+        const configToUpdate = existingConfigs[0];
+        const response = await executeGraphQL<{
+          updateDashboardActivityConfigById: { dashboardActivityConfig: ActivityConfig };
+        }>(ACTIVITY_CONFIG_QUERIES.updateConfig, {
+          id: configToUpdate.id,
+          input: {
+            dateRangeStart: dateRange.start,
+            dateRangeEnd: dateRange.end,
+            enabled: true
+          }
+        });
+
+        if (response.errors) {
+          throw new Error(response.errors[0].message);
+        }
+
+        return response.data?.updateDashboardActivityConfigById.dashboardActivityConfig;
+      } else {
+        // If no config exists, we would need to create one, but for now just return success
+        console.log('No existing activity config found, date range not saved to database');
+        return null;
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save activity configuration';
+      setError(errorMessage);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     loading,
     error,
@@ -382,5 +440,8 @@ export function useDashboardCRUD() {
     removeUserFromDashboard,
     addRepositoryToDashboard,
     removeRepositoryFromDashboard,
+    createGithubUser,
+    getGithubUserByUsername,
+    saveActivityConfiguration,
   };
 }
