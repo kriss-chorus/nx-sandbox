@@ -16,5 +16,3 @@ export const dashboardGithubUsers = pgTable('dashboard_github_users', {
 // Export types for TypeScript
 export type DashboardGithubUser = typeof dashboardGithubUsers.$inferSelect;
 export type NewDashboardGithubUser = typeof dashboardGithubUsers.$inferInsert;
-
-
