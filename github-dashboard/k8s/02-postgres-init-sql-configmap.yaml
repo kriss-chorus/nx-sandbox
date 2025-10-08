@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-sql
+  namespace: github-dashboard
+data:
+  init.sql: |
+    -- Initial database setup
+    -- This file will be executed when the database is first created
+    CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+    
+    -- Add any initial data or schema modifications here

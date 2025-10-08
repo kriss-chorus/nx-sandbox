@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-deployment
+  namespace: github-dashboard
+  labels:
+    app: github-dashboard-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: github-dashboard-api
+  template:
+    metadata:
+      labels:
+        app: github-dashboard-api
+    spec:
+      containers:
+      - name: api
+        image: github-dashboard-api:latest
+        ports:
+        - containerPort: 3001
+        envFrom:
+        - configMapRef:
+            name: api-config
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 3001
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 3001
+          initialDelaySeconds: 5
+          periodSeconds: 5

@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: web-config
+  namespace: github-dashboard
+data:
+  VITE_API_URL: "http://api-service:80/api"

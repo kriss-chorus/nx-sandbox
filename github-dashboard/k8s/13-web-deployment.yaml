@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-deployment
+  namespace: github-dashboard
+  labels:
+    app: github-dashboard-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: github-dashboard-web
+  template:
+    metadata:
+      labels:
+        app: github-dashboard-web
+    spec:
+      containers:
+      - name: web
+        image: github-dashboard-web:latest
+        ports:
+        - containerPort: 80
+        envFrom:
+        - configMapRef:
+            name: web-config
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "50m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5

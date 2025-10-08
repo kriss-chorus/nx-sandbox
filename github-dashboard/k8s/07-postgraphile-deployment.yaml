@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgraphile-deployment
+  namespace: github-dashboard
+  labels:
+    app: postgraphile
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgraphile
+  template:
+    metadata:
+      labels:
+        app: postgraphile
+    spec:
+      containers:
+      - name: postgraphile
+        image: graphile/postgraphile:latest
+        ports:
+        - containerPort: 5001
+        envFrom:
+        - configMapRef:
+            name: postgraphile-config
+        command:
+        - postgraphile
+        - --connection
+        - $(DATABASE_URL)
+        - --host
+        - 0.0.0.0
+        - --port
+        - "5001"
+        - --cors
+        - --enhance-graphiql
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /graphql
+            port: 5001
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /graphql
+            port: 5001
+          initialDelaySeconds: 5
+          periodSeconds: 5

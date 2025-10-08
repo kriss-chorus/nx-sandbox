@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: github-dashboard
+  labels:
+    app: github-dashboard
+    'internal:operations:Environment': 'development'
+    'internal:operations:Owner': 'DevOps'
+    'internal:compliance:Framework': 'HIPAA'
+    'internal:cost-allocation:Application': 'github-dashboard'
+    'internal:cost-allocation:Client': 'internal'
