@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
     "types": ["node"],
@@ -19,7 +19,7 @@
   ],
   "references": [
     {
-      "path": "../../common/tsconfig.lib.json"
+      "path": "../../common"
     }
   ]
 }

@@ -81,21 +81,30 @@
     "packages/github-dashboard/*"
   ],
   "dependencies": {
+    "@apollo/gateway": "^2.11.2",
+    "@apollo/server": "^5.0.0",
+    "@apollo/subgraph": "^2.11.2",
+    "@as-integrations/express5": "^1.1.2",
+    "@as-integrations/fastify": "^3.0.0",
     "@emotion/react": "11.11.1",
     "@emotion/styled": "11.11.0",
     "@mui/icons-material": "^5.15.0",
     "@mui/material": "^5.15.0",
+    "@nestjs/apollo": "^13.2.1",
     "@nestjs/axios": "^3.0.1",
     "@nestjs/common": "^11.0.0",
     "@nestjs/core": "^11.0.0",
+    "@nestjs/graphql": "^13.2.0",
     "@nestjs/platform-express": "^11.0.0",
     "axios": "^1.6.0",
     "express": "^4.21.2",
+    "graphql": "^16.11.0",
     "postgraphile": "^4.14.1",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-router-dom": "6.29.0",
     "reflect-metadata": "^0.1.13",
-    "rxjs": "^7.8.0"
+    "rxjs": "^7.8.0",
+    "ts-morph": "^27.0.0"
   }
 }

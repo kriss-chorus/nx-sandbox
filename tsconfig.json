@@ -4,9 +4,6 @@
   "files": [],
   "references": [
     {
-      "path": "./packages/common"
-    },
-    {
       "path": "./packages/github-dashboard/api-e2e"
     },
     {
@@ -17,6 +14,12 @@
     },
     {
       "path": "./packages/github-dashboard/web"
+    },
+    {
+      "path": "./packages/test-app/client"
+    },
+    {
+      "path": "./packages/test-app/api"
     }
   ]
 }
