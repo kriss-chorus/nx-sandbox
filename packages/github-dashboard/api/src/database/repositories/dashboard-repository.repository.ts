@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { BaseRepository } from '../base.repository';
-import { dashboardRepositories, type DashboardRepository, type NewDashboardRepository } from '../entities/dashboard-repository.entity';
+import { dashboardRepositories, type DashboardRepository, type NewDashboardRepository } from '../entities';
 import { eq, and } from 'drizzle-orm';
 
 @Injectable()
