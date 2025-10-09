@@ -1,4 +1,4 @@
-# 🐙 GitHub Dashboard - Full Stack Learning Journey
+# Demo 1: Full Stack App - GitHub Dashboard
 
 > **About This Document:** This is my journey building a modern full-stack application using LLM/Cursor AI assistance. It documents both the technical implementation and the meta-learning about building with AI tools. The goal is to understand the stack deeply, not just make it work.
 

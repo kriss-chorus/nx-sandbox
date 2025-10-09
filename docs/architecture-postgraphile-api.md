@@ -1,4 +1,4 @@
-# GitHub Dashboard: API Cleanup (PostGraphile + Frontend)
+# Architecture: PostGraphile API - Cleanup & Frontend Integration
 
 ## Overview
 This document reflects the current, kept architecture after cleanup:

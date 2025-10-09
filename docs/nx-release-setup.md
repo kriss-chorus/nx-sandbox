@@ -1,3 +1,5 @@
+# Nx Release Setup - Commands & Configuration
+
 ## POC overview
 
 - **Projects**: `common` (lib), `api` (depends on `common`), `client` (independent)

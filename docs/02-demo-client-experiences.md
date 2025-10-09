@@ -1,4 +1,4 @@
-# Client Experiences Plan (Basic vs Premium)
+# Demo 2: Client Experiences - Basic vs Premium
 
 Purpose: Implement and demo two distinct client experiences (frontend + backend) without auth, using a multi-tenant model (clients) and tier-based entitlements.
 
@@ -11,7 +11,7 @@ Purpose: Implement and demo two distinct client experiences (frontend + backend)
 ## Key Decisions
 - No auth: UI uses an “Active Client” selector; backend receives X-Demo-Client-Id to simulate tenancy
 - Entitlements live on client tier (NOT on dashboard type)
-- Dashboard type changes layout/UX only (never entitlements)
+- Dashboard type changes layout/UX only
 
 ---
 
@@ -21,24 +21,43 @@ Purpose: Implement and demo two distinct client experiences (frontend + backend)
   - id uuid pk default gen_random_uuid()
   - code varchar(32) unique not null  // 'basic' | 'premium'
   - name varchar(64) not null
-  - features jsonb default '{}'::jsonb (optional)
+  - created_at timestamp default now()
+  - updated_at timestamp default now()
+- Create table `features`:
+  - id uuid pk default gen_random_uuid()
+  - code varchar(32) unique not null  // 'export', 'summary', 'type_chips'
+  - name varchar(64) not null
+  - created_at timestamp default now()
+  - updated_at timestamp default now()
+- Create table `tier_type_features`:
+  - tier_type_id uuid not null references tier_types(id)
+  - feature_id uuid not null references features(id)
+  - primary key (tier_type_id, feature_id)
+- Create table `dashboard_types`:
+  - id uuid pk default gen_random_uuid()
+  - code varchar(32) unique not null  // 'user_activity', 'team_overview', 'project_focus'
+  - name varchar(64) not null
+  - created_at timestamp default now()
+  - updated_at timestamp default now()
 - Create table `clients`:
   - id uuid pk default gen_random_uuid()
   - name varchar(255) not null
   - tier_type_id uuid not null references tier_types(id)
-  - icon_url varchar(500) null
   - logo_url varchar(500) null
   - created_at timestamp default now()
   - updated_at timestamp default now()
 - Alter `dashboards`:
   - client_id uuid not null references clients(id)
-  - dashboard_type varchar(32) not null default 'user_activity'
+  - dashboard_type_id uuid not null references dashboard_types(id)
 
 ### Seeding
 - tier_types: basic, premium
+- features: export, summary, type_chips
+- tier_type_features: premium gets all features, basic gets none
+- dashboard_types: user_activity, team_overview, project_focus
 - clients:
-  - “Candy Corn Labs” (basic)  // icon_url/logo_url TBD
-  - "Haunted Hollow" (premium)  // icon_url/logo_url TBD
+  - "Candy Corn Labs" (basic)  // logo_url TBD
+  - "Haunted Hollow" (premium)  // logo_url TBD
 - Assign existing dashboards to one of the demo clients
 
 ### GraphQL (PostGraphile)
@@ -55,13 +74,19 @@ Purpose: Implement and demo two distinct client experiences (frontend + backend)
 ---
 
 ## Frontend (Shared Components, Two Experiences)
+### Routing Structure
+- `/` → Client Selection Page (choose between Candy Corn Labs Basic vs Haunted Hollow Premium)
+- `/dashboards` → Dashboard List Page (shows "My Dashboards" + Create Dashboard button)
+- `/dashboard/:slug` → Individual Dashboard Detail Page
+
 ### Active Client
-- Selector (top-right); load via PostGraphile; persist selection (state/localStorage)
+- Client Selection Page: Two client cards (Candy Corn Labs Basic, Haunted Hollow Premium)
+- Persist selection in localStorage; load via PostGraphile
 - Filter dashboards list by `clientId`
 - Show client brand: prefer logo_url in header, fallback icon_url, else initials
 
 ### Dashboard View
-- Guard: if dashboard.clientId ≠ activeClient.id → show “Not your client”
+- Guard: if dashboard.clientId ≠ activeClient.id → show "Not your client"
 - Map `client.tierType.code` → features:
   - basic: neutral styling, no Export, no Type Chips, no Summary
   - premium: premium header/badge, Type Chips, Summary bar, Export button
@@ -97,10 +122,16 @@ Purpose: Implement and demo two distinct client experiences (frontend + backend)
 - [x] Backend: create `tier_type_features` junction table
 - [x] Backend: alter `dashboards` (add `client_id`, `dashboard_type`)
 - [x] Backend: seed Candy Corn Labs (basic) and Haunted Hollow (premium)
+- [x] Frontend: Client Selection Page with two client cards
+- [x] Frontend: Dashboard List Page with "My Dashboards" and Create Dashboard button
+- [x] Frontend: Individual Dashboard Detail Page
 - [x] Frontend: Active Client selector + persist selection
 - [x] Frontend: filter dashboards by `clientId`
 - [x] Frontend: include client (tier, logo/icon) and dashboardType in queries
 - [x] Frontend: Fix PostGraphile field naming (`tierTypeByTierTypeId` vs `tierType`)
+- [x] Frontend: Fix GraphQL filter structure for clientId (direct UUID value not {equalTo: uuid})
+- [x] Frontend: Halloween orange colors for Candy Corn Labs
+- [x] Frontend: Remove 'Ltd' from Haunted Hollow references
 - [ ] Frontend: guard page on `clientId` mismatch
 - [ ] Frontend (premium): Type Chips + persist `dashboardType`
 - [ ] Frontend (premium): Summary bar (totals from `userActivities`)
@@ -145,3 +176,18 @@ Purpose: Implement and demo two distinct client experiences (frontend + backend)
   })<{ isPremium: boolean }>`
   ```
 - Files updated: `ClientSelectionPage.tsx` (ClientCard and ClientIcon styled components)
+
+**Issue: GraphQL Filter Structure**
+- Problem: GraphQL query failed with `Expected value of type "UUID", found {equalTo: "uuid"}` when filtering dashboards by clientId
+- Root Cause: The filter structure was using `{ clientId: { equalTo: clientId } }` but PostGraphile expects a direct UUID value
+- Solution: Changed filter structure from `{ clientId: { equalTo: clientId } }` to `{ clientId }`
+- Files updated: `useDashboardDataPostGraphile.ts`
+
+**Issue: Routing and Component Structure**
+- Problem: Monolithic Dashboard component was causing import errors and caching issues
+- Root Cause: Single component handling multiple responsibilities (client selection, dashboard list, dashboard detail)
+- Solution: Split into separate page components:
+  - `ClientSelectionPage` for `/` route
+  - `DashboardListPage` for `/dashboards` route  
+  - `DashboardDetailPage` for `/dashboard/:slug` route
+- Files updated: `App.tsx`, created new page components, removed old `Dashboard.tsx` and `ClientSelector.tsx`

@@ -1,4 +1,4 @@
-# Tilt PostGraphile Solution - Complete Fix
+# Troubleshooting: Tilt PostGraphile Solution - Complete Fix
 
 ## Issue Summary
 PostGraphile was not starting up when running `tilt up` in the GitHub Dashboard project. Multiple approaches were tried before finding the correct solution.

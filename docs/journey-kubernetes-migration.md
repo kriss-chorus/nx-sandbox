@@ -1,4 +1,4 @@
-# Kubernetes Migration Journey: From Docker Compose to K8s with Tilt
+# Journey: Kubernetes Migration - Docker Compose to K8s: From Docker Compose to K8s with Tilt
 
 ## 📋 Project Overview
 **Project**: GitHub Dashboard  
