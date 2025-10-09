@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { BaseRepository } from '../base.repository';
-import { dashboardRepositories, type DashboardRepository, type NewDashboardRepository } from '../entities';
+import { dashboardRepository, repository, type DashboardRepository, type NewDashboardRepository, type Repository, type NewRepository } from '../entities';
 import { eq, and } from 'drizzle-orm';
 
 @Injectable()
-export class DashboardRepositoryRepository extends BaseRepository<typeof dashboardRepositories> {
+export class DashboardRepositoryRepository extends BaseRepository<typeof dashboardRepository> {
   constructor() {
-    super(dashboardRepositories);
+    super(dashboardRepository);
   }
 
   /**
@@ -14,15 +14,33 @@ export class DashboardRepositoryRepository extends BaseRepository<typeof dashboa
    */
   async addRepositoryToDashboard(dashboardId: string, name: string, githubRepoId: number): Promise<DashboardRepository> {
     const [owner, repoName] = name.split('/');
-    const newRepo: NewDashboardRepository = {
+    
+    // First, find or create the repository record
+    let repoRecord = await this.db
+      .select()
+      .from(repository)
+      .where(eq(repository.githubRepoId, githubRepoId))
+      .limit(1);
+    
+    if (repoRecord.length === 0) {
+      // Create new repository record
+      const newRepo: NewRepository = {
+        githubRepoId,
+        name: repoName,
+        owner,
+        fullName: name,
+      };
+      const [createdRepo] = await this.db.insert(repository).values(newRepo).returning();
+      repoRecord = [createdRepo];
+    }
+    
+    // Now create the dashboard-repository junction
+    const newDashboardRepo: NewDashboardRepository = {
       dashboardId,
-      githubRepoId,
-      name: repoName,
-      owner,
-      fullName: name,
+      repositoryId: repoRecord[0].id,
     };
     
-    const [result] = await this.db.insert(this.table).values(newRepo).returning();
+    const [result] = await this.db.insert(this.table).values(newDashboardRepo).returning();
     return result;
   }
 
@@ -30,14 +48,23 @@ export class DashboardRepositoryRepository extends BaseRepository<typeof dashboa
    * Remove a repository from a dashboard
    */
   async removeRepositoryFromDashboard(dashboardId: string, name: string): Promise<void> {
-    await this.db
-      .delete(this.table)
-      .where(
-        and(
-          eq(this.table.dashboardId, dashboardId),
-          eq(this.table.fullName, name)
-        )
-      );
+    // First find the repository by fullName
+    const repoRecord = await this.db
+      .select()
+      .from(repository)
+      .where(eq(repository.fullName, name))
+      .limit(1);
+    
+    if (repoRecord.length > 0) {
+      await this.db
+        .delete(this.table)
+        .where(
+          and(
+            eq(this.table.dashboardId, dashboardId),
+            eq(this.table.repositoryId, repoRecord[0].id)
+          )
+        );
+    }
   }
 
   /**
@@ -45,8 +72,9 @@ export class DashboardRepositoryRepository extends BaseRepository<typeof dashboa
    */
   async getDashboardRepositories(dashboardId: string): Promise<string[]> {
     const repos = await this.db
-      .select({ fullName: this.table.fullName })
+      .select({ fullName: repository.fullName })
       .from(this.table)
+      .innerJoin(repository, eq(this.table.repositoryId, repository.id))
       .where(eq(this.table.dashboardId, dashboardId));
     
     return repos.map(repo => repo.fullName);
@@ -59,7 +87,8 @@ export class DashboardRepositoryRepository extends BaseRepository<typeof dashboa
     return await this.db
       .select()
       .from(this.table)
-      .where(eq(this.table.fullName, name));
+      .innerJoin(repository, eq(this.table.repositoryId, repository.id))
+      .where(eq(repository.fullName, name));
   }
 
   /**
@@ -69,10 +98,11 @@ export class DashboardRepositoryRepository extends BaseRepository<typeof dashboa
     const result = await this.db
       .select()
       .from(this.table)
+      .innerJoin(repository, eq(this.table.repositoryId, repository.id))
       .where(
         and(
           eq(this.table.dashboardId, dashboardId),
-          eq(this.table.fullName, name)
+          eq(repository.fullName, name)
         )
       )
       .limit(1);

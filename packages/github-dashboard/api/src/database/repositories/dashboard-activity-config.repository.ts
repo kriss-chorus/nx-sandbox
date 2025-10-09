@@ -21,81 +21,48 @@ export class DashboardActivityConfigRepository extends BaseRepository<typeof das
 
   /**
    * Get enabled activity configurations for a dashboard
+   * Since we removed the enabled column, all configs returned are enabled
    */
   async getEnabledConfigs(dashboardId: string): Promise<DashboardActivityConfig[]> {
-    return await this.db
-      .select()
-      .from(this.table)
-      .where(
-        and(
-          eq(this.table.dashboardId, dashboardId),
-          eq(this.table.enabled, true)
-        )
-      );
+    return await this.getDashboardConfigs(dashboardId);
   }
 
   /**
-   * Set activity configuration for a dashboard
+   * Add activity type to dashboard (enable it)
    */
-  async setActivityConfig(
+  async addActivityTypeToDashboard(
     dashboardId: string, 
-    activityTypeId: string, 
-    enabled: boolean,
-    dateRangeStart?: string,
-    dateRangeEnd?: string
+    activityTypeId: string
   ): Promise<DashboardActivityConfig> {
     const config: NewDashboardActivityConfig = {
       dashboardId,
-      activityTypeId,
-      enabled,
-      dateRangeStart,
-      dateRangeEnd
+      activityTypeId
     };
 
-    // Use upsert to either insert or update
+    // Insert new config (will fail if already exists due to unique constraint)
     const [result] = await this.db
       .insert(this.table)
       .values(config)
-      .onConflictDoUpdate({
-        target: [this.table.dashboardId, this.table.activityTypeId],
-        set: {
-          enabled,
-          dateRangeStart,
-          dateRangeEnd,
-          updatedAt: new Date()
-        }
-      })
       .returning();
 
     return result;
   }
 
   /**
-   * Update multiple activity configurations for a dashboard
+   * Remove activity type from dashboard (disable it)
    */
-  async updateDashboardConfigs(
+  async removeActivityTypeFromDashboard(
     dashboardId: string,
-    configs: Array<{
-      activityTypeId: string;
-      enabled: boolean;
-      dateRangeStart?: string;
-      dateRangeEnd?: string;
-    }>
-  ): Promise<DashboardActivityConfig[]> {
-    const results: DashboardActivityConfig[] = [];
-
-    for (const config of configs) {
-      const result = await this.setActivityConfig(
-        dashboardId,
-        config.activityTypeId,
-        config.enabled,
-        config.dateRangeStart,
-        config.dateRangeEnd
+    activityTypeId: string
+  ): Promise<void> {
+    await this.db
+      .delete(this.table)
+      .where(
+        and(
+          eq(this.table.dashboardId, dashboardId),
+          eq(this.table.activityTypeId, activityTypeId)
+        )
       );
-      results.push(result);
-    }
-
-    return results;
   }
 
   /**
@@ -109,6 +76,7 @@ export class DashboardActivityConfigRepository extends BaseRepository<typeof das
 
   /**
    * Check if an activity type is enabled for a dashboard
+   * Since we removed the enabled column, we just check if the config exists
    */
   async isActivityEnabled(dashboardId: string, activityTypeId: string): Promise<boolean> {
     const result = await this.db
@@ -117,8 +85,7 @@ export class DashboardActivityConfigRepository extends BaseRepository<typeof das
       .where(
         and(
           eq(this.table.dashboardId, dashboardId),
-          eq(this.table.activityTypeId, activityTypeId),
-          eq(this.table.enabled, true)
+          eq(this.table.activityTypeId, activityTypeId)
         )
       )
       .limit(1);

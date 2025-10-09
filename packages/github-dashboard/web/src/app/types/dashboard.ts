@@ -49,18 +49,22 @@ export interface DashboardType {
 export interface DashboardRepository {
   id: string;
   dashboardId: string;
-  githubRepoId: number;
-  name: string;
-  owner: string;
-  fullName: string;
+  repositoryId: string;
+  repositoryByRepositoryId?: {
+    id: string;
+    githubRepoId: number;
+    name: string;
+    owner: string;
+    fullName: string;
+  };
 }
 
 export interface ActivityType {
   id: string;
-  name: string;
+  code: string;
   displayName: string;
   description?: string;
-  category: string;
+  category?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -69,9 +73,7 @@ export interface ActivityConfig {
   id: string;
   dashboardId: string;
   activityTypeId: string;
-  enabled: boolean;
-  dateRangeStart?: string;
-  dateRangeEnd?: string;
+  createdAt: string;
   activityTypeByActivityTypeId: ActivityType;
 }
 

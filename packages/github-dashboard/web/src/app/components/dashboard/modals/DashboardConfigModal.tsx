@@ -23,6 +23,14 @@ import {
 import { Add, Close, Delete } from '@mui/icons-material';
 import { GitHubUser } from '../../../types/github';
 
+// Hardcoded activity types - these match the database
+// IDs are from the migration file: 0002_volatile_swarm.sql
+const ACTIVITY_TYPES = [
+  { id: '42c3b89d-2897-4109-a5e7-3406b773bbb4', code: 'prs_created', displayName: 'PRs Created' },
+  { id: 'dff9302a-d6f0-49d1-9fb3-6414801eab46', code: 'prs_merged', displayName: 'PRs Merged' },
+  { id: '7adbc498-4789-40ec-9be1-1bb3bf408e9f', code: 'prs_reviewed', displayName: 'PRs Reviewed' },
+];
+
 interface DashboardConfigModalProps {
   open: boolean;
   onClose: () => void;
@@ -32,7 +40,7 @@ interface DashboardConfigModalProps {
     activityConfig: any;
     dateRange: { start: string; end: string };
     isPublic: boolean;
-  }) => void;
+  }) => void | Promise<void>;
   initialRepositories: string[];
   initialUsers: GitHubUser[];
   initialActivityConfig: any;
@@ -59,6 +67,9 @@ export const DashboardConfigModal: React.FC<DashboardConfigModalProps> = ({
   const [isPublic, setIsPublic] = useState<boolean>(initialIsPublic);
   const [selectedRepoToAdd, setSelectedRepoToAdd] = useState<string>('');
   const [selectedUserToAdd, setSelectedUserToAdd] = useState<string>('');
+  const [saving, setSaving] = useState(false);
+
+  const hasOrgRepos = (organizationRepos?.length ?? 0) > 0;
 
   useEffect(() => {
     setRepositories(initialRepositories || []);
@@ -68,43 +79,55 @@ export const DashboardConfigModal: React.FC<DashboardConfigModalProps> = ({
     setIsPublic(initialIsPublic ?? true);
   }, [initialRepositories, initialUsers, initialActivityConfig, initialDateRange, initialIsPublic]);
 
-  const handleAddRepository = () => {
-    if (selectedRepoToAdd && !repositories.includes(selectedRepoToAdd)) {
-      setRepositories([...repositories, selectedRepoToAdd]);
-      setSelectedRepoToAdd('');
+  const addRepoFromInput = () => {
+    const value = selectedRepoToAdd.trim();
+    if (!value) return;
+    // Minimal owner/repo validation when free text
+    const isValid = hasOrgRepos || /.+\/.+/.test(value);
+    if (!isValid) return;
+    if (!repositories.includes(value)) {
+      setRepositories([...repositories, value]);
     }
+    setSelectedRepoToAdd('');
+  };
+
+  const handleAddRepository = () => {
+    addRepoFromInput();
   };
 
   const handleRemoveRepository = (repo: string) => {
     setRepositories(repositories.filter(r => r !== repo));
   };
 
-  const handleAddUser = () => {
-    if (selectedUserToAdd.trim()) {
-      const username = selectedUserToAdd.trim();
-      // Check if user already exists
-      if (!users.find(u => u.login === username)) {
-        const newUser = {
-          id: Date.now(), // Temporary ID
-          login: username,
-          name: username,
-          avatar_url: `https://github.com/${username}.png`,
-          html_url: `https://github.com/${username}`,
-          public_repos: 0,
-          followers: 0,
-          following: 0,
-          public_gists: 0,
-          created_at: '',
-          updated_at: ''
-        };
-        setUsers([...users, newUser]);
-        setSelectedUserToAdd('');
-      }
+  const addUserFromInput = () => {
+    const raw = selectedUserToAdd.trim();
+    if (!raw) return;
+    const username = raw.replace(/^@/, '');
+    if (!users.find(u => (u as any).login === username)) {
+      const newUser = {
+        id: Date.now(),
+        login: username,
+        name: username,
+        avatar_url: `https://github.com/${username}.png`,
+        html_url: `https://github.com/${username}`,
+        public_repos: 0,
+        followers: 0,
+        following: 0,
+        public_gists: 0,
+        created_at: '',
+        updated_at: ''
+      } as unknown as GitHubUser;
+      setUsers([...users, newUser]);
     }
+    setSelectedUserToAdd('');
+  };
+
+  const handleAddUser = () => {
+    addUserFromInput();
   };
 
   const handleRemoveUser = (userLogin: string) => {
-    setUsers(users.filter(u => u.login !== userLogin));
+    setUsers(users.filter(u => (u as any).login !== userLogin));
   };
 
   const handleActivityConfigChange = (key: string, value: boolean) => {
@@ -114,15 +137,22 @@ export const DashboardConfigModal: React.FC<DashboardConfigModalProps> = ({
     });
   };
 
-  const handleSave = () => {
-    onSave({
-      repositories,
-      users,
-      activityConfig,
-      dateRange,
-      isPublic
-    });
-    onClose();
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      await Promise.resolve(onSave({
+        repositories,
+        users,
+        activityConfig,
+        dateRange,
+        isPublic
+      }));
+      onClose();
+    } catch (e) {
+      console.error('Failed to save dashboard configuration', e);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -157,35 +187,47 @@ export const DashboardConfigModal: React.FC<DashboardConfigModalProps> = ({
                 </Typography>
                 
                 <Box display="flex" gap={2} mb={2}>
-                  <FormControl fullWidth>
-                    <InputLabel>Add Repository</InputLabel>
-                    <Select
-                      value={selectedRepoToAdd}
-                      onChange={(e) => setSelectedRepoToAdd(e.target.value)}
-                      MenuProps={{
-                        PaperProps: {
-                          style: {
-                            maxHeight: 300,
-                            zIndex: 9999
+                  {hasOrgRepos ? (
+                    <FormControl fullWidth>
+                      <InputLabel>Add Repository</InputLabel>
+                      <Select
+                        value={selectedRepoToAdd}
+                        onChange={(e) => setSelectedRepoToAdd(e.target.value)}
+                        MenuProps={{
+                          PaperProps: {
+                            style: {
+                              maxHeight: 300,
+                              zIndex: 9999
+                            }
                           }
-                        }
-                      }}
-                    >
-                      {(organizationRepos?.length ?? 0) > 0 ? (
-                        (organizationRepos || [])
+                        }}
+                      >
+                        {(organizationRepos || [])
                           .filter(repo => !repositories.includes(repo.full_name))
                           .map(repo => (
                             <MenuItem key={repo.full_name} value={repo.full_name}>
                               {repo.full_name}
                             </MenuItem>
                           ))
-                      ) : (
-                        <MenuItem disabled>
-                          Loading repositories...
-                        </MenuItem>
-                      )}
-                    </Select>
-                  </FormControl>
+                        }
+                      </Select>
+                    </FormControl>
+                  ) : (
+                    <TextField
+                      fullWidth
+                      label="Repository (owner/name)"
+                      placeholder="e.g., vercel/next.js"
+                      value={selectedRepoToAdd}
+                      onChange={(e) => setSelectedRepoToAdd(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          addRepoFromInput();
+                        }
+                      }}
+                      helperText="Press Enter to add"
+                    />
+                  )}
                   <Button
                     variant="outlined"
                     startIcon={<Add />}
@@ -224,7 +266,14 @@ export const DashboardConfigModal: React.FC<DashboardConfigModalProps> = ({
                     label="GitHub Username"
                     value={selectedUserToAdd}
                     onChange={(e) => setSelectedUserToAdd(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addUserFromInput();
+                      }
+                    }}
                     placeholder="e.g., octocat"
+                    helperText="Press Enter to add"
                   />
                   <Button
                     variant="outlined"
@@ -240,9 +289,9 @@ export const DashboardConfigModal: React.FC<DashboardConfigModalProps> = ({
                   {users.length > 0 && (
                     users.map(user => (
                       <Chip
-                        key={user.login}
-                        label={user.name || user.login}
-                        onDelete={() => handleRemoveUser(user.login)}
+                        key={(user as any).login}
+                        label={(user as any).name || (user as any).login}
+                        onDelete={() => handleRemoveUser((user as any).login)}
                         deleteIcon={<Delete />}
                       />
                     ))
@@ -261,16 +310,16 @@ export const DashboardConfigModal: React.FC<DashboardConfigModalProps> = ({
                 </Typography>
                 
                 <Grid container spacing={2}>
-                  {Object.entries(activityConfig).map(([key, enabled]) => (
-                    <Grid item xs={12} sm={6} key={key}>
+                  {ACTIVITY_TYPES.map((activityType) => (
+                    <Grid item xs={12} sm={6} key={activityType.id}>
                       <FormControlLabel
                         control={
                           <Switch
-                            checked={enabled as boolean}
-                            onChange={(e) => handleActivityConfigChange(key, e.target.checked)}
+                            checked={activityConfig[activityType.code] || false}
+                            onChange={(e) => handleActivityConfigChange(activityType.code, e.target.checked)}
                           />
                         }
-                        label={key.replace('track', '').replace(/([A-Z])/g, ' $1').trim()}
+                        label={activityType.displayName}
                       />
                     </Grid>
                   ))}
@@ -344,9 +393,9 @@ export const DashboardConfigModal: React.FC<DashboardConfigModalProps> = ({
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button onClick={handleSave} variant="contained">
-          Save Configuration
+        <Button onClick={onClose} disabled={saving}>Cancel</Button>
+        <Button onClick={handleSave} variant="contained" disabled={saving}>
+          {saving ? 'Saving...' : 'Save Configuration'}
         </Button>
       </DialogActions>
     </Dialog>

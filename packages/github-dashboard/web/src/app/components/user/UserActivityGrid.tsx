@@ -1,5 +1,4 @@
-import React from 'react';
-import { Grid, Box, Typography, Chip } from '@mui/material';
+import { Grid, Box, Typography } from '@mui/material';
 import { UserCard } from './UserCard';
 
 interface UserActivity {
@@ -24,7 +23,7 @@ interface UserActivity {
     commits?: number;
     issues?: number;
   };
-  repos?: any[];
+  repos?: unknown[];
 }
 
 interface UserActivityGridProps {
@@ -32,10 +31,10 @@ interface UserActivityGridProps {
   sortBy: 'prsCreated' | 'prsReviewed' | 'prsMerged' | 'totalActivity';
 }
 
-export const UserActivityGrid: React.FC<UserActivityGridProps> = ({
+export function UserActivityGrid({
   userActivities,
   sortBy
-}) => {
+}: UserActivityGridProps) {
   // Sort user activities based on the selected sort option
   const sortedActivities = [...userActivities].sort((a, b) => {
     const aValue = a.activity[sortBy] || 0;
@@ -53,7 +52,7 @@ export const UserActivityGrid: React.FC<UserActivityGridProps> = ({
           </Typography>
           <select
             value={sortBy}
-            onChange={(e) => {
+            onChange={() => {
               // This will be handled by parent component
             }}
             style={{
@@ -88,4 +87,4 @@ export const UserActivityGrid: React.FC<UserActivityGridProps> = ({
       </Grid>
     </Box>
   );
-};
+}

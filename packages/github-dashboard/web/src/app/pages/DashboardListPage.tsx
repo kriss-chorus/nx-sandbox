@@ -4,9 +4,9 @@ import { Box, Button, Typography } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
 import { useDashboardDataPostGraphile, useDashboardCRUD } from '../hooks/useDashboardDataPostGraphile';
 import { useClientData } from '../hooks/useClientData';
-import { DashboardList } from '../components/dashboard';
-import { CreateDashboardDialog } from '../components/dashboard';
-import { DashboardConfigModal } from '../components/dashboard';
+import { DashboardList } from '../components/dashboard/DashboardList';
+import { CreateDashboardDialog } from '../components/dashboard/modals/CreateDashboardDialog';
+import { DashboardConfigModal } from '../components/dashboard/modals/DashboardConfigModal';
 import { Dashboard as DashboardType } from '../types/dashboard';
 import { LoadingState } from '../components/common/LoadingState';
 import { ErrorState } from '../components/common/ErrorState';
@@ -30,7 +30,18 @@ export const DashboardListPage: React.FC = (): React.ReactElement => {
     activeClient?.id || undefined
   );
 
-  const { createDashboard, loading: creating, error: createError, saveActivityConfiguration } = useDashboardCRUD();
+  const { 
+    createDashboard, 
+    updateDashboard,
+    addRepositoryToDashboard,
+    upsertRepository,
+    addUserToDashboard,
+    createGithubUser,
+    getGithubUserByUsername,
+    loading: creating, 
+    error: createError, 
+    addActivityTypeToDashboard
+  } = useDashboardCRUD();
 
   const handleViewDashboard = (dashboard: DashboardType) => {
     navigate(`/dashboard/${dashboard.slug}`);
@@ -118,17 +129,99 @@ export const DashboardListPage: React.FC = (): React.ReactElement => {
         open={configDialogOpen}
         onClose={() => setConfigDialogOpen(false)}
         onSave={async (config) => {
-          // Minimal persistence: save date range if possible; others can be wired next
-          if (newDashboardId && config.dateRange?.start && config.dateRange?.end) {
-            try {
-              await saveActivityConfiguration(newDashboardId, config.dateRange);
-            } catch {}
+          console.log('DashboardListPage onSave called with config:', config);
+          if (!newDashboardId) {
+            console.log('No newDashboardId, returning early');
+            return;
           }
-          setConfigDialogOpen(false);
+          console.log('newDashboardId:', newDashboardId);
+          try {
+            // Persist dashboard visibility
+            await updateDashboard(newDashboardId, { isPublic: config.isPublic });
+
+            // Resolve and persist repositories
+            for (const full of (config.repositories || [])) {
+              try {
+                const value = (full || '').trim();
+                if (!value) continue;
+                const [owner, repo] = value.split('/');
+                if (!owner || !repo) continue;
+                // get repo details for id via backend proxy (handles auth/rate limits)
+                const resp = await fetch(`http://localhost:3001/api/github/repos/${owner}/${repo}`);
+                if (!resp.ok) continue;
+                const repoInfo = await resp.json();
+                const githubRepoId = repoInfo?.id;
+                if (!githubRepoId) continue;
+                const ownerName = repoInfo?.owner?.login || owner;
+                const displayName = repoInfo?.name || repo;
+                const fullName = repoInfo?.full_name || `${owner}/${repo}`;
+                
+                // First create/upsert the repository
+                const repository = await upsertRepository({
+                  githubRepoId,
+                  name: displayName,
+                  owner: ownerName,
+                  fullName
+                });
+                
+                // Then add it to the dashboard
+                if (repository?.id) {
+                  await addRepositoryToDashboard(newDashboardId, repository.id);
+                }
+              } catch (err) {
+                console.error('Failed to resolve/persist repo', full, err);
+              }
+            }
+
+            // Ensure users exist and add them to the dashboard (best-effort per user)
+            for (const user of (config.users || [])) {
+              try {
+                const username = (user as any).login || (user as any).githubUsername;
+                if (!username) continue;
+                let ghUser: any;
+                try {
+                  ghUser = await getGithubUserByUsername(username);
+                } catch {
+                  ghUser = await createGithubUser(username, (user as any).name, (user as any).avatar_url);
+                }
+                if (ghUser?.id) {
+                  await addUserToDashboard(newDashboardId, ghUser.id);
+                }
+              } catch (err) {
+                console.error('Failed to attach user to dashboard', err);
+              }
+            }
+
+            // Persist activity types (date range is frontend-only)
+            if (config.activityConfig && Object.keys(config.activityConfig).length > 0) {
+              try {
+                console.log('Saving activity config:', config.activityConfig);
+                
+                // Save each selected activity type using the code directly
+                for (const [activityCode, enabled] of Object.entries(config.activityConfig)) {
+                  if (enabled) {
+                    console.log(`Saving activity type: ${activityCode}`);
+                    // Add activity type to dashboard using code (will resolve to ID in backend)
+                    await addActivityTypeToDashboard(newDashboardId, activityCode);
+                    console.log(`Successfully saved activity config for ${activityCode}`);
+                  }
+                }
+              } catch (err) {
+                console.error('Failed to save activity configuration', err);
+              }
+            } else {
+              console.log('No activity config to save');
+            }
+          } catch (e) {
+            console.error('Failed to save dashboard configuration', e);
+            throw e;
+          } finally {
+            setConfigDialogOpen(false);
+          }
         }}
         initialRepositories={[]}
         initialUsers={[]}
-        initialActivityConfig={{ trackPRsCreated: true, trackPRsMerged: true, trackPRsReviewed: true }}
+        initialActivityConfig={{ prs_created: true, prs_merged: true, prs_reviewed: true }}
         initialDateRange={{ start: '', end: '' }}
         initialIsPublic={true}
         organizationRepos={[]}

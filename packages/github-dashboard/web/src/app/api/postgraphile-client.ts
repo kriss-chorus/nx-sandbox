@@ -185,6 +185,24 @@ export const DASHBOARD_REPOSITORY_QUERIES = {
       nodes {
         id
         dashboardId
+        repositoryId
+        addedAt
+        repositoryByRepositoryId {
+          id
+          githubRepoId
+          name
+          owner
+          fullName
+        }
+      }
+    }
+  }`,
+
+  // Create or update repository
+  upsertRepository: `mutation UpsertRepository($input: CreateRepositoryInput!) {
+    createRepository(input: $input) {
+      repository {
+        id
         githubRepoId
         name
         owner
@@ -193,15 +211,14 @@ export const DASHBOARD_REPOSITORY_QUERIES = {
     }
   }`,
 
+  // Add repository to dashboard (join table)
   addRepository: `mutation AddRepositoryToDashboard($input: CreateDashboardRepositoryInput!) {
     createDashboardRepository(input: $input) {
       dashboardRepository {
         id
         dashboardId
-        githubRepoId
-        name
-        owner
-        fullName
+        repositoryId
+        addedAt
       }
     }
   }`,
@@ -220,26 +237,12 @@ export const ACTIVITY_CONFIG_QUERIES = {
         id
         dashboardId
         activityTypeId
-        enabled
-        dateRangeStart
-        dateRangeEnd
+        createdAt
         activityTypeByActivityTypeId {
           id
+          code
           displayName
         }
-      }
-    }
-  }`,
-
-  updateConfig: `mutation UpdateDashboardActivityConfig($id: UUID!, $input: DashboardActivityConfigPatch!) {
-    updateDashboardActivityConfigById(input: { id: $id, dashboardActivityConfigPatch: $input }) {
-      dashboardActivityConfig {
-        id
-        dashboardId
-        activityTypeId
-        enabled
-        dateRangeStart
-        dateRangeEnd
       }
     }
   }`,
@@ -250,10 +253,14 @@ export const ACTIVITY_CONFIG_QUERIES = {
         id
         dashboardId
         activityTypeId
-        enabled
-        dateRangeStart
-        dateRangeEnd
+        createdAt
       }
+    }
+  }`,
+
+  deleteConfig: `mutation DeleteDashboardActivityConfig($id: UUID!) {
+    deleteDashboardActivityConfigById(input: { id: $id }) {
+      deletedDashboardActivityConfigId
     }
   }`,
 };
@@ -263,6 +270,32 @@ export const ACTIVITY_TYPE_QUERIES = {
     allActivityTypes {
       nodes {
         id
+        code
+        displayName
+        createdAt
+        updatedAt
+      }
+    }
+  }`,
+  
+  // Alternative query names to try
+  getAllAlt1: `query GetAllActivityTypesAlt1 {
+    allActivity_types {
+      nodes {
+        id
+        code
+        displayName
+        createdAt
+        updatedAt
+      }
+    }
+  }`,
+  
+  getAllAlt2: `query GetAllActivityTypesAlt2 {
+    activityTypes {
+      nodes {
+        id
+        code
         displayName
         createdAt
         updatedAt
@@ -275,6 +308,8 @@ export const GITHUB_USER_MUTATIONS = {
   create: `mutation CreateGithubUser($input: CreateGithubUserInput!) {
     createGithubUser(input: $input) {
       githubUser {
+        id
+        githubUserId
         githubUsername
         displayName
         avatarUrl

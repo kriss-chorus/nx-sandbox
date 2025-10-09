@@ -12,7 +12,6 @@ import {
 } from '@mui/material';
 import { ArrowBack, Settings as SettingsIcon } from '@mui/icons-material';
 import { GitHubUser } from '../../types/github';
-import { executeGraphQL, DASHBOARD_REPOSITORY_QUERIES } from '../api/postgraphile-client';
 
 interface UserActivity {
   user: GitHubUser;
@@ -40,8 +39,22 @@ export const DashboardDetailPage: React.FC = (): React.ReactElement => {
   const {
     dashboard: postgraphileDashboard,
     users: postgraphileUsers,
-    repositories: postgraphileRepositories
+    repositories: postgraphileRepositories,
+    activityConfigs: postgraphileActivityConfigs,
+    refetch
   } = useDashboardDataPostGraphile(dashboardSlug);
+
+  const {
+    updateDashboard,
+    addActivityTypeToDashboard,
+    removeActivityTypeFromDashboard,
+    upsertRepository,
+    addRepositoryToDashboard,
+    removeRepositoryFromDashboard,
+    upsertGithubUser,
+    addUserToDashboard,
+    removeUserFromDashboard
+  } = useDashboardCRUD();
 
   // State management
   const [startDate, setStartDate] = useState<string>('');
@@ -58,6 +71,35 @@ export const DashboardDetailPage: React.FC = (): React.ReactElement => {
   const selectedDashboard = postgraphileDashboard;
   const githubUsers = postgraphileUsers;
   const dashboardRepositories = postgraphileRepositories;
+  
+  // Convert activity configs to the format expected by the modal
+  const currentActivityConfig = postgraphileActivityConfigs.reduce((acc, config) => {
+    if (config.activityTypeByActivityTypeId?.code) {
+      acc[config.activityTypeByActivityTypeId.code] = true;
+    }
+    return acc;
+  }, {} as Record<string, boolean>);
+
+  // Convert users to the format expected by the modal
+  const currentUsers = postgraphileUsers.map(dashboardUser => ({
+    id: dashboardUser.githubUserByGithubUserId?.id || '',
+    login: dashboardUser.githubUserByGithubUserId?.githubUsername || '',
+    name: dashboardUser.githubUserByGithubUserId?.displayName || dashboardUser.githubUserByGithubUserId?.githubUsername || '',
+    avatar_url: dashboardUser.githubUserByGithubUserId?.avatarUrl || `https://github.com/${dashboardUser.githubUserByGithubUserId?.githubUsername}.png`,
+    html_url: dashboardUser.githubUserByGithubUserId?.profileUrl || `https://github.com/${dashboardUser.githubUserByGithubUserId?.githubUsername}`,
+    public_repos: 0,
+    followers: 0,
+    following: 0,
+    public_gists: 0,
+    created_at: '',
+    updated_at: ''
+  }));
+
+  // Convert repositories to the format expected by the modal
+  const currentRepositories = postgraphileRepositories.map(dashboardRepo => 
+    dashboardRepo.repositoryByRepositoryId?.fullName || ''
+  ).filter(Boolean);
+
 
   // Set default date range (last 30 days)
   useEffect(() => {
@@ -71,11 +113,11 @@ export const DashboardDetailPage: React.FC = (): React.ReactElement => {
 
   // Fetch user activities when dashboard, users, repositories, or date range changes
   const fetchUserActivities = useCallback(async () => {
-    if (!selectedDashboard || !startDate || !endDate || dashboardRepositories.length === 0 || githubUsers.length === 0) {
+    if (!selectedDashboard || githubUsers.length === 0) {
       return;
     }
 
-    const cacheKey = `${selectedDashboard.id}-${startDate}-${endDate}-${githubUsers.length}-${dashboardRepositories.length}`;
+    const cacheKey = `${selectedDashboard.id}-${githubUsers.length}`;
     if (fetchingRef.current === cacheKey) {
       return;
     }
@@ -84,57 +126,55 @@ export const DashboardDetailPage: React.FC = (): React.ReactElement => {
     try {
       setFetchingUsers(true);
       
-      const repoFullNames = dashboardRepositories.map(repo => repo.fullName);
-      const usernames = githubUsers.map(user => user.githubUsername);
 
-      const response = await executeGraphQL<{
-        githubUsersBatchActivitySummary: {
-          users: Array<{
-            username: string;
-            activity: {
-              prsCreated: number;
-              prsReviewed: number;
-              prsMerged: number;
-              totalActivity: number;
-              commits?: number;
-              issues?: number;
-            };
-            repos: Array<{
-              name: string;
-              full_name: string;
-              private: boolean;
-              updated_at: string;
-            }>;
-          }>;
+           // For now, create user activities with mock data since we don't have the batch activity summary query
+           // TODO: Implement proper activity data fetching when the backend query is available
+           const activities = githubUsers.map(dashboardUser => {
+        if (!dashboardUser?.githubUserByGithubUserId) {
+          return null;
+        }
+        
+        // Convert to GitHubUser format expected by UserActivityGrid
+        const githubUser: GitHubUser = {
+          id: parseInt(dashboardUser.githubUserByGithubUserId.id) || 0,
+          login: dashboardUser.githubUserByGithubUserId.githubUsername,
+          name: dashboardUser.githubUserByGithubUserId.displayName || dashboardUser.githubUserByGithubUserId.githubUsername,
+          avatar_url: dashboardUser.githubUserByGithubUserId.avatarUrl || `https://github.com/${dashboardUser.githubUserByGithubUserId.githubUsername}.png`,
+          html_url: dashboardUser.githubUserByGithubUserId.profileUrl || `https://github.com/${dashboardUser.githubUserByGithubUserId.githubUsername}`,
+          public_repos: 0,
+          followers: 0,
+          following: 0,
+          public_gists: 0,
+          created_at: '',
+          updated_at: ''
         };
-      }>(DASHBOARD_REPOSITORY_QUERIES.getBatchActivitySummary, {
-        usernames,
-        repoFullNames,
-        startDate,
-        endDate,
-      });
-
-      if (response.errors) {
-        throw new Error(response.errors[0].message);
-      }
-
-      const activities: UserActivity[] = response.data?.githubUsersBatchActivitySummary.users.map(userData => {
-        const githubUser = githubUsers.find(u => u.githubUsername === userData.username);
+        
+        // Mock activity data for now
+        const mockActivity = {
+          prsCreated: Math.floor(Math.random() * 10),
+          prsReviewed: Math.floor(Math.random() * 15),
+          prsMerged: Math.floor(Math.random() * 8),
+          totalActivity: 0, // Will be calculated
+          commits: Math.floor(Math.random() * 20),
+          issues: Math.floor(Math.random() * 5)
+        };
+        mockActivity.totalActivity = mockActivity.prsCreated + mockActivity.prsReviewed + mockActivity.prsMerged;
+        
         return {
-          user: githubUser!,
-          activity: userData.activity,
-          repos: userData.repos,
+          user: githubUser,
+          activity: mockActivity,
+          repos: [],
         };
-      }) || [];
+      }).filter(Boolean) || [];
 
-      setUserActivities(activities);
+           setUserActivities(activities.filter((activity): activity is UserActivity => activity !== null));
     } catch (error) {
       console.error('Error fetching user activities:', error);
     } finally {
       setFetchingUsers(false);
       fetchingRef.current = null;
     }
-  }, [selectedDashboard, startDate, endDate, dashboardRepositories, githubUsers]);
+  }, [selectedDashboard, dashboardRepositories, githubUsers]);
 
   useEffect(() => {
     fetchUserActivities();
@@ -149,8 +189,165 @@ export const DashboardDetailPage: React.FC = (): React.ReactElement => {
   };
 
   const handleConfigSave = async (config: any) => {
-    console.log('Save config:', config);
-    setConfigModalOpen(false);
+    if (!selectedDashboard?.id) {
+      return;
+    }
+    
+    try {
+      // Persist dashboard visibility
+      await updateDashboard(selectedDashboard.id, { isPublic: config.isPublic });
+
+      // Sync repositories - remove ones not in config, add new ones
+      const currentRepoFullNames = new Set(currentRepositories);
+      const newRepoFullNames = new Set(config.repositories || []);
+      
+      // Remove repositories that are no longer in the config
+      for (const fullName of currentRepoFullNames) {
+        if (!newRepoFullNames.has(fullName)) {
+          try {
+            // Find the dashboard-repository junction ID
+            const dashboardRepoToRemove = postgraphileRepositories.find(dr => 
+              dr.repositoryByRepositoryId?.fullName === fullName
+            );
+            if (dashboardRepoToRemove?.id) {
+              await removeRepositoryFromDashboard(dashboardRepoToRemove.id);
+            }
+          } catch (err) {
+            console.error('Failed to remove repository', fullName, err);
+          }
+        }
+      }
+      
+      // Add new repositories
+      for (const full of (config.repositories || [])) {
+        try {
+          const value = (full || '').trim();
+          if (!value) continue;
+          const [owner, repo] = value.split('/');
+          if (!owner || !repo) continue;
+          
+          // Skip if already exists
+          if (currentRepoFullNames.has(value)) {
+            continue;
+          }
+          
+          // get repo details for id via backend proxy (handles auth/rate limits)
+          const resp = await fetch(`http://localhost:3001/api/github/repos/${owner}/${repo}`);
+          if (!resp.ok) continue;
+          const repoInfo = await resp.json();
+          const githubRepoId = repoInfo?.id;
+          if (!githubRepoId) continue;
+          const ownerName = repoInfo?.owner?.login || owner;
+          const displayName = repoInfo?.name || repo;
+          const fullName = repoInfo?.full_name || `${owner}/${repo}`;
+          
+          // First create/upsert the repository
+          const repository = await upsertRepository({
+            githubRepoId,
+            name: displayName,
+            owner: ownerName,
+            fullName
+          });
+          
+          // Then add it to the dashboard
+          if (repository && typeof repository === 'object' && 'id' in repository) {
+            await addRepositoryToDashboard(selectedDashboard.id, (repository as { id: string }).id);
+          }
+        } catch (err) {
+          console.error('Failed to resolve/persist repo', full, err);
+        }
+      }
+
+      // Sync users - remove ones not in config, add new ones
+      const currentUserLogins = new Set(currentUsers.map(u => u.login));
+      const newUserLogins = new Set((config.users || []).map((u: any) => u.login));
+      
+      // Remove users that are no longer in the config
+      for (const userLogin of currentUserLogins) {
+        if (!newUserLogins.has(userLogin)) {
+          try {
+            // Find the user ID from current users
+            const userToRemove = currentUsers.find(u => u.login === userLogin);
+            if (userToRemove?.id) {
+              await removeUserFromDashboard(selectedDashboard.id, userToRemove.id);
+            }
+          } catch (err) {
+            console.error('Failed to remove user', userLogin, err);
+          }
+        }
+      }
+      
+      // Add new users
+      for (const user of (config.users || [])) {
+        try {
+          // Skip if already exists
+          if (currentUserLogins.has(user.login)) {
+            continue;
+          }
+          
+          const githubUser = await upsertGithubUser({
+            githubUserId: user.id?.toString() || user.login,
+            githubUsername: user.login,
+            displayName: user.name || user.login,
+            avatarUrl: user.avatar_url,
+            profileUrl: user.html_url
+          });
+          
+          console.log('upsertGithubUser returned:', githubUser);
+          
+          if (githubUser && typeof githubUser === 'object' && 'id' in githubUser) {
+            const userId = (githubUser as { id: string }).id;
+            console.log('Adding user to dashboard:', { dashboardId: selectedDashboard.id, userId });
+            const result = await addUserToDashboard(selectedDashboard.id, userId);
+            console.log('addUserToDashboard result:', result);
+          } else {
+            console.error('No user ID returned from upsertGithubUser:', githubUser);
+          }
+        } catch (err) {
+          console.error('Failed to persist user', user.login, err);
+        }
+      }
+
+      // Sync activity types - remove disabled ones, add enabled ones
+      const currentActivityCodes = new Set(Object.keys(currentActivityConfig));
+      
+      // Remove activity types that are no longer enabled
+      for (const activityCode of currentActivityCodes) {
+        if (!config.activityConfig?.[activityCode]) {
+          try {
+            // Find the activity type ID from the current configs
+            const configToRemove = postgraphileActivityConfigs.find(config => 
+              config.activityTypeByActivityTypeId?.code === activityCode
+            );
+            if (configToRemove?.activityTypeId) {
+              await removeActivityTypeFromDashboard(selectedDashboard.id, configToRemove.activityTypeId);
+            }
+          } catch (err) {
+            console.error('Failed to remove activity type', activityCode, err);
+          }
+        }
+      }
+      
+      // Add new activity types that are enabled
+      for (const [activityCode, enabled] of Object.entries(config.activityConfig || {})) {
+        if (enabled && !currentActivityCodes.has(activityCode)) {
+          try {
+            await addActivityTypeToDashboard(selectedDashboard.id, activityCode);
+          } catch (err) {
+            console.error('Failed to add activity type', activityCode, err);
+          }
+        }
+      }
+
+      // Refetch dashboard data to show the newly added users/repositories/activity configs
+      refetch();
+
+    } catch (e) {
+      console.error('Failed to save dashboard configuration', e);
+      throw e;
+    } finally {
+      setConfigModalOpen(false);
+    }
   };
 
   if (!selectedDashboard) {
@@ -207,7 +404,7 @@ export const DashboardDetailPage: React.FC = (): React.ReactElement => {
         onEndDateChange={setEndDate}
         onSortByChange={setSortBy}
         onRefreshStats={handleRefreshStats}
-        disabled={!startDate || !endDate || dashboardRepositories.length === 0 || fetchingUsers}
+        disabled={!startDate || !endDate || fetchingUsers}
       />
 
       {/* User Activity Grid */}
@@ -221,10 +418,11 @@ export const DashboardDetailPage: React.FC = (): React.ReactElement => {
         open={configModalOpen}
         onClose={() => setConfigModalOpen(false)}
         onSave={handleConfigSave}
-        initialRepositories={dashboardRepositories}
-        initialUsers={githubUsers}
-        initialActivityConfig={{}}
+        initialRepositories={currentRepositories}
+        initialUsers={currentUsers}
+        initialActivityConfig={currentActivityConfig}
         initialDateRange={{ start: startDate, end: endDate }}
+        initialIsPublic={selectedDashboard?.isPublic ?? true}
       />
     </DashboardContainer>
   );
