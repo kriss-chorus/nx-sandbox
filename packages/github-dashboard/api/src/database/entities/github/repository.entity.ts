@@ -1,6 +1,6 @@
 import { pgTable, uuid, varchar, integer, } from 'drizzle-orm/pg-core';
 
-// Dashboard Repositories junction table - many-to-many relationship
+// Repository table - stores unique repository information
 export const repository = pgTable('repository', {
   id: uuid('id').primaryKey().defaultRandom(),
   githubRepoId: integer('github_repo_id').notNull(),

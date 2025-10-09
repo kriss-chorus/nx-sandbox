@@ -1,17 +1,14 @@
-import { pgTable, uuid, boolean, timestamp, unique, foreignKey } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, timestamp, unique, foreignKey } from 'drizzle-orm/pg-core';
 import { dashboard } from './dashboard.entity';
 import { activityType } from '../github/activity-type.entity';
 
 // Dashboard Activity Config table - junction table linking dashboard to enabled activity types
+// Row exists = enabled, row doesn't exist = disabled
 export const dashboardActivityConfigs = pgTable('dashboard_activity_config', {
   id: uuid('id').primaryKey().defaultRandom(),
   dashboardId: uuid('dashboard_id').notNull(),
   activityTypeId: uuid('activity_type_id').notNull(),
-  enabled: boolean('enabled').default(true),
-  dateRangeStart: timestamp('date_range_start', { withTimezone: true }), // UTC timestamp
-  dateRangeEnd: timestamp('date_range_end', { withTimezone: true }), // UTC timestamp
   createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at'),
 }, (table) => ({
   // Unique constraint to prevent duplicate configs (short name)
   uniqueDashboardActivity: unique('dac_dash_act_unique').on(table.dashboardId, table.activityTypeId),
