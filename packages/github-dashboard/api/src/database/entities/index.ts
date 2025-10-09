@@ -15,6 +15,7 @@ export * from './dashboard/dashboard-repository.entity';
 // GitHub entities
 export * from './github/github-user.entity';
 export * from './github/activity-type.entity';
+export * from './github/repository.entity';
 
 // Client entities
 export * from './client/client.entity';

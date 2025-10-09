@@ -22,6 +22,13 @@
       "when": 1759999070762,
       "tag": "0002_volatile_swarm",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1760027392951,
+      "tag": "0003_wooden_mariko_yashida",
+      "breakpoints": true
     }
   ]
 }

@@ -1,8 +1,8 @@
 import { pgTable, uuid, boolean, timestamp, unique, foreignKey } from 'drizzle-orm/pg-core';
-import { dashboards } from './dashboard.entity';
-import { activityTypes } from '../github/activity-type.entity';
+import { dashboard } from './dashboard.entity';
+import { activityType } from '../github/activity-type.entity';
 
-// Dashboard Activity Config table - junction table linking dashboards to enabled activity types
+// Dashboard Activity Config table - junction table linking dashboard to enabled activity types
 export const dashboardActivityConfigs = pgTable('dashboard_activity_config', {
   id: uuid('id').primaryKey().defaultRandom(),
   dashboardId: uuid('dashboard_id').notNull(),
@@ -19,12 +19,12 @@ export const dashboardActivityConfigs = pgTable('dashboard_activity_config', {
   dacDashboardFk: foreignKey({
     name: 'da_dashboard_fk',
     columns: [table.dashboardId],
-    foreignColumns: [dashboards.id],
+    foreignColumns: [dashboard.id],
   }),
   dacActivityTypeFk: foreignKey({
     name: 'dac_activity_type_fk',
     columns: [table.activityTypeId],
-    foreignColumns: [activityTypes.id],
+    foreignColumns: [activityType.id],
   }),
 }));
 

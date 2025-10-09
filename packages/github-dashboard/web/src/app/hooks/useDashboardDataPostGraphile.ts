@@ -89,7 +89,7 @@ export function useDashboardDataPostGraphile(slug?: string, clientId?: string): 
 
         const [usersResponse, repositoriesResponse, activityConfigsResponse] = await Promise.all([
           executeGraphQL<{
-            allDashboardGithubUsers: { nodes: DashboardUser[] };
+            alldashboardGithubUser: { nodes: DashboardUser[] };
           }>(DASHBOARD_USER_QUERIES.getByDashboard, { dashboardId: dashboard.id }),
           
           executeGraphQL<{
@@ -117,7 +117,7 @@ export function useDashboardDataPostGraphile(slug?: string, clientId?: string): 
         setData({
           dashboard,
           dashboards: [],
-          users: usersResponse.data?.allDashboardGithubUsers.nodes || [],
+          users: usersResponse.data?.alldashboardGithubUser.nodes || [],
           repositories: repositoriesResponse.data?.allDashboardRepositories.nodes || [],
           activityConfigs,
           activityTypes,
@@ -419,9 +419,24 @@ export function useDashboardCRUD() {
 
         return response.data?.updateDashboardActivityConfigById.dashboardActivityConfig;
       } else {
-        // If no config exists, we would need to create one, but for now just return success
-        console.log('No existing activity config found, date range not saved to database');
-        return null;
+        const createResp = await executeGraphQL<{
+          createDashboardActivityConfig: { dashboardActivityConfig: ActivityConfig };
+        }>(ACTIVITY_CONFIG_QUERIES.createConfig, {
+          input: {
+            dashboardActivityConfig: {
+              dashboardId,
+              enabled: true,
+              dateRangeStart: dateRange.start,
+              dateRangeEnd: dateRange.end
+            }
+          }
+        });
+
+        if (createResp.errors) {
+          throw new Error(createResp.errors[0].message);
+        }
+
+        return createResp.data?.createDashboardActivityConfig.dashboardActivityConfig;
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to save activity configuration';
