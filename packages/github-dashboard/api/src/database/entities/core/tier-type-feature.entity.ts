@@ -1,14 +1,14 @@
 import { pgTable, uuid, unique } from 'drizzle-orm/pg-core';
-import { tierTypes } from './tier-type.entity';
-import { features } from './feature.entity';
+import { tierType } from './tier-type.entity';
+import { feature } from './feature.entity';
 
-export const tierTypeFeatures = pgTable('tier_type_feature', {
+export const tierTypeFeature = pgTable('tier_type_feature', {
   id: uuid('id').primaryKey().defaultRandom(),
-  tierTypeId: uuid('tier_type_id').references(() => tierTypes.id).notNull(),
-  featureId: uuid('feature_id').references(() => features.id).notNull(),
+  tierTypeId: uuid('tier_type_id').references(() => tierType.id).notNull(),
+  featureId: uuid('feature_id').references(() => feature.id).notNull(),
 }, (table) => ({
   uniq: unique().on(table.tierTypeId, table.featureId),
 }));
 
-export type TierTypeFeature = typeof tierTypeFeatures.$inferSelect;
-export type NewTierTypeFeature = typeof tierTypeFeatures.$inferInsert;
+export type TierTypeFeature = typeof tierTypeFeature.$inferSelect;
+export type NewTierTypeFeature = typeof tierTypeFeature.$inferInsert;
