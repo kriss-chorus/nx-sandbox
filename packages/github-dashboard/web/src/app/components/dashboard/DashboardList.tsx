@@ -1,7 +1,8 @@
 import React from 'react';
-import { Box, Typography, Button, Grid, Card, CardContent, CardActions, Chip } from '@mui/material';
+import { Box, Typography, Button, Grid, CardContent, CardActions, Chip } from '@mui/material';
 import { Add, Visibility, Business, Star } from '@mui/icons-material';
-import { Dashboard as DashboardType } from '../types/dashboard';
+import { Dashboard as DashboardType } from '../../types/dashboard';
+import { GradientCard } from '../common/GradientCard';
 
 interface DashboardListProps {
   dashboards: DashboardType[];
@@ -36,10 +37,7 @@ export const DashboardList: React.FC<DashboardListProps> = ({
         
         return (
           <Grid item xs={12} sm={6} md={4} key={dashboard.id}>
-            <Card sx={{ 
-              border: isPremium ? '2px solid #667eea' : '1px solid #e0e0e0',
-              background: isPremium ? 'linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%)' : 'white'
-            }}>
+            <GradientCard isPremium={isPremium}>
               <CardContent>
                 <Box display="flex" alignItems="center" gap={1} mb={1}>
                   {dashboard.clientByClientId?.logoUrl ? (
@@ -94,7 +92,7 @@ export const DashboardList: React.FC<DashboardListProps> = ({
                   View Dashboard
                 </Button>
               </CardActions>
-            </Card>
+            </GradientCard>
           </Grid>
         );
       })}

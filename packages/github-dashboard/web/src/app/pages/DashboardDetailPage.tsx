@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import styled from '@emotion/styled';
 import { useDashboardDataPostGraphile, useDashboardCRUD } from '../hooks/useDashboardDataPostGraphile';
-import { DashboardConfigModal } from '../components/dashboard/modals';
+import { DashboardConfigModal } from '../components/dashboard';
 import { ActivitySettings } from '../components/activity';
 import { UserActivityGrid } from '../components/user';
 import { 
@@ -27,13 +27,6 @@ interface UserActivity {
   repos?: any[];
 }
 
-interface OrganizationRepository {
-  name: string;
-  full_name: string;
-  private: boolean;
-  updated_at: string;
-}
-
 const DashboardContainer = styled(Box)`
   padding: 24px;
   max-width: 1200px;
@@ -47,21 +40,8 @@ export const DashboardDetailPage: React.FC = (): React.ReactElement => {
   const {
     dashboard: postgraphileDashboard,
     users: postgraphileUsers,
-    repositories: postgraphileRepositories,
-    activityConfigs: postgraphileActivityConfigs
+    repositories: postgraphileRepositories
   } = useDashboardDataPostGraphile(dashboardSlug);
-
-  const {
-    createDashboard: createDashboardPostGraphile,
-    updateDashboard: updateDashboardPostGraphile,
-    addUserToDashboard: addUserToDashboardPostGraphile,
-    removeUserFromDashboard: removeUserFromDashboardPostGraphile,
-    addRepositoryToDashboard: addRepositoryToDashboardPostGraphile,
-    removeRepositoryFromDashboard: removeRepositoryFromDashboardPostGraphile,
-    createGithubUser: createGithubUserPostGraphile,
-    getGithubUserByUsername: getGithubUserByUsernamePostGraphile,
-    saveActivityConfiguration: saveActivityConfigurationPostGraphile,
-  } = useDashboardCRUD();
 
   // State management
   const [startDate, setStartDate] = useState<string>('');
@@ -169,7 +149,6 @@ export const DashboardDetailPage: React.FC = (): React.ReactElement => {
   };
 
   const handleConfigSave = async (config: any) => {
-    // TODO: Implement configuration save
     console.log('Save config:', config);
     setConfigModalOpen(false);
   };
