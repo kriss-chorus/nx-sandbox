@@ -89,7 +89,7 @@ export function useDashboardDataPostGraphile(slug?: string, clientId?: string): 
 
         const [usersResponse, repositoriesResponse, activityConfigsResponse] = await Promise.all([
           executeGraphQL<{
-            alldashboardGithubUser: { nodes: DashboardUser[] };
+            allDashboardGithubUsers: { nodes: DashboardUser[] };
           }>(DASHBOARD_USER_QUERIES.getByDashboard, { dashboardId: dashboard.id }),
           
           executeGraphQL<{
@@ -117,7 +117,7 @@ export function useDashboardDataPostGraphile(slug?: string, clientId?: string): 
         setData({
           dashboard,
           dashboards: [],
-          users: usersResponse.data?.alldashboardGithubUser.nodes || [],
+          users: usersResponse.data?.allDashboardGithubUsers.nodes || [],
           repositories: repositoriesResponse.data?.allDashboardRepositories.nodes || [],
           activityConfigs,
           activityTypes,

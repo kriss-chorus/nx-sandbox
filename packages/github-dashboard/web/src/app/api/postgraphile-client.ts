@@ -225,10 +225,7 @@ export const ACTIVITY_CONFIG_QUERIES = {
         dateRangeEnd
         activityTypeByActivityTypeId {
           id
-          name
           displayName
-          description
-          category
         }
       }
     }
@@ -246,6 +243,19 @@ export const ACTIVITY_CONFIG_QUERIES = {
       }
     }
   }`,
+
+  createConfig: `mutation CreateDashboardActivityConfig($input: CreateDashboardActivityConfigInput!) {
+    createDashboardActivityConfig(input: $input) {
+      dashboardActivityConfig {
+        id
+        dashboardId
+        activityTypeId
+        enabled
+        dateRangeStart
+        dateRangeEnd
+      }
+    }
+  }`,
 };
 
 export const ACTIVITY_TYPE_QUERIES = {
@@ -253,10 +263,7 @@ export const ACTIVITY_TYPE_QUERIES = {
     allActivityTypes {
       nodes {
         id
-        name
         displayName
-        description
-        category
         createdAt
         updatedAt
       }
