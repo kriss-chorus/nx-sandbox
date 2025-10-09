@@ -1,5 +1,5 @@
 import { pgTable, uuid, varchar, timestamp } from 'drizzle-orm/pg-core';
-import { tierTypes } from './tier-type.entity';
+import { tierTypes } from '../core/tier-type.entity';
 
 // Client/Organization (tenant)
 export const clients = pgTable('clients', {

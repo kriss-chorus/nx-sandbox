@@ -1,5 +1,5 @@
 import { pgTable, uuid, varchar, text, boolean, timestamp } from 'drizzle-orm/pg-core';
-import { clients } from './client.entity';
+import { clients } from '../client/client.entity';
 import { dashboardTypes } from './dashboard-type.entity';
 
 // Dashboards table - stores named dashboards
@@ -18,5 +18,3 @@ export const dashboards = pgTable('dashboards', {
 // Export types for TypeScript
 export type Dashboard = typeof dashboards.$inferSelect;
 export type NewDashboard = typeof dashboards.$inferInsert;
-
-

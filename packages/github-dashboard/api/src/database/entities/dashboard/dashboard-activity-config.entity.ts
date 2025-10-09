@@ -1,6 +1,6 @@
 import { pgTable, uuid, boolean, timestamp, unique, foreignKey } from 'drizzle-orm/pg-core';
 import { dashboards } from './dashboard.entity';
-import { activityTypes } from './activity-type.entity';
+import { activityTypes } from '../github/activity-type.entity';
 
 // Dashboard Activity Config table - junction table linking dashboards to enabled activity types
 export const dashboardActivityConfigs = pgTable('dashboard_activity_configs', {

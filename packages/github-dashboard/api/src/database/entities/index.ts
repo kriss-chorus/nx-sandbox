@@ -1,15 +1,23 @@
 // Export all entities from a single location
-export * from './dashboard.entity';
-export * from './github-user.entity';
-export * from './dashboard-github-user.entity';
-export * from './dashboard-repository.entity';
-export * from './dashboard-widget.entity';
-export * from './activity-type.entity';
-export * from './dashboard-activity-config.entity';
-export * from './tier-type.entity';
-export * from './client.entity';
-export * from './dashboard-type.entity';
-export * from './feature.entity';
-export * from './tier-type-feature.entity';
+
+// Core entities
+export * from './core/tier-type.entity';
+export * from './core/feature.entity';
+export * from './core/tier-type-feature.entity';
+
+// Dashboard entities
+export * from './dashboard/dashboard.entity';
+export * from './dashboard/dashboard-type.entity';
+export * from './dashboard/dashboard-activity-config.entity';
+export * from './dashboard/dashboard-github-user.entity';
+export * from './dashboard/dashboard-repository.entity';
+export * from './dashboard/dashboard-widget.entity';
+
+// GitHub entities
+export * from './github/github-user.entity';
+export * from './github/activity-type.entity';
+
+// Client entities
+export * from './client/client.entity';
 
 
