@@ -15,7 +15,7 @@ const ClientCard = styled(Paper, {
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  min-width: 300px;
+  width: 400px;
   transition: all 0.3s ease-in-out;
   background: ${({ isPremium }) =>
     isPremium
