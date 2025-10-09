@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { eq, and } from 'drizzle-orm';
 import { BaseRepository } from '../base.repository';
-import { dashboardGithubUsers, githubUsers, DashboardGithubUser, NewDashboardGithubUser, GitHubUser } from '../entities';
+import { dashboardGithubUser, githubUser, DashboardGithubUser, NewDashboardGithubUser, GitHubUser } from '../entities';
 
 @Injectable()
-export class DashboardUserRepository extends BaseRepository<typeof dashboardGithubUsers> {
+export class DashboardUserRepository extends BaseRepository<typeof dashboardGithubUser> {
   constructor() {
-    super(dashboardGithubUsers);
+    super(dashboardGithubUser);
   }
 
   /**
@@ -19,7 +19,7 @@ export class DashboardUserRepository extends BaseRepository<typeof dashboardGith
     };
     
     const [relation] = await this.db
-      .insert(dashboardGithubUsers)
+      .insert(dashboardGithubUser)
       .values(newRelation)
       .returning();
     return relation;
@@ -30,11 +30,11 @@ export class DashboardUserRepository extends BaseRepository<typeof dashboardGith
    */
   async removeUserFromDashboard(dashboardId: string, githubUserId: string): Promise<boolean> {
     const result = await this.db
-      .delete(dashboardGithubUsers)
+      .delete(dashboardGithubUser)
       .where(
         and(
-          eq(dashboardGithubUsers.dashboardId, dashboardId),
-          eq(dashboardGithubUsers.githubUserId, githubUserId)
+          eq(dashboardGithubUser.dashboardId, dashboardId),
+          eq(dashboardGithubUser.githubUserId, githubUserId)
         )
       );
     return result.rowCount > 0;
@@ -46,24 +46,24 @@ export class DashboardUserRepository extends BaseRepository<typeof dashboardGith
   async getUsersForDashboard(dashboardId: string): Promise<(DashboardGithubUser & { user: GitHubUser })[]> {
     return this.db
       .select({
-        id: dashboardGithubUsers.id,
-        dashboardId: dashboardGithubUsers.dashboardId,
-        githubUserId: dashboardGithubUsers.githubUserId,
-        addedAt: dashboardGithubUsers.addedAt,
+        id: dashboardGithubUser.id,
+        dashboardId: dashboardGithubUser.dashboardId,
+        githubUserId: dashboardGithubUser.githubUserId,
+        addedAt: dashboardGithubUser.addedAt,
         user: {
-          id: githubUsers.id,
-          githubUserId: githubUsers.githubUserId,
-          githubUsername: githubUsers.githubUsername,
-          displayName: githubUsers.displayName,
-          avatarUrl: githubUsers.avatarUrl,
-          profileUrl: githubUsers.profileUrl,
-          createdAt: githubUsers.createdAt,
-          updatedAt: githubUsers.updatedAt,
+          id: githubUser.id,
+          githubUserId: githubUser.githubUserId,
+          githubUsername: githubUser.githubUsername,
+          displayName: githubUser.displayName,
+          avatarUrl: githubUser.avatarUrl,
+          profileUrl: githubUser.profileUrl,
+          createdAt: githubUser.createdAt,
+          updatedAt: githubUser.updatedAt,
         }
       })
-      .from(dashboardGithubUsers)
-      .innerJoin(githubUsers, eq(dashboardGithubUsers.githubUserId, githubUsers.id))
-      .where(eq(dashboardGithubUsers.dashboardId, dashboardId));
+      .from(dashboardGithubUser)
+      .innerJoin(githubUser, eq(dashboardGithubUser.githubUserId, githubUser.id))
+      .where(eq(dashboardGithubUser.dashboardId, dashboardId));
   }
 
   /**
@@ -72,11 +72,11 @@ export class DashboardUserRepository extends BaseRepository<typeof dashboardGith
   async isUserInDashboard(dashboardId: string, githubUserId: string): Promise<boolean> {
     const [relation] = await this.db
       .select()
-      .from(dashboardGithubUsers)
+      .from(dashboardGithubUser)
       .where(
         and(
-          eq(dashboardGithubUsers.dashboardId, dashboardId),
-          eq(dashboardGithubUsers.githubUserId, githubUserId)
+          eq(dashboardGithubUser.dashboardId, dashboardId),
+          eq(dashboardGithubUser.githubUserId, githubUserId)
         )
       )
       .limit(1);
@@ -89,7 +89,7 @@ export class DashboardUserRepository extends BaseRepository<typeof dashboardGith
   async getDashboardUserRelations(dashboardId: string): Promise<DashboardGithubUser[]> {
     return this.db
       .select()
-      .from(dashboardGithubUsers)
-      .where(eq(dashboardGithubUsers.dashboardId, dashboardId));
+      .from(dashboardGithubUser)
+      .where(eq(dashboardGithubUser.dashboardId, dashboardId));
   }
 }
