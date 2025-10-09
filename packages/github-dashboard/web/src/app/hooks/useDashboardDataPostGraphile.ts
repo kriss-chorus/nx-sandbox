@@ -153,6 +153,7 @@ export function useDashboardCRUD() {
     slug: string;
     description?: string;
     isPublic?: boolean;
+    clientId?: string;
   }) => {
     setLoading(true);
     setError(null);
@@ -160,7 +161,7 @@ export function useDashboardCRUD() {
     try {
       const response = await executeGraphQL<{
         createDashboard: { dashboard: Dashboard };
-      }>(DASHBOARD_QUERIES.create, { input });
+      }>(DASHBOARD_QUERIES.create, { input: { dashboard: input } });
 
       if (response.errors) {
         throw new Error(response.errors[0].message);

@@ -38,7 +38,7 @@ interface DashboardConfigModalProps {
   initialActivityConfig: any;
   initialDateRange: { start: string; end: string };
   initialIsPublic: boolean;
-  organizationRepos: any[];
+  organizationRepos?: any[];
 }
 
 export const DashboardConfigModal: React.FC<DashboardConfigModalProps> = ({
@@ -50,7 +50,7 @@ export const DashboardConfigModal: React.FC<DashboardConfigModalProps> = ({
   initialActivityConfig,
   initialDateRange,
   initialIsPublic,
-  organizationRepos
+  organizationRepos = []
 }) => {
   const [repositories, setRepositories] = useState<string[]>(initialRepositories);
   const [users, setUsers] = useState<GitHubUser[]>(initialUsers);
@@ -61,11 +61,11 @@ export const DashboardConfigModal: React.FC<DashboardConfigModalProps> = ({
   const [selectedUserToAdd, setSelectedUserToAdd] = useState<string>('');
 
   useEffect(() => {
-    setRepositories(initialRepositories);
-    setUsers(initialUsers);
-    setActivityConfig(initialActivityConfig);
-    setDateRange(initialDateRange);
-    setIsPublic(initialIsPublic);
+    setRepositories(initialRepositories || []);
+    setUsers(initialUsers || []);
+    setActivityConfig(initialActivityConfig || {});
+    setDateRange(initialDateRange || { start: '', end: '' });
+    setIsPublic(initialIsPublic ?? true);
   }, [initialRepositories, initialUsers, initialActivityConfig, initialDateRange, initialIsPublic]);
 
   const handleAddRepository = () => {
@@ -171,8 +171,8 @@ export const DashboardConfigModal: React.FC<DashboardConfigModalProps> = ({
                         }
                       }}
                     >
-                      {organizationRepos.length > 0 ? (
-                        organizationRepos
+                      {(organizationRepos?.length ?? 0) > 0 ? (
+                        (organizationRepos || [])
                           .filter(repo => !repositories.includes(repo.full_name))
                           .map(repo => (
                             <MenuItem key={repo.full_name} value={repo.full_name}>
@@ -237,7 +237,7 @@ export const DashboardConfigModal: React.FC<DashboardConfigModalProps> = ({
                 </Box>
 
                 <Box display="flex" flexWrap="wrap" gap={1}>
-                  {users.length > 0 ? (
+                  {users.length > 0 && (
                     users.map(user => (
                       <Chip
                         key={user.login}
@@ -246,11 +246,6 @@ export const DashboardConfigModal: React.FC<DashboardConfigModalProps> = ({
                         deleteIcon={<Delete />}
                       />
                     ))
-                  ) : (
-                    <>
-                      <Chip label="Free Text" color="primary" variant="outlined" />
-                      <Chip label="Octocat" color="secondary" variant="outlined" />
-                    </>
                   )}
                 </Box>
               </CardContent>
@@ -340,8 +335,7 @@ export const DashboardConfigModal: React.FC<DashboardConfigModalProps> = ({
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                   {isPublic 
                     ? "This dashboard will be visible to all users" 
-                    : "This dashboard will only be visible to you"
-                  }
+                    : "This dashboard will only be visible to you"}
                 </Typography>
               </CardContent>
             </Card>

@@ -6,6 +6,7 @@ export interface Dashboard {
   isPublic: boolean;
   createdAt: string;
   updatedAt: string;
+  dashboardType: DashboardType;
   clientByClientId?: {
     id: string;
     name: string;
@@ -37,6 +38,12 @@ export interface DashboardUser {
     avatarUrl?: string;
     profileUrl?: string;
   };
+}
+
+export interface DashboardType {
+  id: string;
+  code: string;
+  name: string;
 }
 
 export interface DashboardRepository {

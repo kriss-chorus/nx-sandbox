@@ -94,7 +94,7 @@ export const DASHBOARD_QUERIES = {
           name
         }
       }
-      dashboardType {
+      dashboardTypeByDashboardTypeId {
         id
         code
         name
