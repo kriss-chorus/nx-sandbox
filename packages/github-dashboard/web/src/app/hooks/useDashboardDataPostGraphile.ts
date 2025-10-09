@@ -5,15 +5,13 @@ import {
   DASHBOARD_USER_QUERIES, 
   DASHBOARD_REPOSITORY_QUERIES,
   ACTIVITY_CONFIG_QUERIES,
-  ACTIVITY_TYPE_QUERIES,
   GITHUB_USER_QUERIES,
   GITHUB_USER_MUTATIONS
 } from '../api/postgraphile-client';
 import { 
   Dashboard, 
   DashboardUser, 
-  DashboardRepository, 
-  ActivityType, 
+  DashboardRepository,
   ActivityConfig, 
   DashboardData 
 } from '../types/dashboard';
@@ -46,7 +44,7 @@ export function useDashboardDataPostGraphile(slug?: string, clientId?: string): 
 
         if (!slug) {
           // Build filter for client if provided
-          const filter = clientId ? { clientId: { equalTo: clientId } } : undefined;
+          const filter = clientId ? { clientId } : undefined;
           
           const dashboardsResponse = await executeGraphQL<{
             allDashboards: { nodes: Dashboard[] };
