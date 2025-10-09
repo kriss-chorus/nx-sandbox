@@ -74,6 +74,18 @@ export class GitHubController {
   }
 
   /**
+   * Get repository information
+   * GET /api/github/repos/:owner/:repo
+   */
+  @Get('repos/:owner/:repo')
+  async getRepository(
+    @Param('owner') owner: string,
+    @Param('repo') repo: string
+  ): Promise<GitHubRepo> {
+    return this.githubService.getRepository(owner, repo);
+  }
+
+  /**
    * Get pull requests for a repository
    * GET /api/github/repos/:owner/:repo/pulls?state=all&per_page=30&page=1
    */
