@@ -2,7 +2,7 @@ import { pgTable, uuid, varchar, timestamp } from 'drizzle-orm/pg-core';
 import { tierTypes } from '../core/tier-type.entity';
 
 // Client/Organization (tenant)
-export const clients = pgTable('clients', {
+export const clients = pgTable('client', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: varchar('name', { length: 255 }).notNull(),
   tierTypeId: uuid('tier_type_id').references(() => tierTypes.id).notNull(),

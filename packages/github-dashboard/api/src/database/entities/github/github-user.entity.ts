@@ -1,7 +1,7 @@
 import { pgTable, uuid, varchar, timestamp } from 'drizzle-orm/pg-core';
 
 // GitHub users table - stores unique user information
-export const githubUsers = pgTable('github_users', {
+export const githubUsers = pgTable('github_user', {
   id: uuid('id').primaryKey().defaultRandom(),
   githubUserId: varchar('github_user_id', { length: 50 }).notNull().unique(), // GitHub user ID (immutable)
   githubUsername: varchar('github_username', { length: 255 }).notNull(), // Current username (for display)

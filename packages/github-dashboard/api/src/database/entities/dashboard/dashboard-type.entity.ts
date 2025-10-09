@@ -1,7 +1,7 @@
 import { pgTable, uuid, varchar, timestamp, unique } from 'drizzle-orm/pg-core';
 
 // Normalized dashboard types (layout/experience)
-export const dashboardTypes = pgTable('dashboard_types', {
+export const dashboardTypes = pgTable('dashboard_type', {
   id: uuid('id').primaryKey().defaultRandom(),
   code: varchar('code', { length: 32 }).notNull(),
   name: varchar('name', { length: 64 }).notNull(),

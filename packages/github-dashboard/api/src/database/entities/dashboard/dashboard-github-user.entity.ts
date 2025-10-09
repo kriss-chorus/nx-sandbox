@@ -3,7 +3,7 @@ import { dashboards } from './dashboard.entity';
 import { githubUsers } from '../github/github-user.entity';
 
 // Junction table for many-to-many relationship between dashboards and GitHub users
-export const dashboardGithubUsers = pgTable('dashboard_github_users', {
+export const dashboardGithubUsers = pgTable('dashboard_github_user', {
   id: uuid('id').primaryKey().defaultRandom(),
   dashboardId: uuid('dashboard_id').references(() => dashboards.id, { onDelete: 'cascade' }).notNull(),
   githubUserId: uuid('github_user_id').references(() => githubUsers.id, { onDelete: 'cascade' }).notNull(),

@@ -2,7 +2,7 @@ import { pgTable, uuid, varchar, timestamp, integer, unique } from 'drizzle-orm/
 import { dashboards } from './dashboard.entity';
 
 // Dashboard Repositories junction table - many-to-many relationship
-export const dashboardRepositories = pgTable('dashboard_repositories', {
+export const dashboardRepositories = pgTable('dashboard_repository', {
   id: uuid('id').primaryKey().defaultRandom(),
   dashboardId: uuid('dashboard_id').notNull().references(() => dashboards.id, { onDelete: 'cascade' }),
   githubRepoId: integer('github_repo_id').notNull(),

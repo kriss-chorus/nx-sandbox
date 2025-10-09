@@ -3,7 +3,7 @@ import { clients } from '../client/client.entity';
 import { dashboardTypes } from './dashboard-type.entity';
 
 // Dashboards table - stores named dashboards
-export const dashboards = pgTable('dashboards', {
+export const dashboards = pgTable('dashboard', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: varchar('name', { length: 255 }).notNull(),
   slug: varchar('slug', { length: 255 }).notNull().unique(),

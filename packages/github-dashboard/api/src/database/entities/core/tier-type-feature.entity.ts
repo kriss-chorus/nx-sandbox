@@ -2,7 +2,7 @@ import { pgTable, uuid, unique } from 'drizzle-orm/pg-core';
 import { tierTypes } from './tier-type.entity';
 import { features } from './feature.entity';
 
-export const tierTypeFeatures = pgTable('tier_type_features', {
+export const tierTypeFeatures = pgTable('tier_type_feature', {
   id: uuid('id').primaryKey().defaultRandom(),
   tierTypeId: uuid('tier_type_id').references(() => tierTypes.id).notNull(),
   featureId: uuid('feature_id').references(() => features.id).notNull(),
