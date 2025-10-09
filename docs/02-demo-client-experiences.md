@@ -147,9 +147,6 @@ Purpose: Implement and demo two distinct client experiences (frontend + backend)
 - Enforce export entitlement server-side; other differences are UI-driven
 - Reuse ActivitySettings, UserActivityGrid, UserCard and compose features around them
 
-## Work Log
-- Use this section for quick timestamps and changes as you implement.
-
 ### Recent Issues and Solutions
 
 **Issue: Tilt Port Conflict**
