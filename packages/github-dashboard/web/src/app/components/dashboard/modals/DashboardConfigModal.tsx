@@ -1,26 +1,26 @@
 import { Add, Close, Delete } from '@mui/icons-material';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
   Box,
-  Typography,
-  Grid,
+  Button,
   Card,
   CardContent,
-  TextField,
   Chip,
-  IconButton,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   FormControlLabel,
-  Switch
+  Grid,
+  IconButton,
+  InputLabel,
+  MenuItem,
+  Select,
+  Switch,
+  TextField,
+  Typography
 } from '@mui/material';
-import { useState, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { GitHubUser } from '../../../../types/github';
 
@@ -67,13 +67,30 @@ export function DashboardConfigModal({
   const [saving, setSaving] = useState(false);
 
   const hasOrgRepos = (organizationRepos?.length ?? 0) > 0;
+  const initialValuesRef = useRef<{
+    repositories: string[];
+    users: GitHubUser[];
+    activityConfig: any;
+    isPublic: boolean;
+  }>({ repositories: [], users: [], activityConfig: {}, isPublic: true });
 
   useEffect(() => {
-    setRepositories(initialRepositories || []);
-    setUsers(initialUsers || []);
-    setActivityConfig(initialActivityConfig || {});
-    setIsPublic(initialIsPublic ?? true);
-  }, [initialRepositories, initialUsers, initialActivityConfig, initialIsPublic]);
+    if (open) {
+      // Capture initial values when modal opens
+      initialValuesRef.current = {
+        repositories: initialRepositories || [],
+        users: initialUsers || [],
+        activityConfig: initialActivityConfig || {},
+        isPublic: initialIsPublic ?? true
+      };
+      
+      setRepositories(initialValuesRef.current.repositories);
+      setUsers(initialValuesRef.current.users);
+      setActivityConfig(initialValuesRef.current.activityConfig);
+      setIsPublic(initialValuesRef.current.isPublic);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const addRepoFromInput = () => {
     const value = selectedRepoToAdd.trim();
