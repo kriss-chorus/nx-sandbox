@@ -21,13 +21,13 @@ k8s_yaml([
 
 # Build and deploy API image
 docker_build('github-dashboard-api:latest', 
-    'api',
+    '.',
     dockerfile='api/Dockerfile'
 )
 
 # Build and deploy Web image
 docker_build('github-dashboard-web:latest',
-    'web', 
+    '.', 
     dockerfile='web/Dockerfile'
 )
 
