@@ -4,7 +4,7 @@ import { dashboardRepository, repository, type DashboardRepository, type NewDash
 import { eq, and } from 'drizzle-orm';
 
 @Injectable()
-export class DashboardRepositoryRepository extends BaseRepository<typeof dashboardRepository> {
+export class DashboardRepositoryRepository extends BaseRepository<DashboardRepository, NewDashboardRepository, Partial<NewDashboardRepository>> {
   constructor() {
     super(dashboardRepository);
   }

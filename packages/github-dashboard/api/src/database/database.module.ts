@@ -10,7 +10,10 @@ import { DashboardActivityConfigRepository } from './repositories/dashboard-acti
 @Global()
 @Module({
   providers: [
-    DatabaseConnection,
+    {
+      provide: DatabaseConnection,
+      useFactory: () => DatabaseConnection.getInstance(),
+    },
     DashboardRepository,
     GitHubUserRepository,
     DashboardUserRepository,

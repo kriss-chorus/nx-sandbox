@@ -4,7 +4,7 @@ import { dashboardActivityConfigs, DashboardActivityConfig, NewDashboardActivity
 import { eq, and } from 'drizzle-orm';
 
 @Injectable()
-export class DashboardActivityConfigRepository extends BaseRepository<typeof dashboardActivityConfigs> {
+export class DashboardActivityConfigRepository extends BaseRepository<DashboardActivityConfig, NewDashboardActivityConfig, Partial<NewDashboardActivityConfig>> {
   constructor() {
     super(dashboardActivityConfigs);
   }
@@ -16,7 +16,7 @@ export class DashboardActivityConfigRepository extends BaseRepository<typeof das
     return await this.db
       .select()
       .from(this.table)
-      .where(eq(this.table.dashboardId, dashboardId));
+      .where(eq(this.table.dashboardId, dashboardId)) as DashboardActivityConfig[];
   }
 
   /**

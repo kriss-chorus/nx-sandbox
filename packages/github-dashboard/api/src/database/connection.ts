@@ -10,7 +10,7 @@ export class DatabaseConnection {
 	private db: ReturnType<typeof drizzle>;
 	private logger = new Logger(DatabaseConnection.name);
 
-	private constructor() {
+	constructor() {
 		this.initializeConnection();
 	}
 
