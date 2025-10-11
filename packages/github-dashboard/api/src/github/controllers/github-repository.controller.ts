@@ -1,6 +1,7 @@
 import { Controller, Get, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
-import { GitHubRepositoryService } from '../services/github-repository.service';
+
 import { GitHubRepo, GitHubPullRequest } from '../interfaces';
+import { GitHubRepositoryService } from '../services/github-repository.service';
 
 @Controller('github/repos')
 export class GitHubRepositoryController {

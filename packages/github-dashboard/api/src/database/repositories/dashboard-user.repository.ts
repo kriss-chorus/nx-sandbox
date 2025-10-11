@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { eq, and } from 'drizzle-orm';
+
 import { BaseRepository } from '../base.repository';
 import { dashboardGithubUser, githubUser, DashboardGithubUser, NewDashboardGithubUser, GitHubUser } from '../entities';
 

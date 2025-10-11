@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
+import { eq } from 'drizzle-orm';
+
 import { BaseRepository } from '../base.repository';
 import { activityType, ActivityType } from '../entities';
-import { eq } from 'drizzle-orm';
 
 @Injectable()
 export class ActivityTypeRepository extends BaseRepository<typeof activityType> {

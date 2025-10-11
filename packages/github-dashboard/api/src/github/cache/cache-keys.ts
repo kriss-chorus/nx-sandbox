@@ -9,7 +9,7 @@ export class CacheKeys {
    * @param repo Repository name
    * @param windowDays Number of days to look back (e.g., 90 for last 90 days)
    */
-  static prList(owner: string, repo: string, windowDays: number = 90): string {
+  static prList(owner: string, repo: string, windowDays = 90): string {
     return `repo:${owner}/${repo}:prs:updated:${windowDays}d`;
   }
 

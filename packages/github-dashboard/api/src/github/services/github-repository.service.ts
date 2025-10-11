@@ -1,8 +1,10 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+
+import { GitHubCacheService } from '../cache/github-cache.service';
 import { GitHubRepo, GitHubPullRequest } from '../interfaces';
 import { RateLimitService } from '../rate-limit.service';
-import { GitHubCacheService } from '../cache/github-cache.service';
+
 import { GitHubBaseService } from './github-base.service';
 import { GitHubRepositoryServiceInterface } from './interfaces/github-repository.service.interface';
 

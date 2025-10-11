@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
+import { eq, and } from 'drizzle-orm';
+
 import { BaseRepository } from '../base.repository';
 import { dashboardActivityConfigs, DashboardActivityConfig, NewDashboardActivityConfig } from '../entities';
-import { eq, and } from 'drizzle-orm';
 
 @Injectable()
 export class DashboardActivityConfigRepository extends BaseRepository<DashboardActivityConfig, NewDashboardActivityConfig, Partial<NewDashboardActivityConfig>> {

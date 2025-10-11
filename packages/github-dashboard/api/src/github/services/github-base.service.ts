@@ -1,8 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
+import { Injectable, Logger } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
-import { RateLimitService } from '../rate-limit.service';
+
 import { GitHubCacheService } from '../cache/github-cache.service';
+import { RateLimitService } from '../rate-limit.service';
+
 import { GitHubBaseServiceInterface } from './interfaces/github-base.service.interface';
 
 @Injectable()

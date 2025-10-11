@@ -1,4 +1,5 @@
 import { useState } from 'react';
+
 import { GitHubUser } from '../../types/github';
 
 interface UserActivity {

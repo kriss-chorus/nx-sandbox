@@ -1,6 +1,7 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
-import { GitHubUserService } from '../services/github-user.service';
+
 import { GitHubUser } from '../interfaces';
+import { GitHubUserService } from '../services/github-user.service';
 
 @Controller('github/users')
 export class GitHubUserController {

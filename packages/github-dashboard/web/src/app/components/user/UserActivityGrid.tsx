@@ -1,4 +1,5 @@
 import { Grid, Box, Typography } from '@mui/material';
+
 import { UserCard } from './UserCard';
 
 interface UserActivity {

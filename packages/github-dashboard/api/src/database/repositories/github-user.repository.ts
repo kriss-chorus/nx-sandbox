@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
+import { eq } from 'drizzle-orm';
+
 import { BaseRepository } from '../base.repository';
 import { githubUser, GitHubUser, NewGitHubUser } from '../entities';
-import { eq } from 'drizzle-orm';
 
 @Injectable()
 export class GitHubUserRepository extends BaseRepository<typeof githubUser> {

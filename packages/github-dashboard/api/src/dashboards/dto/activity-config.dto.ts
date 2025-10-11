@@ -1,5 +1,5 @@
-import { IsBoolean, IsOptional, IsString, IsArray, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
+import { IsBoolean, IsOptional, IsString, IsArray, ValidateNested } from 'class-validator';
 
 export class DateRangeDto {
   @IsOptional()

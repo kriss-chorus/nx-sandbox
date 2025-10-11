@@ -1,17 +1,18 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
 import styled from '@emotion/styled';
-import { useDashboardDataPostGraphile, useDashboardCRUD } from '../hooks/useDashboardDataPostGraphile';
-import { DashboardConfigModal } from '../components/dashboard';
-import { ActivitySettings } from '../components/activity';
-import { UserActivityGrid } from '../components/user';
+import { ArrowBack, Settings as SettingsIcon } from '@mui/icons-material';
 import { 
   Box, 
   Typography, 
   Button
 } from '@mui/material';
-import { ArrowBack, Settings as SettingsIcon } from '@mui/icons-material';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+
 import { GitHubUser } from '../../types/github';
+import { ActivitySettings } from '../components/activity';
+import { DashboardConfigModal } from '../components/dashboard';
+import { UserActivityGrid } from '../components/user';
+import { useDashboardDataPostGraphile, useDashboardCRUD } from '../hooks/useDashboardDataPostGraphile';
 
 interface UserActivity {
   user: GitHubUser;
@@ -32,7 +33,7 @@ const DashboardContainer = styled(Box)`
   margin: 0 auto;
 `;
 
-export const DashboardDetailPage: React.FC = (): React.ReactElement => {
+export function DashboardDetailPage() {
   const { dashboardSlug } = useParams<{ dashboardSlug: string }>();
   const navigate = useNavigate();
 
@@ -167,7 +168,7 @@ export const DashboardDetailPage: React.FC = (): React.ReactElement => {
         };
       }).filter(Boolean) || [];
 
-           setUserActivities(activities.filter((activity): activity is UserActivity => activity !== null));
+           setUserActivities(activities.filter((activity): activity is UserActivity => activity !== null) as UserActivity[]);
     } catch (error) {
       console.error('Error fetching user activities:', error);
     } finally {
@@ -292,14 +293,10 @@ export const DashboardDetailPage: React.FC = (): React.ReactElement => {
             avatarUrl: user.avatar_url,
             profileUrl: user.html_url
           });
-          
-          console.log('upsertGithubUser returned:', githubUser);
-          
+
           if (githubUser && typeof githubUser === 'object' && 'id' in githubUser) {
             const userId = (githubUser as { id: string }).id;
-            console.log('Adding user to dashboard:', { dashboardId: selectedDashboard.id, userId });
-            const result = await addUserToDashboard(selectedDashboard.id, userId);
-            console.log('addUserToDashboard result:', result);
+            await addUserToDashboard(selectedDashboard.id, userId);
           } else {
             console.error('No user ID returned from upsertGithubUser:', githubUser);
           }

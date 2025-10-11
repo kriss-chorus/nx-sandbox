@@ -1,15 +1,16 @@
+import { ArrowBack } from '@mui/icons-material';
+import { Box, Button, Typography } from '@mui/material';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, Typography } from '@mui/material';
-import { ArrowBack } from '@mui/icons-material';
-import { useDashboardDataPostGraphile, useDashboardCRUD } from '../hooks/useDashboardDataPostGraphile';
-import { useClientData } from '../hooks/useClientData';
+
+import { ErrorState } from '../components/common/ErrorState';
+import { LoadingState } from '../components/common/LoadingState';
 import { DashboardList } from '../components/dashboard/DashboardList';
 import { CreateDashboardDialog } from '../components/dashboard/modals/CreateDashboardDialog';
 import { DashboardConfigModal } from '../components/dashboard/modals/DashboardConfigModal';
+import { useClientData } from '../hooks/useClientData';
+import { useDashboardDataPostGraphile, useDashboardCRUD } from '../hooks/useDashboardDataPostGraphile';
 import { Dashboard as DashboardType } from '../types/dashboard';
-import { LoadingState } from '../components/common/LoadingState';
-import { ErrorState } from '../components/common/ErrorState';
 
 export const DashboardListPage: React.FC = (): React.ReactElement => {
   const navigate = useNavigate();
@@ -128,7 +129,7 @@ export const DashboardListPage: React.FC = (): React.ReactElement => {
       <DashboardConfigModal
         open={configDialogOpen}
         onClose={() => setConfigDialogOpen(false)}
-        onSave={async (config) => {
+        onSave={async (config: any) => {
           console.log('DashboardListPage onSave called with config:', config);
           if (!newDashboardId) {
             console.log('No newDashboardId, returning early');

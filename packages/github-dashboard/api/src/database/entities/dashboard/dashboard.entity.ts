@@ -1,5 +1,7 @@
 import { pgTable, uuid, varchar, text, boolean, timestamp } from 'drizzle-orm/pg-core';
+
 import { client } from '../client/client.entity';
+
 import { dashboardTypes } from './dashboard-type.entity';
 
 // dashboard table - stores named dashboard

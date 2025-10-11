@@ -1,16 +1,18 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+
 import databaseConfig from '../config/database.config';
 import githubConfig from '../config/github.config';
 
 // Database module
+import { DashboardsModule } from '../dashboards/dashboards.module';
 import { DatabaseModule } from '../database/database.module';
 
 // Feature modules
-import { DashboardsModule } from '../dashboards/dashboards.module';
 import { GitHubModule } from '../github/github.module';
+
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 
 
 @Module({

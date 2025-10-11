@@ -1,6 +1,7 @@
 import { pgTable, uuid, unique } from 'drizzle-orm/pg-core';
-import { tierType } from './tier-type.entity';
+
 import { feature } from './feature.entity';
+import { tierType } from './tier-type.entity';
 
 export const tierTypeFeature = pgTable('tier_type_feature', {
   id: uuid('id').primaryKey().defaultRandom(),

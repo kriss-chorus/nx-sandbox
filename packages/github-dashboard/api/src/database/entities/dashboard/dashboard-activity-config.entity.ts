@@ -1,6 +1,8 @@
 import { pgTable, uuid, timestamp, unique, foreignKey } from 'drizzle-orm/pg-core';
-import { dashboard } from './dashboard.entity';
+
 import { activityType } from '../github/activity-type.entity';
+
+import { dashboard } from './dashboard.entity';
 
 // Dashboard Activity Config table - junction table linking dashboard to enabled activity types
 // Row exists = enabled, row doesn't exist = disabled

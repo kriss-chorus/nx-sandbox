@@ -1,9 +1,10 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
 import { ClientSelectionPage } from './pages/ClientSelectionPage';
-import { DashboardListPage } from './pages/DashboardListPage';
 import { DashboardDetailPage } from './pages/DashboardDetailPage';
+import { DashboardListPage } from './pages/DashboardListPage';
 
 // Create Material-UI theme
 const theme = createTheme({

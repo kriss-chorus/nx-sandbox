@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { Add, Close, Delete } from '@mui/icons-material';
 import {
   Dialog,
   DialogTitle,
@@ -20,8 +20,9 @@ import {
   FormControlLabel,
   Switch
 } from '@mui/material';
-import { Add, Close, Delete } from '@mui/icons-material';
-import { GitHubUser } from '../../../types/github';
+import { useState, useEffect } from 'react';
+
+import { GitHubUser } from '../../../../types/github';
 
 // Hardcoded activity types - these match the database
 // IDs are from the migration file: 0002_volatile_swarm.sql
@@ -38,32 +39,28 @@ interface DashboardConfigModalProps {
     repositories: string[];
     users: GitHubUser[];
     activityConfig: any;
-    dateRange: { start: string; end: string };
     isPublic: boolean;
   }) => void | Promise<void>;
   initialRepositories: string[];
   initialUsers: GitHubUser[];
   initialActivityConfig: any;
-  initialDateRange: { start: string; end: string };
   initialIsPublic: boolean;
   organizationRepos?: any[];
 }
 
-export const DashboardConfigModal: React.FC<DashboardConfigModalProps> = ({
+export function DashboardConfigModal({
   open,
   onClose,
   onSave,
   initialRepositories,
   initialUsers,
   initialActivityConfig,
-  initialDateRange,
   initialIsPublic,
   organizationRepos = []
-}) => {
+}: DashboardConfigModalProps) {
   const [repositories, setRepositories] = useState<string[]>(initialRepositories);
   const [users, setUsers] = useState<GitHubUser[]>(initialUsers);
   const [activityConfig, setActivityConfig] = useState(initialActivityConfig);
-  const [dateRange, setDateRange] = useState(initialDateRange);
   const [isPublic, setIsPublic] = useState<boolean>(initialIsPublic);
   const [selectedRepoToAdd, setSelectedRepoToAdd] = useState<string>('');
   const [selectedUserToAdd, setSelectedUserToAdd] = useState<string>('');
@@ -75,9 +72,8 @@ export const DashboardConfigModal: React.FC<DashboardConfigModalProps> = ({
     setRepositories(initialRepositories || []);
     setUsers(initialUsers || []);
     setActivityConfig(initialActivityConfig || {});
-    setDateRange(initialDateRange || { start: '', end: '' });
     setIsPublic(initialIsPublic ?? true);
-  }, [initialRepositories, initialUsers, initialActivityConfig, initialDateRange, initialIsPublic]);
+  }, [initialRepositories, initialUsers, initialActivityConfig, initialIsPublic]);
 
   const addRepoFromInput = () => {
     const value = selectedRepoToAdd.trim();
@@ -144,7 +140,6 @@ export const DashboardConfigModal: React.FC<DashboardConfigModalProps> = ({
         repositories,
         users,
         activityConfig,
-        dateRange,
         isPublic
       }));
       onClose();
@@ -323,40 +318,6 @@ export const DashboardConfigModal: React.FC<DashboardConfigModalProps> = ({
                       />
                     </Grid>
                   ))}
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Date Range */}
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Date Range
-                </Typography>
-                
-                <Grid container spacing={2}>
-                  <Grid item xs={6}>
-                    <TextField
-                      fullWidth
-                      label="Start Date"
-                      type="date"
-                      value={dateRange.start}
-                      onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  </Grid>
-                  <Grid item xs={6}>
-                    <TextField
-                      fullWidth
-                      label="End Date"
-                      type="date"
-                      value={dateRange.end}
-                      onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  </Grid>
                 </Grid>
               </CardContent>
             </Card>

@@ -1,6 +1,7 @@
-import React from 'react';
-import { Card, Avatar, Box, Typography, Chip } from '@mui/material';
 import styled from '@emotion/styled';
+import { Card, Avatar, Box, Typography, Chip } from '@mui/material';
+import React from 'react';
+
 import { GitHubUser } from '../../types/github';
 
 const UserCardContainer = styled(Card)`

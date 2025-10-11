@@ -1,13 +1,16 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
-import { DashboardRepository } from '../database/repositories/dashboard.repository';
-import { GitHubUserRepository } from '../database/repositories/github-user.repository';
-import { DashboardUserRepository } from '../database/repositories/dashboard-user.repository';
-import { DashboardRepositoryRepository } from '../database/repositories/dashboard-repository.repository';
+
+import { Dashboard, DashboardGithubUser, GitHubUser, ActivityType, DashboardActivityConfig } from '../database/entities';
 import { ActivityTypeRepository } from '../database/repositories/activity-type.repository';
 import { DashboardActivityConfigRepository } from '../database/repositories/dashboard-activity-config.repository';
+import { DashboardRepositoryRepository } from '../database/repositories/dashboard-repository.repository';
+import { DashboardUserRepository } from '../database/repositories/dashboard-user.repository';
+import { DashboardRepository } from '../database/repositories/dashboard.repository';
+import { GitHubUserRepository } from '../database/repositories/github-user.repository';
 import { GitHubService } from '../github/github.service';
+
 import { CreateDashboardDto, UpdateDashboardDto, AddUserToDashboardDto, UpdateActivityConfigDto, ActivityConfigDto } from './dto';
-import { Dashboard, DashboardGithubUser, GitHubUser, ActivityType, DashboardActivityConfig } from '../database/entities';
+
 
 @Injectable()
 export class DashboardsService {

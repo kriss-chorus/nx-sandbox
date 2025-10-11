@@ -1,6 +1,6 @@
-import React from 'react';
-import { Box, Typography, Button, Grid, CardContent, CardActions, Chip } from '@mui/material';
 import { Add, Visibility, Business, Star } from '@mui/icons-material';
+import { Box, Typography, Button, Grid, CardContent, CardActions, Chip } from '@mui/material';
+
 import { Dashboard as DashboardType } from '../../types/dashboard';
 import { GradientCard } from '../common/GradientCard';
 
@@ -10,11 +10,11 @@ interface DashboardListProps {
   onViewDashboard: (dashboard: DashboardType) => void;
 }
 
-export const DashboardList: React.FC<DashboardListProps> = ({
+export function DashboardList({
   dashboards,
   onCreateDashboard,
   onViewDashboard
-}) => {
+}: DashboardListProps) {
   return (
     <Grid container spacing={3}>
       {/* Header and Create button */}

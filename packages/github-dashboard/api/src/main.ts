@@ -5,8 +5,9 @@
 
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app/app.module';
 import { postgraphile } from 'postgraphile';
+
+import { AppModule } from './app/app.module';
 import databaseConfig from './config/database.config';
 
 async function bootstrap() {

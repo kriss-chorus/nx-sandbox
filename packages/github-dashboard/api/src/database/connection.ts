@@ -1,8 +1,9 @@
+import { Logger } from '@nestjs/common';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import { Logger } from '@nestjs/common';
-import * as schema from '../database/schema';
+
 import databaseConfig from '../config/database.config';
+import * as schema from '../database/schema';
 
 export class DatabaseConnection {
 	private static instance: DatabaseConnection;

@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -8,6 +7,7 @@ import {
   Button,
   Box
 } from '@mui/material';
+import React from 'react';
 
 interface CreateDashboardDialogProps {
   open: boolean;

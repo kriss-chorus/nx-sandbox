@@ -1,10 +1,11 @@
+import { Box, Typography, Container } from '@mui/material';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Typography, Container } from '@mui/material';
-import { useClientData } from '../hooks/useClientData';
+
 import { ClientCard } from '../components/client/ClientCard';
-import { LoadingState } from '../components/common/LoadingState';
 import { ErrorState } from '../components/common/ErrorState';
+import { LoadingState } from '../components/common/LoadingState';
+import { useClientData } from '../hooks/useClientData';
 
 export const ClientSelectionPage: React.FC = (): React.ReactElement => {
   const navigate = useNavigate();

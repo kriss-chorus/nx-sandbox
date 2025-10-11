@@ -1,7 +1,7 @@
-import React from 'react';
-import { Box, Button, Paper, Typography } from '@mui/material';
-import { Business, Star } from '@mui/icons-material';
 import styled from '@emotion/styled';
+import { Business, Star } from '@mui/icons-material';
+import { Box, Button, Paper, Typography } from '@mui/material';
+import React from 'react';
 
 export interface ClientCardProps {
   name: string;

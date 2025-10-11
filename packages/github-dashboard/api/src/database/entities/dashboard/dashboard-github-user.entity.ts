@@ -1,6 +1,8 @@
 import { pgTable, uuid, timestamp, unique } from 'drizzle-orm/pg-core';
-import { dashboard } from './dashboard.entity';
+
 import { githubUser } from '../github/github-user.entity';
+
+import { dashboard } from './dashboard.entity';
 
 // Junction table for many-to-many relationship between dashboard and GitHub users
 export const dashboardGithubUser = pgTable('dashboard_github_user', {

@@ -1,10 +1,11 @@
-import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
+import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
+
+import { CacheKeys } from './cache/cache-keys';
+import { GitHubCacheService } from './cache/github-cache.service';
 import { GitHubUser, GitHubRepo, GitHubPullRequest } from './interfaces';
 import { RateLimitService } from './rate-limit.service';
-import { GitHubCacheService } from './cache/github-cache.service';
-import { CacheKeys } from './cache/cache-keys';
 
 @Injectable()
 export class GitHubService {
@@ -711,7 +712,7 @@ export class GitHubService {
       
       // Process PRs in parallel batches to avoid overwhelming the API
       const batchSize = 3; // Smaller batch size for reviews
-      let reviewedPRs = new Set<number>();
+      const reviewedPRs = new Set<number>();
       
       for (let i = 0; i < otherPRs.length; i += batchSize) {
         const batch = otherPRs.slice(i, i + batchSize);
@@ -1045,9 +1046,9 @@ export class GitHubService {
     repos: string[] = [], 
     startDate?: string, 
     endDate?: string,
-    includeReviews: boolean = true,
+    includeReviews = true,
     usersFilter: string[] = [],
-    noCache: boolean = false
+    noCache = false
   ): Promise<Array<{
     user: GitHubUser;
     activity: {
@@ -1222,7 +1223,7 @@ export class GitHubService {
     repoList: string[],
     startDate?: string,
     endDate?: string,
-    includeReviews: boolean = true
+    includeReviews = true
   ): Promise<{
     user: GitHubUser;
     activity: {

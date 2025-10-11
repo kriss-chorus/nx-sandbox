@@ -1,4 +1,5 @@
 import { pgTable, uuid, varchar, timestamp } from 'drizzle-orm/pg-core';
+
 import { tierType } from '../core/tier-type.entity';
 
 // Client/Organization (tenant)

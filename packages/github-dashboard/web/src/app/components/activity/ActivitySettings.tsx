@@ -1,4 +1,3 @@
-import React from 'react';
 import { 
   Box, 
   Typography, 
@@ -12,6 +11,7 @@ import {
   Select,
   MenuItem
 } from '@mui/material';
+import React from 'react';
 
 interface ActivitySettingsProps {
   startDate: string;

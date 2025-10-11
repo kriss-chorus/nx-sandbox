@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
+import { eq } from 'drizzle-orm';
+
 import { BaseRepository } from '../base.repository';
 import { dashboards, Dashboard, NewDashboard } from '../schema';
-import { eq } from 'drizzle-orm';
 
 @Injectable()
 export class DashboardRepository extends BaseRepository<Dashboard, NewDashboard, Partial<NewDashboard>> {

@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Param, Query, Body, HttpCode, HttpStatus } from '@nestjs/common';
+
 import { GitHubActivityService } from '../services/github-activity.service';
 
 @Controller('github/activity')
