@@ -1,5 +1,5 @@
-import { Add, Visibility, Business, Star } from '@mui/icons-material';
-import { Box, Typography, Button, Grid, CardContent, CardActions, Chip } from '@mui/material';
+import { Add, Business, Star, Visibility } from '@mui/icons-material';
+import { Box, Button, CardActions, CardContent, Chip, Grid, Typography } from '@mui/material';
 
 import { Dashboard as DashboardType } from '../../types/dashboard';
 import { GradientCard } from '../common/GradientCard';

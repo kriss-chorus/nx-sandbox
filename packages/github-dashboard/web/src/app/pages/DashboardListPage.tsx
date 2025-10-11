@@ -1,6 +1,6 @@
 import { ArrowBack } from '@mui/icons-material';
 import { Box, Button, Typography } from '@mui/material';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { ErrorState } from '../components/common/ErrorState';
@@ -9,10 +9,10 @@ import { DashboardList } from '../components/dashboard/DashboardList';
 import { CreateDashboardDialog } from '../components/dashboard/modals/CreateDashboardDialog';
 import { DashboardConfigModal } from '../components/dashboard/modals/DashboardConfigModal';
 import { useClientData } from '../hooks/useClientData';
-import { useDashboardDataPostGraphile, useDashboardCRUD } from '../hooks/useDashboardDataPostGraphile';
+import { useDashboardCRUD, useDashboardDataPostGraphile } from '../hooks/useDashboardDataPostGraphile';
 import { Dashboard as DashboardType } from '../types/dashboard';
 
-export const DashboardListPage: React.FC = (): React.ReactElement => {
+export const DashboardListPage = () => {
   const navigate = useNavigate();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
@@ -129,7 +129,12 @@ export const DashboardListPage: React.FC = (): React.ReactElement => {
       <DashboardConfigModal
         open={configDialogOpen}
         onClose={() => setConfigDialogOpen(false)}
-        onSave={async (config: any) => {
+        onSave={async (config: {
+          repositories: string[];
+          users: Array<{ login: string; githubUsername?: string; name?: string; avatar_url?: string }>;
+          activityConfig: Record<string, boolean>;
+          isPublic: boolean;
+        }) => {
           console.log('DashboardListPage onSave called with config:', config);
           if (!newDashboardId) {
             console.log('No newDashboardId, returning early');
@@ -166,8 +171,8 @@ export const DashboardListPage: React.FC = (): React.ReactElement => {
                 });
                 
                 // Then add it to the dashboard
-                if (repository?.id) {
-                  await addRepositoryToDashboard(newDashboardId, repository.id);
+                if (repository && typeof repository === 'object' && 'id' in repository) {
+                  await addRepositoryToDashboard(newDashboardId, (repository as { id: string }).id);
                 }
               } catch (err) {
                 console.error('Failed to resolve/persist repo', full, err);
@@ -177,13 +182,15 @@ export const DashboardListPage: React.FC = (): React.ReactElement => {
             // Ensure users exist and add them to the dashboard (best-effort per user)
             for (const user of (config.users || [])) {
               try {
-                const username = (user as any).login || (user as any).githubUsername;
+                const username = user.login || user.githubUsername;
                 if (!username) continue;
-                let ghUser: any;
+                let ghUser: { id: string } | null = null;
                 try {
-                  ghUser = await getGithubUserByUsername(username);
+                  const result = await getGithubUserByUsername(username);
+                  ghUser = result && typeof result === 'object' && 'id' in result ? result as { id: string } : null;
                 } catch {
-                  ghUser = await createGithubUser(username, (user as any).name, (user as any).avatar_url);
+                  const result = await createGithubUser(username, user.name || username, user.avatar_url || '');
+                  ghUser = result && typeof result === 'object' && 'id' in result ? result as { id: string } : null;
                 }
                 if (ghUser?.id) {
                   await addUserToDashboard(newDashboardId, ghUser.id);

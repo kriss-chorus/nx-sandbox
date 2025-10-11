@@ -38,14 +38,14 @@ interface DashboardConfigModalProps {
   onSave: (config: {
     repositories: string[];
     users: GitHubUser[];
-    activityConfig: any;
+    activityConfig: Record<string, boolean>;
     isPublic: boolean;
   }) => void | Promise<void>;
   initialRepositories: string[];
   initialUsers: GitHubUser[];
-  initialActivityConfig: any;
+  initialActivityConfig: Record<string, boolean>;
   initialIsPublic: boolean;
-  organizationRepos?: any[];
+  organizationRepos?: Array<{ full_name: string }>;
 }
 
 export function DashboardConfigModal({
@@ -70,7 +70,7 @@ export function DashboardConfigModal({
   const initialValuesRef = useRef<{
     repositories: string[];
     users: GitHubUser[];
-    activityConfig: any;
+    activityConfig: Record<string, boolean>;
     isPublic: boolean;
   }>({ repositories: [], users: [], activityConfig: {}, isPublic: true });
 
@@ -116,7 +116,7 @@ export function DashboardConfigModal({
     const raw = selectedUserToAdd.trim();
     if (!raw) return;
     const username = raw.replace(/^@/, '');
-    if (!users.find(u => (u as any).login === username)) {
+    if (!users.find(u => (u as GitHubUser).login === username)) {
       const newUser = {
         id: Date.now(),
         login: username,
@@ -129,7 +129,7 @@ export function DashboardConfigModal({
         public_gists: 0,
         created_at: '',
         updated_at: ''
-      } as unknown as GitHubUser;
+      } as GitHubUser;
       setUsers([...users, newUser]);
     }
     setSelectedUserToAdd('');
@@ -140,7 +140,7 @@ export function DashboardConfigModal({
   };
 
   const handleRemoveUser = (userLogin: string) => {
-    setUsers(users.filter(u => (u as any).login !== userLogin));
+    setUsers(users.filter(u => (u as GitHubUser).login !== userLogin));
   };
 
   const handleActivityConfigChange = (key: string, value: boolean) => {
@@ -153,12 +153,12 @@ export function DashboardConfigModal({
   const handleSave = async () => {
     try {
       setSaving(true);
-      await Promise.resolve(onSave({
+      await onSave({
         repositories,
         users,
         activityConfig,
         isPublic
-      }));
+      });
       onClose();
     } catch (e) {
       console.error('Failed to save dashboard configuration', e);
@@ -204,7 +204,7 @@ export function DashboardConfigModal({
                       <InputLabel>Add Repository</InputLabel>
                       <Select
                         value={selectedRepoToAdd}
-                        onChange={(e) => setSelectedRepoToAdd(e.target.value)}
+                        onChange={(e: React.ChangeEvent<{ value: unknown }>) => setSelectedRepoToAdd(e.target.value as string)}
                         MenuProps={{
                           PaperProps: {
                             style: {
@@ -230,8 +230,8 @@ export function DashboardConfigModal({
                       label="Repository (owner/name)"
                       placeholder="e.g., vercel/next.js"
                       value={selectedRepoToAdd}
-                      onChange={(e) => setSelectedRepoToAdd(e.target.value)}
-                      onKeyDown={(e) => {
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSelectedRepoToAdd(e.target.value)}
+                      onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                         if (e.key === 'Enter') {
                           e.preventDefault();
                           addRepoFromInput();
@@ -277,8 +277,8 @@ export function DashboardConfigModal({
                     fullWidth
                     label="GitHub Username"
                     value={selectedUserToAdd}
-                    onChange={(e) => setSelectedUserToAdd(e.target.value)}
-                    onKeyDown={(e) => {
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSelectedUserToAdd(e.target.value)}
+                    onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
                         addUserFromInput();
@@ -301,9 +301,9 @@ export function DashboardConfigModal({
                   {users.length > 0 && (
                     users.map(user => (
                       <Chip
-                        key={(user as any).login}
-                        label={(user as any).name || (user as any).login}
-                        onDelete={() => handleRemoveUser((user as any).login)}
+                        key={(user as GitHubUser).login}
+                        label={(user as GitHubUser).name || (user as GitHubUser).login}
+                        onDelete={() => handleRemoveUser((user as GitHubUser).login)}
                         deleteIcon={<Delete />}
                       />
                     ))
@@ -328,7 +328,7 @@ export function DashboardConfigModal({
                         control={
                           <Switch
                             checked={activityConfig[activityType.code] || false}
-                            onChange={(e) => handleActivityConfigChange(activityType.code, e.target.checked)}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleActivityConfigChange(activityType.code, e.target.checked)}
                           />
                         }
                         label={activityType.displayName}
@@ -352,7 +352,7 @@ export function DashboardConfigModal({
                   control={
                     <Switch
                       checked={isPublic}
-                      onChange={(e) => setIsPublic(e.target.checked)}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIsPublic(e.target.checked)}
                       color="primary"
                     />
                   }

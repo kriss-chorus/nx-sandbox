@@ -1,18 +1,18 @@
 import styled from '@emotion/styled';
 import { ArrowBack, Settings as SettingsIcon } from '@mui/icons-material';
-import { 
-  Box, 
-  Typography, 
-  Button
+import {
+  Box,
+  Button,
+  Typography
 } from '@mui/material';
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import { GitHubUser } from '../../types/github';
 import { ActivitySettings } from '../components/activity';
 import { DashboardConfigModal } from '../components/dashboard';
 import { UserActivityGrid } from '../components/user';
-import { useDashboardDataPostGraphile, useDashboardCRUD } from '../hooks/useDashboardDataPostGraphile';
+import { useDashboardCRUD, useDashboardDataPostGraphile } from '../hooks/useDashboardDataPostGraphile';
 
 interface UserActivity {
   user: GitHubUser;

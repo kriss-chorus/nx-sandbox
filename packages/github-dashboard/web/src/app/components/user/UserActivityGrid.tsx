@@ -1,4 +1,4 @@
-import { Grid, Box, Typography } from '@mui/material';
+import { Box, Grid, Typography } from '@mui/material';
 
 import { UserCard } from './UserCard';
 
