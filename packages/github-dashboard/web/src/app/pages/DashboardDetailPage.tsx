@@ -12,7 +12,7 @@ import { GitHubUser } from '../../types/github';
 import { ActivitySettings } from '../components/activity';
 import { DashboardConfigModal } from '../components/dashboard';
 import { UserActivityGrid } from '../components/user';
-import { useActivityConfigs, useDashboardMutations, useDashboardData, useDashboardRepositories, useDashboardUsers } from '../hooks';
+import { useActivityConfigs, useDashboardData, useDashboardMutations, useDashboardRepositories, useDashboardUsers } from '../hooks';
 
 interface UserActivity {
   user: GitHubUser;
@@ -60,6 +60,13 @@ export function DashboardDetailPage() {
 
   // Refs for tracking
   const fetchingRef = useRef<string | null>(null);
+
+  // Activity type code to UUID mapping
+  const ACTIVITY_TYPE_MAP: Record<string, string> = {
+    'prs_created': '42c3b89d-2897-4109-a5e7-3406b773bbb4',
+    'prs_merged': 'dff9302a-d6f0-49d1-9fb3-6414801eab46',
+    'prs_reviewed': '7adbc498-4789-40ec-9be1-1bb3bf408e9f',
+  };
 
   // Derived data
   const selectedDashboard = postgraphileDashboard;
@@ -316,7 +323,10 @@ export function DashboardDetailPage() {
       for (const [activityCode, enabled] of Object.entries(config.activityConfig || {})) {
         if (enabled && !currentActivityCodes.has(activityCode)) {
           try {
-            await addActivityTypeToDashboard(selectedDashboard.id, activityCode);
+            const activityTypeId = ACTIVITY_TYPE_MAP[activityCode];
+            if (activityTypeId) {
+              await addActivityTypeToDashboard(selectedDashboard.id, activityTypeId);
+            }
           } catch (err) {
             console.error('Failed to add activity type', activityCode, err);
           }

@@ -98,8 +98,8 @@ export function useDashboardUsers() {
       }>(GITHUB_USER_MUTATIONS.create, {
         input: {
           githubUser: {
-            username,
-            name: name || username,
+            githubUserId: username, // Use username as the GitHub user ID
+            githubUsername: username, // Use githubUsername field name
             avatarUrl: avatarUrl || `https://github.com/${username}.png`
           }
         }

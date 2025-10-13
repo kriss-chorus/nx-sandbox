@@ -1,2 +1,3 @@
 export { DashboardList } from './DashboardList';
-export { DashboardConfigModal, CreateDashboardDialog } from './modals';
+export { DashboardConfigModal } from './configuration';
+export { CreateDashboardDialog } from './modals';

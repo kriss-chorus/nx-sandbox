@@ -7,8 +7,8 @@ import { ErrorState } from '../components/common/ErrorState';
 import { LoadingState } from '../components/common/LoadingState';
 import { DashboardList } from '../components/dashboard/DashboardList';
 import { CreateDashboardDialog } from '../components/dashboard/modals/CreateDashboardDialog';
-import { DashboardConfigModal } from '../components/dashboard/modals/DashboardConfigModal';
-import { useActivityConfigs, useDashboardMutations, useDashboardData, useDashboardRepositories, useDashboardUsers } from '../hooks';
+import { DashboardConfigModal } from '../components/dashboard/configuration/DashboardConfigModal';
+import { useActivityConfigs, useDashboardData, useDashboardMutations, useDashboardRepositories, useDashboardUsers } from '../hooks';
 import { useClientData } from '../hooks/useClientData';
 import { Dashboard as DashboardType } from '../types/dashboard';
 
