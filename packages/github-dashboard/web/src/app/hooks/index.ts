@@ -8,3 +8,7 @@ export { useDashboardMutations } from './useDashboardMutations';
 export { useDashboardRepositories } from './useDashboardRepositories';
 export { useDashboardUsers } from './useDashboardUsers';
 
+// Complex logic hooks
+export { useDashboardConfigHandler } from './useDashboardConfigHandler';
+export { useUserActivityManager } from './useUserActivityManager';
+
