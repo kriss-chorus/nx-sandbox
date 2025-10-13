@@ -8,7 +8,7 @@ import { LoadingState } from '../components/common/LoadingState';
 import { DashboardList } from '../components/dashboard/DashboardList';
 import { CreateDashboardDialog } from '../components/dashboard/modals/CreateDashboardDialog';
 import { DashboardConfigModal } from '../components/dashboard/modals/DashboardConfigModal';
-import { useActivityConfigs, useDashboardCRUD, useDashboardData, useDashboardRepositories, useDashboardUsers } from '../hooks';
+import { useActivityConfigs, useDashboardMutations, useDashboardData, useDashboardRepositories, useDashboardUsers } from '../hooks';
 import { useClientData } from '../hooks/useClientData';
 import { Dashboard as DashboardType } from '../types/dashboard';
 
@@ -36,7 +36,7 @@ export const DashboardListPage = () => {
     updateDashboard,
     loading: creating, 
     error: createError
-  } = useDashboardCRUD();
+  } = useDashboardMutations();
 
   const { 
     addUserToDashboard,

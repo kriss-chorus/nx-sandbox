@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { DASHBOARD_QUERIES, executeGraphQL } from '../api/postgraphile-client';
 import { Dashboard } from '../types/dashboard';
 
-export function useDashboardCRUD() {
+export function useDashboardMutations() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

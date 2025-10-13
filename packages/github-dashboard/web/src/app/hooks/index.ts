@@ -2,9 +2,9 @@
 export { useClientData } from './useClientData';
 export { useDashboardData } from './useDashboardData';
 
-// CRUD operation hooks
+// Mutation operation hooks
 export { useActivityConfigs } from './useActivityConfigs';
-export { useDashboardCRUD } from './useDashboardCRUD';
+export { useDashboardMutations } from './useDashboardMutations';
 export { useDashboardRepositories } from './useDashboardRepositories';
 export { useDashboardUsers } from './useDashboardUsers';
 

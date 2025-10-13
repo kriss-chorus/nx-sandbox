@@ -12,7 +12,7 @@ import { GitHubUser } from '../../types/github';
 import { ActivitySettings } from '../components/activity';
 import { DashboardConfigModal } from '../components/dashboard';
 import { UserActivityGrid } from '../components/user';
-import { useActivityConfigs, useDashboardCRUD, useDashboardData, useDashboardRepositories, useDashboardUsers } from '../hooks';
+import { useActivityConfigs, useDashboardMutations, useDashboardData, useDashboardRepositories, useDashboardUsers } from '../hooks';
 
 interface UserActivity {
   user: GitHubUser;
@@ -45,7 +45,7 @@ export function DashboardDetailPage() {
     refetch
   } = useDashboardData(dashboardSlug || '');
 
-  const { updateDashboard } = useDashboardCRUD();
+  const { updateDashboard } = useDashboardMutations();
   const { upsertRepository, addRepositoryToDashboard, removeRepositoryFromDashboard } = useDashboardRepositories();
   const { createGithubUser, addUserToDashboard, removeUserFromDashboard } = useDashboardUsers();
   const { addActivityTypeToDashboard, removeActivityTypeFromDashboard } = useActivityConfigs();
