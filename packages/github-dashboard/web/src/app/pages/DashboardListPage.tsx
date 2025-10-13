@@ -8,8 +8,8 @@ import { LoadingState } from '../components/common/LoadingState';
 import { DashboardList } from '../components/dashboard/DashboardList';
 import { CreateDashboardDialog } from '../components/dashboard/modals/CreateDashboardDialog';
 import { DashboardConfigModal } from '../components/dashboard/modals/DashboardConfigModal';
+import { useActivityConfigs, useDashboardCRUD, useDashboardData, useDashboardRepositories, useDashboardUsers } from '../hooks';
 import { useClientData } from '../hooks/useClientData';
-import { useDashboardCRUD, useDashboardDataPostGraphile } from '../hooks/useDashboardDataPostGraphile';
 import { Dashboard as DashboardType } from '../types/dashboard';
 
 export const DashboardListPage = () => {
@@ -26,7 +26,7 @@ export const DashboardListPage = () => {
   } = useClientData();
 
   // Dashboard data filtered by client
-  const { dashboards, loading: dashboardsLoading, error: dashboardsError } = useDashboardDataPostGraphile(
+  const { dashboards, loading: dashboardsLoading, error: dashboardsError } = useDashboardData(
     undefined, // no specific dashboard slug
     activeClient?.id || undefined
   );
@@ -34,15 +34,24 @@ export const DashboardListPage = () => {
   const { 
     createDashboard, 
     updateDashboard,
-    addRepositoryToDashboard,
-    upsertRepository,
+    loading: creating, 
+    error: createError
+  } = useDashboardCRUD();
+
+  const { 
     addUserToDashboard,
     createGithubUser,
-    getGithubUserByUsername,
-    loading: creating, 
-    error: createError, 
+    getGithubUserByUsername
+  } = useDashboardUsers();
+
+  const { 
+    addRepositoryToDashboard,
+    upsertRepository
+  } = useDashboardRepositories();
+
+  const { 
     addActivityTypeToDashboard
-  } = useDashboardCRUD();
+  } = useActivityConfigs();
 
   const handleViewDashboard = (dashboard: DashboardType) => {
     navigate(`/dashboard/${dashboard.slug}`);

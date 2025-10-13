@@ -12,7 +12,7 @@ import { GitHubUser } from '../../types/github';
 import { ActivitySettings } from '../components/activity';
 import { DashboardConfigModal } from '../components/dashboard';
 import { UserActivityGrid } from '../components/user';
-import { useDashboardCRUD, useDashboardDataPostGraphile } from '../hooks/useDashboardDataPostGraphile';
+import { useActivityConfigs, useDashboardCRUD, useDashboardData, useDashboardRepositories, useDashboardUsers } from '../hooks';
 
 interface UserActivity {
   user: GitHubUser;
@@ -43,19 +43,12 @@ export function DashboardDetailPage() {
     repositories: postgraphileRepositories,
     activityConfigs: postgraphileActivityConfigs,
     refetch
-  } = useDashboardDataPostGraphile(dashboardSlug);
+  } = useDashboardData(dashboardSlug || '');
 
-  const {
-    updateDashboard,
-    addActivityTypeToDashboard,
-    removeActivityTypeFromDashboard,
-    upsertRepository,
-    addRepositoryToDashboard,
-    removeRepositoryFromDashboard,
-    upsertGithubUser,
-    addUserToDashboard,
-    removeUserFromDashboard
-  } = useDashboardCRUD();
+  const { updateDashboard } = useDashboardCRUD();
+  const { upsertRepository, addRepositoryToDashboard, removeRepositoryFromDashboard } = useDashboardRepositories();
+  const { createGithubUser, addUserToDashboard, removeUserFromDashboard } = useDashboardUsers();
+  const { addActivityTypeToDashboard, removeActivityTypeFromDashboard } = useActivityConfigs();
 
   // State management
   const [startDate, setStartDate] = useState<string>('');
@@ -97,7 +90,7 @@ export function DashboardDetailPage() {
   }));
 
   // Convert repositories to the format expected by the modal
-  const currentRepositories = postgraphileRepositories.map(dashboardRepo => 
+  const currentRepositories = postgraphileRepositories.map((dashboardRepo: any) => 
     dashboardRepo.repositoryByRepositoryId?.fullName || ''
   ).filter(Boolean);
 
@@ -139,7 +132,7 @@ export function DashboardDetailPage() {
         const githubUser: GitHubUser = {
           id: parseInt(dashboardUser.githubUserByGithubUserId.id) || 0,
           login: dashboardUser.githubUserByGithubUserId.githubUsername,
-          name: dashboardUser.githubUserByGithubUserId.displayName || dashboardUser.githubUserByGithubUserId.githubUsername,
+          name: dashboardUser.githubUserByGithubUserId.displayName || dashboardUser.githubUserByGithubUserId.githubUsername || '',
           avatar_url: dashboardUser.githubUserByGithubUserId.avatarUrl || `https://github.com/${dashboardUser.githubUserByGithubUserId.githubUsername}.png`,
           html_url: dashboardUser.githubUserByGithubUserId.profileUrl || `https://github.com/${dashboardUser.githubUserByGithubUserId.githubUsername}`,
           public_repos: 0,
@@ -168,7 +161,7 @@ export function DashboardDetailPage() {
         };
       }).filter(Boolean) || [];
 
-           setUserActivities(activities.filter((activity): activity is UserActivity => activity !== null) as UserActivity[]);
+           setUserActivities(activities.filter((activity: any): activity is UserActivity => activity !== null) as UserActivity[]);
     } catch (error) {
       console.error('Error fetching user activities:', error);
     } finally {
@@ -268,9 +261,9 @@ export function DashboardDetailPage() {
         if (!newUserLogins.has(userLogin)) {
           try {
             // Find the user ID from current users
-            const userToRemove = currentUsers.find(u => u.login === userLogin);
+            const userToRemove = currentUsers.find((u: any) => u.login === userLogin);
             if (userToRemove?.id) {
-              await removeUserFromDashboard(selectedDashboard.id, userToRemove.id);
+              await removeUserFromDashboard(userToRemove.id);
             }
           } catch (err) {
             console.error('Failed to remove user', userLogin, err);
@@ -286,13 +279,7 @@ export function DashboardDetailPage() {
             continue;
           }
           
-          const githubUser = await upsertGithubUser({
-            githubUserId: user.id?.toString() || user.login,
-            githubUsername: user.login,
-            displayName: user.name || user.login,
-            avatarUrl: user.avatar_url,
-            profileUrl: user.html_url
-          });
+          const githubUser = await createGithubUser(user.login, user.name, user.avatar_url);
 
           if (githubUser && typeof githubUser === 'object' && 'id' in githubUser) {
             const userId = (githubUser as { id: string }).id;
@@ -405,10 +392,7 @@ export function DashboardDetailPage() {
       />
 
       {/* User Activity Grid */}
-      <UserActivityGrid
-        userActivities={userActivities}
-        sortBy={sortBy}
-      />
+      {UserActivityGrid({ userActivities: userActivities as any, sortBy })}
 
       {/* Configuration Modal */}
       <DashboardConfigModal
@@ -418,7 +402,6 @@ export function DashboardDetailPage() {
         initialRepositories={currentRepositories}
         initialUsers={currentUsers}
         initialActivityConfig={currentActivityConfig}
-        initialDateRange={{ start: startDate, end: endDate }}
         initialIsPublic={selectedDashboard?.isPublic ?? true}
       />
     </DashboardContainer>

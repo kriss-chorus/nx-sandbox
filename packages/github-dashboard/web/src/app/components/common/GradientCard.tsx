@@ -1,6 +1,5 @@
 import styled from '@emotion/styled';
 import { Paper, PaperProps } from '@mui/material';
-import React from 'react';
 
 export interface GradientCardProps extends PaperProps {
   isPremium?: boolean;
@@ -23,7 +22,7 @@ const StyledCard = styled(Paper, {
   }
 `;
 
-export const GradientCard: React.FC<GradientCardProps> = ({ isPremium, children, ...props }) => {
+export const GradientCard = ({ isPremium, children, ...props }: GradientCardProps) => {
   return (
     <StyledCard isPremium={isPremium} {...props}>
       {children}
