@@ -67,6 +67,7 @@
     "jiti": "2.4.2",
     "jsdom": "~22.1.0",
     "jsonc-eslint-parser": "^2.1.0",
+    "nock": "^13.5.6",
     "nx": "21.3.11",
     "postgres": "^3.4.4",
     "prettier": "^2.8.8",

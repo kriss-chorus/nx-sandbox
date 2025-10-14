@@ -5,6 +5,45 @@
   "nx": {
     "implicitDependencies": [
       "github-dashboard-web"
-    ]
+    ],
+    "targets": {
+      "e2e": {
+        "executor": "@nx/playwright:playwright",
+        "outputs": [
+          "{projectRoot}/dist/.playwright"
+        ],
+        "options": {
+          "config": "packages/github-dashboard/web-e2e/playwright.config.ts"
+        },
+        "dependsOn": [
+          "github-dashboard-web:build",
+          "github-dashboard-web:serve"
+        ]
+      },
+      "e2e:watch": {
+        "executor": "@nx/playwright:playwright",
+        "options": {
+          "config": "packages/github-dashboard/web-e2e/playwright.config.ts",
+          "watch": true
+        }
+      },
+      "e2e:ci": {
+        "executor": "@nx/playwright:playwright",
+        "outputs": [
+          "{projectRoot}/dist/.playwright"
+        ],
+        "options": {
+          "config": "packages/github-dashboard/web-e2e/playwright.config.ts",
+          "ci": true
+        },
+        "dependsOn": [
+          "github-dashboard-web:build",
+          "github-dashboard-web:serve"
+        ]
+      }
+    }
+  },
+  "dependencies": {
+    "axios": "^1.6.0"
   }
 }
