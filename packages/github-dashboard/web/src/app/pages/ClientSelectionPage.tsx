@@ -1,18 +1,18 @@
-import { Box, Typography, Container } from '@mui/material';
+import { Box, Container, Typography } from '@mui/material';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { ClientCard } from '../components/client/ClientCard';
 import { ErrorState } from '../components/common/ErrorState';
 import { LoadingState } from '../components/common/LoadingState';
-import { useClientData } from '../hooks/useClientData';
+import { useClientContext } from '../context/ClientContext';
 
 export const ClientSelectionPage: React.FC = (): React.ReactElement => {
   const navigate = useNavigate();
-  const { clients, loading, error } = useClientData();
+  const { clients, loading, error, setActiveClientId } = useClientContext();
 
   const handleClientSelect = (clientId: string) => {
-    localStorage.setItem('activeClientId', clientId);
+    setActiveClientId(clientId);
     navigate('/dashboards');
   };
 

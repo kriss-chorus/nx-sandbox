@@ -7,15 +7,28 @@ import {
 } from '../api/postgraphile-client';
 import { ActivityConfig } from '../types/dashboard';
 
+// Activity type mapping - these match the database UUIDs
+const ACTIVITY_TYPE_MAP: Record<string, string> = {
+  'prs_created': '42c3b89d-2897-4109-a5e7-3406b773bbb4',
+  'prs_merged': 'dff9302a-d6f0-49d1-9fb3-6414801eab46',
+  'prs_reviewed': '7adbc498-4789-40ec-9be1-1bb3bf408e9f',
+};
+
 export function useActivityConfigs() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const addActivityTypeToDashboard = async (dashboardId: string, activityTypeId: string) => {
+  const addActivityTypeToDashboard = async (dashboardId: string, activityTypeCode: string) => {
     setLoading(true);
     setError(null);
 
     try {
+      // Map activity code to UUID
+      const activityTypeId = ACTIVITY_TYPE_MAP[activityTypeCode];
+      if (!activityTypeId) {
+        throw new Error(`Unknown activity type code: ${activityTypeCode}`);
+      }
+
       const response = await executeGraphQL<{
         createDashboardActivityConfig: { dashboardActivityConfig: ActivityConfig };
       }>(ACTIVITY_CONFIG_QUERIES.createConfig, {

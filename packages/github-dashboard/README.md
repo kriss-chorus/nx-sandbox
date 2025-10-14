@@ -8,6 +8,18 @@ A dashboard builder to track GitHub activity across users and repositories. This
 - web: React + MUI frontend (dashboard creation, activity views)
 - infra (local): Tilt + docker-compose for Postgres and PostGraphile (optional)
 
+## Premium Features
+
+The dashboard implements a tier-based system providing different experiences for Basic and Premium clients:
+
+- **Basic Tier (Candy Corn Labs)**: Light theme with core dashboard functionality
+- **Premium Tier (Haunted Hollow)**: Dracula-inspired dark theme with three exclusive features:
+  - Dashboard Type Chips (layout switching)
+  - Summary Bar (aggregated team statistics)
+  - Export Button (CSV download with entitlement enforcement)
+
+📖 **See [Premium Features Documentation](../../docs/03-premium-features.md) for detailed technical implementation.**
+
 ## Directory
 
 ```
@@ -208,3 +220,6 @@ packages/github-dashboard/
 - Normalized schema: dashboards ↔ github_users via junction; per-dashboard repositories; per-type activity configs
 - Comprehensive e2e test coverage for all user workflows
 - Automated test data management with proper cleanup
+- **Modular theme system**: SOLID-compliant theme factory with separate basic/premium themes
+- **Tier-based feature delivery**: Premium features conditionally rendered based on client tier
+- **Client ownership enforcement**: Cross-client dashboard access blocked with appropriate error states

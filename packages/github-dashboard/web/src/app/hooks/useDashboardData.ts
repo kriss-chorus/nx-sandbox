@@ -41,8 +41,24 @@ export function useDashboardData(slug?: string, clientId?: string): DashboardDat
       setData(prev => ({ ...prev, loading: true, error: null }));
 
       if (!slug) {
-        // Build filter for client if provided
-        const filter = clientId ? { clientId } : undefined;
+        // If no clientId is provided, don't fetch any dashboards
+        if (!clientId) {
+          setData({
+            dashboard: null,
+            dashboards: [],
+            users: [],
+            repositories: [],
+            activityConfigs: [],
+            activityTypes: [],
+            loading: false,
+            error: null,
+          });
+          fetchingRef.current = null;
+          return;
+        }
+
+        // Build filter for client
+        const filter = { clientId };
         
         const dashboardsResponse = await executeGraphQL<{
           allDashboards: { nodes: Dashboard[] };

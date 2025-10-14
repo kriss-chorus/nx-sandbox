@@ -40,7 +40,7 @@ All Apollo/NestJS GraphQL server work was removed. This file only documents what
   - `UserCard.tsx`, `UserActivityGrid.tsx`, `index.ts`
 - `packages/github-dashboard/web/src/app/components/activity/`
   - `ActivitySettings.tsx`, `index.ts`
-- `packages/github-dashboard/web/src/app/app.tsx`
+- `packages/github-dashboard/web/src/app/App.tsx`
   - Routes (`/`, `/dashboard/:dashboardSlug`) wrapped with `ErrorBoundary`
 
 ## Important Behaviors

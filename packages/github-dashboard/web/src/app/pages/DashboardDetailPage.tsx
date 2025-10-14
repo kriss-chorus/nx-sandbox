@@ -1,12 +1,15 @@
 import styled from '@emotion/styled';
-import { Box } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { ActivitySettings } from '../components/activity';
-import { DashboardConfigModal } from '../components/dashboard/configuration';
+import { DashboardConfigModal } from '../components/dashboard';
+import { DashboardTypeChips } from '../components/dashboard/DashboardTypeChips';
 import { DashboardHeader, DashboardNotFound } from '../components/dashboard/detail';
+import { SummaryBar } from '../components/dashboard/SummaryBar';
 import { UserActivityGrid } from '../components/user';
+import { useClientContext } from '../context/ClientContext';
 import { useDashboardConfigHandler, useDashboardData, useUserActivityManager } from '../hooks';
 
 
@@ -19,6 +22,7 @@ const DashboardContainer = styled(Box)`
 export function DashboardDetailPage() {
   const { dashboardSlug } = useParams<{ dashboardSlug: string }>();
   const navigate = useNavigate();
+  const { activeClient, isPremium } = useClientContext();
 
   const {
     dashboard: postgraphileDashboard,
@@ -33,6 +37,7 @@ export function DashboardDetailPage() {
   const [endDate, setEndDate] = useState<string>('');
   const [sortBy, setSortBy] = useState<'totalActivity' | 'prsCreated' | 'prsReviewed' | 'prsMerged'>('totalActivity');
   const [configModalOpen, setConfigModalOpen] = useState(false);
+  const [dashboardTypeCode, setDashboardTypeCode] = useState<string>('user_activity');
 
   // Derived data
   const selectedDashboard = postgraphileDashboard;
@@ -96,6 +101,13 @@ export function DashboardDetailPage() {
     setStartDate(start.toISOString().split('T')[0]);
   }, []);
 
+  // Set dashboard type from selected dashboard
+  useEffect(() => {
+    if (selectedDashboard?.dashboardTypeByDashboardTypeId?.code) {
+      setDashboardTypeCode(selectedDashboard.dashboardTypeByDashboardTypeId.code);
+    }
+  }, [selectedDashboard]);
+
   const openConfigModal = () => {
     setConfigModalOpen(true);
   };
@@ -105,14 +117,52 @@ export function DashboardDetailPage() {
     return <DashboardNotFound onBackClick={() => navigate('/dashboards')} />;
   }
 
+  // Client ownership guard
+  if (activeClient && selectedDashboard.clientByClientId?.id !== activeClient.id) {
+    return (
+      <DashboardContainer>
+        <Box textAlign="center" py={8}>
+          <Typography variant="h5" gutterBottom>
+            Access Denied
+          </Typography>
+          <Typography variant="body1" color="text.secondary" paragraph>
+            This dashboard belongs to another client. You don't have permission to view it.
+          </Typography>
+          <Button
+            variant="contained"
+            onClick={() => navigate('/')}
+            sx={{ mt: 2 }}
+          >
+            Back to Client Selection
+          </Button>
+        </Box>
+      </DashboardContainer>
+    );
+  }
+
   return (
     <DashboardContainer>
       <DashboardHeader
         dashboardName={selectedDashboard.name}
         dashboardDescription={selectedDashboard.description}
+        dashboardId={selectedDashboard.id}
         onBackClick={() => navigate('/dashboards')}
         onConfigureClick={openConfigModal}
       />
+
+      {/* Premium: Dashboard Type Chips */}
+      {isPremium && (
+        <DashboardTypeChips
+          dashboardId={selectedDashboard.id}
+          currentTypeCode={dashboardTypeCode}
+          onTypeChange={setDashboardTypeCode}
+        />
+      )}
+
+      {/* Premium: Summary Bar */}
+      {isPremium && (
+        <SummaryBar userActivities={userActivities} />
+      )}
 
       {/* Activity Settings */}
       <ActivitySettings

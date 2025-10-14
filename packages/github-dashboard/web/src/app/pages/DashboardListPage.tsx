@@ -8,8 +8,8 @@ import { LoadingState } from '../components/common/LoadingState';
 import { DashboardConfigModal } from '../components/dashboard/configuration/DashboardConfigModal';
 import { DashboardList } from '../components/dashboard/DashboardList';
 import { CreateDashboardDialog } from '../components/dashboard/modals/CreateDashboardDialog';
+import { useClientContext } from '../context/ClientContext';
 import { useActivityConfigs, useDashboardData, useDashboardMutations, useDashboardRepositories, useDashboardUsers } from '../hooks';
-import { useClientData } from '../hooks/useClientData';
 import { Dashboard as DashboardType } from '../types/dashboard';
 
 export const DashboardListPage = () => {
@@ -18,14 +18,14 @@ export const DashboardListPage = () => {
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
   const [newDashboardId, setNewDashboardId] = useState<string | null>(null);
 
-  // Client data - get the active client from localStorage
+  // Client data - get the active client from context
   const { 
     activeClient, 
     loading: clientsLoading,
     error: clientsError
-  } = useClientData();
+  } = useClientContext();
 
-  // Dashboard data filtered by client
+  // Dashboard data filtered by client - only fetch if we have an active client
   const { dashboards, loading: dashboardsLoading, error: dashboardsError } = useDashboardData(
     undefined, // no specific dashboard slug
     activeClient?.id || undefined
@@ -144,12 +144,12 @@ export const DashboardListPage = () => {
           activityConfig: Record<string, boolean>;
           isPublic: boolean;
         }) => {
-          console.log('DashboardListPage onSave called with config:', config);
+
           if (!newDashboardId) {
             console.log('No newDashboardId, returning early');
             return;
           }
-          console.log('newDashboardId:', newDashboardId);
+
           try {
             // Persist dashboard visibility
             await updateDashboard(newDashboardId, { isPublic: config.isPublic });
@@ -212,15 +212,11 @@ export const DashboardListPage = () => {
             // Persist activity types (date range is frontend-only)
             if (config.activityConfig && Object.keys(config.activityConfig).length > 0) {
               try {
-                console.log('Saving activity config:', config.activityConfig);
-                
                 // Save each selected activity type using the code directly
                 for (const [activityCode, enabled] of Object.entries(config.activityConfig)) {
                   if (enabled) {
-                    console.log(`Saving activity type: ${activityCode}`);
                     // Add activity type to dashboard using code (will resolve to ID in backend)
                     await addActivityTypeToDashboard(newDashboardId, activityCode);
-                    console.log(`Successfully saved activity config for ${activityCode}`);
                   }
                 }
               } catch (err) {

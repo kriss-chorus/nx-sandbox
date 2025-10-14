@@ -3,12 +3,14 @@
 Purpose: Implement and demo two distinct client experiences (frontend + backend) without auth, using a multi-tenant model (clients) and tier-based entitlements.
 
 ## Summary
+
 - Client (tenant) has a plan/tier: basic | premium (persisted)
 - Dashboard belongs to a client (client_id) and has a layout type: user_activity | team_overview | project_focus
 - Frontend derives features from client tier; layout comes from dashboard type
 - Backend enforces ownership (client ↔ dashboards) and entitlements (premium-only export)
 
 ## Key Decisions
+
 - No auth: UI uses an “Active Client” selector; backend receives X-Demo-Client-Id to simulate tenancy
 - Entitlements live on client tier (NOT on dashboard type)
 - Dashboard type changes layout/UX only
@@ -16,16 +18,18 @@ Purpose: Implement and demo two distinct client experiences (frontend + backend)
 ---
 
 ## Backend (PostGraphile + API)
+
 ### Data Model
+
 - Create table `tier_types`:
   - id uuid pk default gen_random_uuid()
-  - code varchar(32) unique not null  // 'basic' | 'premium'
+  - code varchar(32) unique not null // 'basic' | 'premium'
   - name varchar(64) not null
   - created_at timestamp default now()
   - updated_at timestamp default now()
 - Create table `features`:
   - id uuid pk default gen_random_uuid()
-  - code varchar(32) unique not null  // 'export', 'summary', 'type_chips'
+  - code varchar(32) unique not null // 'export', 'summary', 'type_chips'
   - name varchar(64) not null
   - created_at timestamp default now()
   - updated_at timestamp default now()
@@ -35,7 +39,7 @@ Purpose: Implement and demo two distinct client experiences (frontend + backend)
   - primary key (tier_type_id, feature_id)
 - Create table `dashboard_types`:
   - id uuid pk default gen_random_uuid()
-  - code varchar(32) unique not null  // 'user_activity', 'team_overview', 'project_focus'
+  - code varchar(32) unique not null // 'user_activity', 'team_overview', 'project_focus'
   - name varchar(64) not null
   - created_at timestamp default now()
   - updated_at timestamp default now()
@@ -51,20 +55,23 @@ Purpose: Implement and demo two distinct client experiences (frontend + backend)
   - dashboard_type_id uuid not null references dashboard_types(id)
 
 ### Seeding
+
 - tier_types: basic, premium
 - features: export, summary, type_chips
 - tier_type_features: premium gets all features, basic gets none
 - dashboard_types: user_activity, team_overview, project_focus
 - clients:
-  - "Candy Corn Labs" (basic)  // logo_url TBD
-  - "Haunted Hollow" (premium)  // logo_url TBD
+  - "Candy Corn Labs" (basic) // logo_url TBD
+  - "Haunted Hollow" (premium) // logo_url TBD
 - Assign existing dashboards to one of the demo clients
 
 ### GraphQL (PostGraphile)
+
 - Expose: `dashboard { client { id name tierTypeByTierTypeId { code name } iconUrl logoUrl } dashboardType }`
 - Filter dashboards by `clientId`
 
 ### API
+
 - Export (premium-only, ownership-enforced):
   - GET /api/dashboards/:id/export.csv
   - Deny if X-Demo-Client-Id ≠ dashboard.client_id (ownership)
@@ -74,18 +81,22 @@ Purpose: Implement and demo two distinct client experiences (frontend + backend)
 ---
 
 ## Frontend (Shared Components, Two Experiences)
+
 ### Routing Structure
+
 - `/` → Client Selection Page (choose between Candy Corn Labs Basic vs Haunted Hollow Premium)
 - `/dashboards` → Dashboard List Page (shows "My Dashboards" + Create Dashboard button)
 - `/dashboard/:slug` → Individual Dashboard Detail Page
 
 ### Active Client
+
 - Client Selection Page: Two client cards (Candy Corn Labs Basic, Haunted Hollow Premium)
 - Persist selection in localStorage; load via PostGraphile
 - Filter dashboards list by `clientId`
 - Show client brand: prefer logo_url in header, fallback icon_url, else initials
 
 ### Dashboard View
+
 - Guard: if dashboard.clientId ≠ activeClient.id → show "Not your client"
 - Map `client.tierType.code` → features:
   - basic: neutral styling, no Export, no Type Chips, no Summary
@@ -99,22 +110,174 @@ Purpose: Implement and demo two distinct client experiences (frontend + backend)
   - Call /api/dashboards/:id/export.csv with X-Demo-Client-Id; handle 403 (ownership/tier)
 
 ### Styling Cues (fast)
-- Premium: gradient header, “Premium” chip, selected chip highlight, card top-border accent
+
+- Premium: gradient header, "Premium" chip, selected chip highlight, card top-border accent
 - Basic: existing neutral look
+
+## Technical Implementation Details
+
+### Theme System
+
+The application uses a modular MUI theme system following SOLID principles:
+
+```
+web/src/app/theme/
+├── baseTheme.ts          # Shared base configuration
+├── basicTheme.ts         # Light theme for basic tier
+├── premiumTheme.ts       # Dracula-inspired dark theme
+├── themeFactory.ts       # Theme creation factory
+└── index.ts             # Barrel exports
+```
+
+**Key Features:**
+
+- Dynamic theme switching based on `client.tierType.code`
+- Dracula color palette: `#282a36` background, `#bd93f9` accent, `#6272a4` muted
+- Gradient buttons and premium styling
+- Consistent typography and spacing
+
+### Client Context
+
+Global client state management via React Context:
+
+```typescript
+// ClientContext provides:
+- activeClient: Current selected client
+- isPremium: Computed boolean from tierType.code
+- setActiveClientId: Function to switch clients
+- loading/error states
+```
+
+**Usage:**
+
+```typescript
+const { isPremium, activeClient } = useClientContext();
+```
+
+### Feature Flags
+
+Premium features are conditionally rendered using the `isPremium` flag:
+
+```typescript
+{
+  isPremium && <PremiumComponent />;
+}
+```
+
+### Premium Features Implementation
+
+#### 1. Dashboard Type Chips
+
+**Purpose**: Allow premium users to switch between different dashboard layouts.
+
+**Implementation:**
+
+- Three layout types: User Activity, Team Overview, Project Focus
+- PostGraphile mutation to update `dashboards.dashboard_type_id`
+- Visual feedback with premium accent colors
+- Persists selection across sessions
+
+**Technical Details:**
+
+- Component: `DashboardTypeChips.tsx`
+- Mutation: `UPDATE_DASHBOARD_TYPE_MUTATION`
+- Maps to database codes: `user_activity`, `team_overview`, `project_focus`
+
+#### 2. Summary Bar
+
+**Purpose**: Provide aggregated team activity statistics.
+
+**Implementation:**
+
+- Displays totals: PRs Created, Merged, Reviewed, Commits
+- Calculated from `userActivities` data
+- Premium gradient styling with icons
+- Real-time updates when data refreshes
+
+**Technical Details:**
+
+- Component: `SummaryBar.tsx`
+- Data source: `userActivities` from `useUserActivityManager`
+- Styling: Dracula color scheme with gradient cards
+
+#### 3. Export Button
+
+**Purpose**: Allow premium users to export dashboard data as CSV.
+
+**Implementation:**
+
+- Calls `GET /api/dashboards/:id/export.csv`
+- Includes `X-Demo-Client-Id` header for ownership verification
+- Handles 403 responses (entitlement errors)
+- Downloads CSV file on success
+
+**Technical Details:**
+
+- Component: `ExportButton.tsx`
+- **TODO**: Backend endpoint not yet implemented
+- Error handling: Toast notifications for failures
+- Security: Client ownership and tier validation
+
+### Security & Access Control
+
+#### Client Ownership Guard
+
+**Implementation**: Dashboard access validation in `DashboardDetailPage.tsx`
+
+```typescript
+if (
+  activeClient &&
+  selectedDashboard.clientByClientId?.id !== activeClient.id
+) {
+  return <AccessDeniedComponent />;
+}
+```
+
+**Protection**: Prevents cross-client dashboard access via direct URLs.
+
+#### Export Entitlement
+
+**Server-Side Validation** (when implemented):
+
+1. Verify `X-Demo-Client-Id` matches dashboard owner
+2. Check client tier is premium
+3. Generate and stream CSV data
+
+### File Structure
+
+```
+web/src/app/
+├── theme/                    # Modular theme system
+│   ├── baseTheme.ts
+│   ├── basicTheme.ts
+│   ├── premiumTheme.ts
+│   ├── themeFactory.ts
+│   └── index.ts
+├── context/
+│   └── ClientContext.tsx     # Global client state
+├── components/dashboard/
+│   ├── DashboardTypeChips.tsx # Premium: Layout switching
+│   ├── SummaryBar.tsx        # Premium: Activity summary
+│   └── ExportButton.tsx      # Premium: CSV export
+└── pages/
+    └── DashboardDetailPage.tsx # Integration point
+```
 
 ---
 
 ## Demo Flow (2–3 minutes)
-1) Active Client = Candy Corn Labs (Basic) → dashboards filter down
-2) Open basic dashboard → cards-only, no Export; refresh shows live proxy stats
-3) Active Client = Haunted Hollow (Premium) → dashboards change
-4) Open premium dashboard → premium styling, Type Chips, Summary, Export works
-5) Export on basic client’s dashboard → 403 entitlement
-6) Deep-link cross-client dashboard → ownership guard
+
+1. Active Client = Candy Corn Labs (Basic) → dashboards filter down
+2. Open basic dashboard → cards-only, no Export; refresh shows live proxy stats
+3. Active Client = Haunted Hollow (Premium) → dashboards change
+4. Open premium dashboard → premium styling, Type Chips, Summary, Export works
+5. Export on basic client’s dashboard → 403 entitlement
+6. Deep-link cross-client dashboard → ownership guard
 
 ---
 
 ## TODO (Working Checklist)
+
 - [x] Backend: create `tier_types` table
 - [x] Backend: create `clients` table (FK → tier_types)
 - [x] Backend: create `dashboard_types` table
@@ -132,17 +295,102 @@ Purpose: Implement and demo two distinct client experiences (frontend + backend)
 - [x] Frontend: Fix GraphQL filter structure for clientId (direct UUID value not {equalTo: uuid})
 - [x] Frontend: Halloween orange colors for Candy Corn Labs
 - [x] Frontend: Remove 'Ltd' from Haunted Hollow references
-- [ ] Frontend: guard page on `clientId` mismatch
-- [ ] Frontend (premium): Type Chips + persist `dashboardType`
-- [ ] Frontend (premium): Summary bar (totals from `userActivities`)
-- [ ] Frontend (premium): Export button (call API, handle 403)
-- [ ] Frontend: premium styling/badges + client branding
+- [x] Frontend: guard page on `clientId` mismatch
+- [x] Frontend (premium): Type Chips + persist `dashboardType`
+- [x] Frontend (premium): Summary bar (totals from `userActivities`)
+- [x] Frontend (premium): Export button (call API, handle 403)
+- [x] Frontend: premium styling/badges + client branding
 - [ ] API: implement `GET /api/dashboards/:id/export.csv` with header checks
 - [ ] QA: run demo flow end-to-end
 
 ---
 
+## Architecture Decisions
+
+### Why Tier-Based Entitlements?
+
+**Decision**: Entitlements are based on client tier, not dashboard type.
+
+**Rationale:**
+
+- **Consistency**: All premium features available regardless of dashboard layout
+- **Simplicity**: Single source of truth for feature access
+- **Scalability**: Easy to add new features without complex permission logic
+- **User Experience**: Clear value proposition for premium tier
+
+### Theme Modularity
+
+**Decision**: Separate theme files with factory pattern.
+
+**Rationale:**
+
+- **SOLID Compliance**: Single Responsibility Principle for each theme
+- **Maintainability**: Easy to modify themes independently
+- **Extensibility**: Simple to add new tiers or themes
+- **Type Safety**: TypeScript support for theme variants
+
+### Client Context Pattern
+
+**Decision**: Global React Context for client state.
+
+**Rationale:**
+
+- **Performance**: Avoids prop drilling
+- **Consistency**: Single source of truth for client data
+- **Developer Experience**: Simple hook-based API
+- **Caching**: Leverages existing `useClientData` hook
+
+## Known Limitations & TODOs
+
+### Backend Implementation
+
+- [ ] Export CSV endpoint: `GET /api/dashboards/:id/export.csv`
+- [ ] Dashboard type mutation validation
+- [ ] Enhanced activity data aggregation
+
+### Future Enhancements
+
+- [ ] More dashboard layout types
+- [ ] Advanced filtering and sorting for premium users
+- [ ] Custom dashboard themes per client
+- [ ] Real-time collaboration features
+
+### Performance Considerations
+
+- [ ] Theme switching optimization
+- [ ] Large dataset export handling
+- [ ] Caching for summary calculations
+
+## Testing Checklist
+
+### Theme System
+
+- [ ] Switch client → theme changes immediately
+- [ ] Premium theme applies Dracula colors correctly
+- [ ] Basic theme maintains neutral appearance
+- [ ] Theme persists across navigation
+
+### Premium Features
+
+- [ ] Type Chips visible only for premium users
+- [ ] Summary Bar shows correct aggregated totals
+- [ ] Export button appears only for premium users
+- [ ] All features hidden for basic users
+
+### Security
+
+- [ ] Cross-client dashboard access blocked
+- [ ] Ownership guard shows appropriate error
+- [ ] Export entitlement properly enforced (when backend ready)
+
+### Integration
+
+- [ ] Premium features work together seamlessly
+- [ ] State updates propagate correctly
+- [ ] Error handling graceful across all features
+
 ## Notes / Conventions
+
 - Prefer PostGraphile CRUD; minimize custom resolvers
 - Enforce export entitlement server-side; other differences are UI-driven
 - Reuse ActivitySettings, UserActivityGrid, UserCard and compose features around them
@@ -150,10 +398,12 @@ Purpose: Implement and demo two distinct client experiences (frontend + backend)
 ### Recent Issues and Solutions
 
 **Issue: Tilt Port Conflict**
+
 - Problem: `Error: Tilt cannot start because you already have another process on port 10360`
 - Solution: Use different port `tilt up --port 10361 github-dashboard` or kill existing process
 
 **Issue: PostGraphile Field Naming**
+
 - Problem: GraphQL queries failed with `Cannot query field "tierType" on type "Client"`
 - Root Cause: PostGraphile uses `tierTypeByTierTypeId` for foreign key relations, not `tierType`
 - Additional Issue: Dashboard queries failed with `Cannot query field "client" on type "Dashboard"`
@@ -164,6 +414,7 @@ Purpose: Implement and demo two distinct client experiences (frontend + backend)
 - Files updated: `useClientData.ts`, `postgraphile-client.ts`, `dashboard.ts` types, `ClientSelector.tsx`, `DashboardList.tsx`
 
 **Issue: React DOM Prop Warning**
+
 - Problem: `React does not recognize the 'isPremium' prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase 'ispremium' instead.`
 - Root Cause: Styled components were passing custom props (`isPremium`) to DOM elements, which React doesn't recognize as valid HTML attributes
 - Solution: Added `shouldForwardProp` to styled components to filter out custom props:
@@ -175,16 +426,18 @@ Purpose: Implement and demo two distinct client experiences (frontend + backend)
 - Files updated: `ClientSelectionPage.tsx` (ClientCard and ClientIcon styled components)
 
 **Issue: GraphQL Filter Structure**
+
 - Problem: GraphQL query failed with `Expected value of type "UUID", found {equalTo: "uuid"}` when filtering dashboards by clientId
 - Root Cause: The filter structure was using `{ clientId: { equalTo: clientId } }` but PostGraphile expects a direct UUID value
 - Solution: Changed filter structure from `{ clientId: { equalTo: clientId } }` to `{ clientId }`
 - Files updated: `useDashboardDataPostGraphile.ts`
 
 **Issue: Routing and Component Structure**
+
 - Problem: Monolithic Dashboard component was causing import errors and caching issues
 - Root Cause: Single component handling multiple responsibilities (client selection, dashboard list, dashboard detail)
 - Solution: Split into separate page components:
   - `ClientSelectionPage` for `/` route
-  - `DashboardListPage` for `/dashboards` route  
+  - `DashboardListPage` for `/dashboards` route
   - `DashboardDetailPage` for `/dashboard/:slug` route
 - Files updated: `App.tsx`, created new page components, removed old `Dashboard.tsx` and `ClientSelector.tsx`
