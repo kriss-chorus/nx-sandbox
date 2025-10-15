@@ -1,3 +1,5 @@
-export * from './DashboardList';
-export * from './Configuration';
-export * from './DashboardList'
+export { DashboardConfigModal } from './Configuration';
+export { DashboardHeader, DashboardLayouts, DashboardNotFound, DashboardTypeChips } from './DashboardDetail';
+export { CreateDashboardDialog, DashboardList } from './DashboardList';
+export { ExportButton, SummaryBar } from './PremiumFeatures';
+

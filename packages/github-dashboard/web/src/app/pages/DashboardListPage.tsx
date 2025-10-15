@@ -3,11 +3,8 @@ import { Box, Button, Typography } from '@mui/material';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { ErrorState } from '../components/common/ErrorState';
-import { LoadingState } from '../components/common/LoadingState';
-import { DashboardConfigModal } from '../components/dashboard/configuration/DashboardConfigModal';
-import { DashboardList } from '../components/dashboard/DashboardList';
-import { CreateDashboardDialog } from '../components/dashboard/modals/CreateDashboardDialog';
+import { ErrorState, LoadingState } from '../components/common';
+import { CreateDashboardDialog, DashboardConfigModal, DashboardList } from '../components/Dashboard';
 import { useClientContext } from '../context/ClientContext';
 import { useActivityConfigs, useDashboardData, useDashboardMutations, useDashboardRepositories, useDashboardUsers } from '../hooks';
 import { Dashboard as DashboardType } from '../types/dashboard';

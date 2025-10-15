@@ -3,12 +3,8 @@ import { Box, Button, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { ActivitySettings } from '../components/activity';
-import { DashboardConfigModal } from '../components/dashboard';
-import { DashboardTypeChips } from '../components/dashboard/DashboardTypeChips';
-import { DashboardHeader, DashboardNotFound } from '../components/dashboard/detail';
-import { SummaryBar } from '../components/dashboard/SummaryBar';
-import { UserActivityGrid } from '../components/user';
+import { ActivitySettings } from '../components/Activity';
+import { DashboardConfigModal, DashboardHeader, DashboardLayouts, DashboardNotFound, DashboardTypeChips, SummaryBar } from '../components/Dashboard';
 import { useClientContext } from '../context/ClientContext';
 import { useDashboardConfigHandler, useDashboardData, useUserActivityManager } from '../hooks';
 
@@ -176,8 +172,12 @@ export function DashboardDetailPage() {
         disabled={!startDate || !endDate || fetchingUsers}
       />
 
-      {/* User Activity Grid */}
-      {UserActivityGrid({ userActivities: userActivities as any, sortBy })}
+      {/* Dynamic Dashboard Layout */}
+      <DashboardLayouts
+        dashboardTypeCode={dashboardTypeCode}
+        userActivities={userActivities as any}
+        sortBy={sortBy}
+      />
 
       {/* Configuration Modal */}
       <DashboardConfigModal
