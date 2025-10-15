@@ -10,27 +10,19 @@ A multi-tenant dashboard builder that tracks GitHub activity across users and re
 ![Basic Tier Dashboard](docs/images/basic-dashboard.png)
 _Coral orange theme with core dashboard functionality_
 
-> 📸 **Screenshot needed**: Take a full-page screenshot of the Basic tier dashboard showing the coral orange theme with core functionality.
-
 **Premium Tier Dashboard**
 ![Premium Tier Dashboard](docs/images/premium-dashboard.png)
 _Dracula dark theme with exclusive features_
 
-> 📸 **Screenshot needed**: Take a full-page screenshot of the Premium tier dashboard showing the Dracula dark theme with premium features.
-
 ### Premium Features
 
 **🎨 Dynamic Theme Switching**
-![Theme Switching Demo](docs/videos/theme-switching.mp4)
+![Theme Switching Demo](docs/videos/theme-switching.gif)
 _Seamless theme transitions between Basic and Premium tiers_
 
-> 🎥 **Video needed**: Record a 10-15 second video showing theme switching between Basic (coral orange) and Premium (Dracula dark) tiers.
-
 **📊 Dynamic Layout Switching**
-![Layout Switching Demo](docs/videos/layout-switching.mp4)
+![Layout Switching Demo](docs/videos/layout-switching.gif)
 _Three dashboard layouts: User Activity, Team Overview, Project Focus_
-
-> 🎥 **Video needed**: Record a 10-15 second video showing dashboard type chip clicking and layout switching between User Activity, Team Overview, and Project Focus layouts.
 
 **📈 Summary Bar & Export**
 
