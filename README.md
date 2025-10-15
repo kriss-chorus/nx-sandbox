@@ -1,75 +1,75 @@
 # Nx Sandbox Monorepo
 
-This workspace hosts multiple experiments and apps. The primary project is the GitHub Dashboard.
+This workspace hosts multiple experiments and applications built with Nx, pnpm, and modern web technologies.
 
 ## Projects
-- packages/common: shared utilities
-- packages/github-dashboard
-  - api: NestJS backend (REST, Drizzle ORM, GitHub integration)
-  - web: React + MUI frontend
 
-## Getting Started
-- Install deps: pnpm install
-- Dev via Tilt (recommended):
-  - pnpm run tilt:up:github-dashboard
-  - pnpm run tilt:down
+### Core Packages
 
-## Docs
-- GitHub Dashboard: [packages/github-dashboard/README.md](packages/github-dashboard/README.md)
-- Learnings — GitHub Dashboard: [docs/github-dashboard.md](docs/github-dashboard.md)
-- Learnings — Nx Release: [docs/nx-release.md](docs/nx-release.md)
+- **packages/common**: Shared utilities and types
+- **packages/test-app**: Legacy reference applications (Express API + React client)
 
-## Tooling
-- Nx for task orchestration and graph
-- Docker/Tilt for local infra (Postgres, PostGraphile)
-- Drizzle ORM for schema + migrations
+### Applications
 
-## Notes
-- Keep commits scoped to changed projects
-- Prefer normalized database design
-- Use server-side caching and rate-limit aware GitHub access
+- **packages/github-dashboard**: Multi-tenant dashboard with tier-based client experiences
+  - API: NestJS backend with PostGraphile and GitHub integration
+  - Web: React frontend with MUI and dynamic theming
 
-## Project Structure
-```
-nx-sandbox/
-├── packages/
-│   ├── common/                    # Shared utilities
-│   ├── test-app/                  # Legacy/reference projects
-│   │   ├── api/                   # Express API (reference)
-│   │   └── client/                # React client (reference)
-│   │
-│   └── github-dashboard/          # GitHub Dashboard
-│       ├── api/                   # NestJS backend (Drizzle ORM, GitHub integration)
-│       └── web/                   # React frontend (MUI, Vite)
-│
-├── github-dashboard/
-│   ├── Tiltfile                   # Dev orchestration
-│   ├── docker-compose.yml         # Local DB and tooling
-│   └── .env.example               # Environment variables
-│
-└── Tiltfile                       # Root orchestrator
+## Quick Start
+
+```bash
+# Install dependencies
+pnpm install
+
+# Start GitHub Dashboard (recommended)
+pnpm run tilt:up:github-dashboard
+
+# Stop services
+pnpm run tilt:down
 ```
 
-For detailed architecture and learnings, see [docs/github-dashboard.md](docs/github-dashboard.md).
+## Documentation
+
+- **[GitHub Dashboard](packages/github-dashboard/README.md)** - Multi-tenant dashboard application
+- **[Architecture Docs](docs/)** - Technical documentation and learnings
+- **[Nx Release Setup](docs/nx-release-setup.md)** - Release automation configuration
+
+## Tech Stack
+
+- **Monorepo**: Nx workspace with pnpm
+- **Frontend**: React, TypeScript, MUI, Vite
+- **Backend**: NestJS, PostGraphile, PostgreSQL, Drizzle ORM
+- **DevOps**: Docker, Tilt, Kubernetes
+- **Testing**: Jest, Playwright, E2E testing
 
 ## Development
-- Install deps: `pnpm install`
-- Start (Tilt): `pnpm run tilt:up:github-dashboard`
-- Stop (Tilt): `pnpm run tilt:down`
 
-Ports
-- API (NestJS): 3001
-- Web (Vite): 4202
-- PostgreSQL: 5432
-- PostGraphile (optional): 5000
-- Tilt UI: 10360
+### Ports
 
-Troubleshooting and deeper workflow details: see [docs/github-dashboard.md](docs/github-dashboard.md).
+- **API**: 3001 (NestJS)
+- **Web**: 4202 (Vite)
+- **Database**: 5432 (PostgreSQL)
+- **GraphQL**: 5000 (PostGraphile)
+- **Tilt UI**: 10360
 
-## TODO Checklist
-- [ ] Kubernetes: manifests, secrets, overlays, CI deploy
-- [ ] Code quality: typecheck, ESLint, Prettier, pre-commit hooks
-- [ ] API e2e: create/list dashboards; users add/remove; repos add/remove; activity config
-- [ ] Web e2e: dashboards list; create dashboard; add user; repos dropdown; activity config
-- [ ] Seed demo data (migrations or seed script)
-- [ ] CI: run typecheck/lint/test/e2e on PRs
+### Commands
+
+```bash
+# Run specific projects
+pnpm nx serve github-dashboard-api
+pnpm nx serve github-dashboard-web
+
+# Run tests
+pnpm nx test github-dashboard-api
+pnpm nx e2e github-dashboard-web-e2e
+
+# Build projects
+pnpm nx build github-dashboard-api
+pnpm nx build github-dashboard-web
+```
+
+## TODO
+
+- [ ] Add more application examples
+- [ ] Improve CI/CD pipeline
+- [ ] Add comprehensive testing strategy

@@ -2,6 +2,8 @@
 
 Purpose: Implement and demo two distinct client experiences (frontend + backend) without auth, using a multi-tenant model (clients) and tier-based entitlements.
 
+> **📖 See the [GitHub Dashboard README](../packages/github-dashboard/README.md) for current implementation status and features.**
+
 ## Summary
 
 - Client (tenant) has a plan/tier: basic | premium (persisted)
