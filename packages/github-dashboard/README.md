@@ -18,7 +18,7 @@ _Dracula dark theme with exclusive features_
 
 **🎨 Dynamic Theme Switching**
 ![Theme Switching Demo](../../docs/videos/theme-switching.gif)
-_Seamless theme transitions between Basic and Premium tiers_
+_Theme transitions between Basic and Premium tiers_
 
 **📊 Dynamic Layout Switching**
 ![Layout Switching Demo](../../docs/videos/layout-switching.gif)
