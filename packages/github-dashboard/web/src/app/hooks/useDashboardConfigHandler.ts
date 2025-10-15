@@ -18,6 +18,13 @@ const ACTIVITY_TYPE_MAP: Record<string, string> = {
   'prs_reviewed': '7adbc498-4789-40ec-9be1-1bb3bf408e9f',
 };
 
+// Dashboard type code to UUID mapping
+const DASHBOARD_TYPE_MAP: Record<string, string> = {
+  'user_activity': '48bfc042-81aa-4814-9d56-4d0f841bcb92',
+  'team_overview': '79e67172-ff4b-4237-906f-14e7a6c7deb0',
+  'project_focus': '91fc99b6-05d0-4dad-bba2-2f82ff912f1d',
+};
+
 export function useDashboardConfigHandler({
   selectedDashboard,
   postgraphileRepositories,
@@ -39,8 +46,18 @@ export function useDashboardConfigHandler({
     }
     
     try {
-      // Persist dashboard visibility
-      await updateDashboard(selectedDashboard.id, { isPublic: config.isPublic });
+      // Persist dashboard visibility and type
+      const updateData: any = { isPublic: config.isPublic };
+      
+      // Update dashboard type if provided
+      if (config.dashboardTypeCode) {
+        const dashboardTypeId = DASHBOARD_TYPE_MAP[config.dashboardTypeCode];
+        if (dashboardTypeId) {
+          updateData.dashboardTypeId = dashboardTypeId;
+        }
+      }
+      
+      await updateDashboard(selectedDashboard.id, updateData);
 
       // Sync repositories - remove ones not in config, add new ones
       const currentRepoFullNames = new Set(currentRepositories);

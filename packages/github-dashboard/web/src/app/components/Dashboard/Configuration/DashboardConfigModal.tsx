@@ -14,7 +14,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { GitHubUser } from '../../../../types/github';
 
-import { ActivityConfigSection, RepositorySection, UserSection, VisibilitySection } from './Sections';
+import { ActivityConfigSection, DashboardTypeSection, RepositorySection, UserSection, VisibilitySection } from './Sections';
 
 interface DashboardConfigModalProps {
   open: boolean;
@@ -24,11 +24,13 @@ interface DashboardConfigModalProps {
     users: GitHubUser[];
     activityConfig: Record<string, boolean>;
     isPublic: boolean;
+    dashboardTypeCode?: string;
   }) => void | Promise<void>;
   initialRepositories: string[];
   initialUsers: GitHubUser[];
   initialActivityConfig: Record<string, boolean>;
   initialIsPublic: boolean;
+  initialDashboardTypeCode?: string;
   organizationRepos?: Array<{ full_name: string }>;
 }
 
@@ -40,19 +42,22 @@ export function DashboardConfigModal({
   initialUsers,
   initialActivityConfig,
   initialIsPublic,
+  initialDashboardTypeCode = 'user_activity',
   organizationRepos = []
-}: DashboardConfigModalProps) {
+}: DashboardConfigModalProps): React.ReactElement {
   const [repositories, setRepositories] = useState<string[]>(initialRepositories);
   const [users, setUsers] = useState<GitHubUser[]>(initialUsers);
   const [activityConfig, setActivityConfig] = useState(initialActivityConfig);
   const [isPublic, setIsPublic] = useState<boolean>(initialIsPublic);
+  const [dashboardTypeCode, setDashboardTypeCode] = useState<string>(initialDashboardTypeCode);
   const [saving, setSaving] = useState(false);
   const initialValuesRef = useRef<{
     repositories: string[];
     users: GitHubUser[];
     activityConfig: Record<string, boolean>;
     isPublic: boolean;
-  }>({ repositories: [], users: [], activityConfig: {}, isPublic: true });
+    dashboardTypeCode: string;
+  }>({ repositories: [], users: [], activityConfig: {}, isPublic: true, dashboardTypeCode: 'user_activity' });
 
   useEffect(() => {
     if (open) {
@@ -61,13 +66,15 @@ export function DashboardConfigModal({
         repositories: initialRepositories || [],
         users: initialUsers || [],
         activityConfig: initialActivityConfig || {},
-        isPublic: initialIsPublic ?? true
+        isPublic: initialIsPublic ?? true,
+        dashboardTypeCode: initialDashboardTypeCode || 'user_activity'
       };
       
       setRepositories(initialValuesRef.current.repositories);
       setUsers(initialValuesRef.current.users);
       setActivityConfig(initialValuesRef.current.activityConfig);
       setIsPublic(initialValuesRef.current.isPublic);
+      setDashboardTypeCode(initialValuesRef.current.dashboardTypeCode);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -80,7 +87,8 @@ export function DashboardConfigModal({
         repositories,
         users,
         activityConfig,
-        isPublic
+        isPublic,
+        dashboardTypeCode
       });
       onClose();
     } catch (e) {
@@ -132,6 +140,11 @@ export function DashboardConfigModal({
           <VisibilitySection
             isPublic={isPublic}
             onIsPublicChange={setIsPublic}
+          />
+          
+          <DashboardTypeSection
+            currentTypeCode={dashboardTypeCode}
+            onTypeChange={setDashboardTypeCode}
           />
         </Grid>
       </DialogContent>

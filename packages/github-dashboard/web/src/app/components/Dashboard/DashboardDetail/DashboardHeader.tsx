@@ -1,9 +1,9 @@
 import { ArrowBack, Settings as SettingsIcon } from '@mui/icons-material';
 import {
-    Box,
-    Button,
-    Chip,
-    Typography
+  Box,
+  Button,
+  Chip,
+  Typography
 } from '@mui/material';
 import React from 'react';
 
@@ -25,7 +25,7 @@ export function DashboardHeader({
   onBackClick,
   onConfigureClick
 }: DashboardHeaderProps): React.ReactElement {
-  const { isPremium } = useClientContext();
+  const { isPremium, hasFeature } = useClientContext();
 
   return (
     <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
@@ -60,7 +60,7 @@ export function DashboardHeader({
         )}
       </Box>
       <Box display="flex" gap={2}>
-        {isPremium && (
+        {hasFeature('export') && (
           <ExportButton dashboardId={dashboardId} dashboardName={dashboardName} />
         )}
         <Button

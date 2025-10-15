@@ -6,16 +6,269 @@ Purpose: Implement and demo two distinct client experiences (frontend + backend)
 
 ## Summary
 
-- Client (tenant) has a plan/tier: basic | premium (persisted)
+- Client (tenant) has a plan/tier: basic | premium (persisted in database)
 - Dashboard belongs to a client (client_id) and has a layout type: user_activity | team_overview | project_focus
-- Frontend derives features from client tier; layout comes from dashboard type
-- Backend enforces ownership (client ↔ dashboards) and entitlements (premium-only export)
+- **Backend stores feature entitlements** in `tier_type_feature` table linking tiers to specific features
+- **Frontend uses React Context** to fetch client features and determine UI display/theme
+- Backend enforces ownership (client ↔ dashboards) and entitlements (premium-only features)
 
 ## Key Decisions
 
-- No auth: UI uses an “Active Client” selector; backend receives X-Demo-Client-Id to simulate tenancy
-- Entitlements live on client tier (NOT on dashboard type)
+- No auth: UI uses an "Active Client" selector; backend receives X-Demo-Client-Id to simulate tenancy
+- **Feature entitlements live on client tier** (NOT on dashboard type) - stored in `tier_type_feature` table
 - Dashboard type changes layout/UX only
+- **Frontend Context pattern** for feature checking and theme determination
+
+---
+
+## Premium Features Implementation
+
+### Three Premium Features
+
+1. **`export`** - CSV export functionality for dashboard data
+2. **`summary`** - Summary statistics bar showing aggregated team metrics
+3. **`type_chips`** - Dashboard type selection (User Activity, Team Overview, Project Focus)
+
+### Backend Feature Storage
+
+Features are stored in the database with the following structure:
+
+```sql
+-- Features table
+feature (id, code, name, created_at, updated_at)
+-- Examples:
+-- 'export' -> 'Export'
+-- 'summary' -> 'Summary Statistics Bar'
+-- 'type_chips' -> 'Dashboard Type Selection Chips'
+
+-- Tier-Feature mapping
+tier_type_feature (tier_type_id, feature_id)
+-- Premium tier gets all features
+-- Basic tier gets no features
+```
+
+### Frontend Context Integration
+
+The frontend uses React Context (`ClientContext`) to:
+
+1. **Fetch client data** including tier and associated features via GraphQL
+2. **Provide feature checking** with `hasFeature(featureCode)` function
+3. **Determine theme** based on tier (Basic = coral, Premium = dracula)
+4. **Conditionally render** premium UI components
+
+```typescript
+// Example usage in components
+const { hasFeature, isPremium } = useClientContext();
+
+// Show export button only if client has 'export' feature
+{
+  hasFeature('export') && <ExportButton />;
+}
+
+// Show summary bar only if client has 'summary' feature
+{
+  hasFeature('summary') && <SummaryBar />;
+}
+
+// Show dashboard type selection only if client has 'type_chips' feature
+{
+  hasFeature('type_chips') && <DashboardTypeSection />;
+}
+```
+
+### Custom Experience Design Patterns
+
+#### **1. Database-Driven Feature Flags**
+
+Instead of hardcoded feature toggles, features are stored in the database:
+
+```sql
+-- Features are defined as data, not code
+INSERT INTO feature (code, name) VALUES
+  ('export', 'Export'),
+  ('summary', 'Summary Statistics Bar'),
+  ('type_chips', 'Dashboard Type Selection Chips');
+
+-- Feature entitlements are relationships, not conditions
+INSERT INTO tier_type_feature (tier_type_id, feature_id)
+SELECT premium_tier.id, feature.id FROM feature;
+```
+
+**Benefits:**
+
+- Features can be added/removed without code changes
+- A/B testing different feature combinations
+- Runtime feature management
+- Clear audit trail of feature access
+
+#### **2. Context-Based Feature Resolution**
+
+The `ClientContext` centralizes all client state and feature logic:
+
+```typescript
+// Single source of truth for client features
+const hasFeature = (featureCode: string): boolean => {
+  return clientData.activeClient?.tierTypeByTierTypeId?.tierTypeFeaturesByTierTypeId?.nodes?.some(
+    (tierFeature) => tierFeature.featureByFeatureId.code === featureCode
+  );
+};
+```
+
+**Benefits:**
+
+- Consistent feature checking across components
+- Single GraphQL query for all client data
+- Easy to add new features without prop drilling
+- Centralized caching and state management
+
+#### **3. Tier-Based Theme System**
+
+Themes are determined by tier, not individual features:
+
+```typescript
+// App.tsx - Theme determination
+const tierType =
+  activeClient.tierTypeByTierTypeId.code === 'premium' ? 'premium' : 'basic';
+const theme = createTierTheme(tierType);
+```
+
+**Benefits:**
+
+- Cohesive visual experience per tier
+- Easy to maintain brand consistency
+- Simple theme switching logic
+- Clear visual hierarchy between tiers
+
+#### **4. Conditional Component Rendering**
+
+Components self-regulate based on feature availability:
+
+```typescript
+// Components check their own feature requirements
+export function DashboardTypeSection() {
+  const { hasFeature } = useClientContext();
+
+  if (!hasFeature('type_chips')) {
+    return null; // Component doesn't render at all
+  }
+
+  return <DashboardTypeSelector />;
+}
+```
+
+**Benefits:**
+
+- Components are self-contained and reusable
+- No need to pass feature flags as props
+- Clean separation of concerns
+- Easy to test individual components
+
+#### **5. Multi-Tenant Data Isolation**
+
+Each client's data is isolated through database relationships:
+
+```typescript
+// GraphQL query includes client context
+const CLIENTS_QUERY = `
+  query GetClients {
+    allClients {
+      nodes {
+        tierTypeByTierTypeId {
+          tierTypeFeaturesByTierTypeId {
+            nodes {
+              featureByFeatureId { code, name }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+```
+
+**Benefits:**
+
+- Secure data isolation
+- Scalable multi-tenant architecture
+- Easy to add new clients/tiers
+- Clear data ownership model
+
+### Implementation Architecture
+
+#### **Data Flow**
+
+```
+Database → GraphQL → ClientContext → Components
+    ↓         ↓           ↓            ↓
+Features → Features → hasFeature() → Conditional Rendering
+```
+
+1. **Database Layer**: Features and entitlements stored as relational data
+2. **GraphQL Layer**: Single query fetches client + tier + features
+3. **Context Layer**: Centralized state management and feature resolution
+4. **Component Layer**: Self-regulating components based on feature availability
+
+#### **Key Design Decisions**
+
+**Why Database-Driven Features?**
+
+- **Flexibility**: Add new features without deployments
+- **A/B Testing**: Test different feature combinations
+- **Audit Trail**: Track feature usage and access
+- **Runtime Management**: Enable/disable features dynamically
+
+**Why Context Over Props?**
+
+- **Avoid Prop Drilling**: No need to pass feature flags through component trees
+- **Single Source of Truth**: All feature logic in one place
+- **Performance**: Single GraphQL query for all client data
+- **Consistency**: Same feature checking logic everywhere
+
+**Why Tier-Based Themes?**
+
+- **Brand Consistency**: Each tier has cohesive visual identity
+- **Simple Logic**: Tier determines theme, not individual features
+- **User Experience**: Clear visual hierarchy between tiers
+- **Maintainability**: Easy to update themes per tier
+
+**Why Self-Regulating Components?**
+
+- **Reusability**: Components work in any context
+- **Testability**: Easy to test with different feature combinations
+- **Maintainability**: Feature logic stays with the component
+- **Performance**: Components don't render if features unavailable
+
+#### **Alternative Approaches Considered**
+
+**❌ Hardcoded Feature Flags**
+
+```typescript
+// Bad: Hardcoded in components
+const isExportEnabled = client.tier === 'premium';
+```
+
+**Problems**: Requires code changes for new features, no runtime control
+
+**❌ Prop-Based Feature Passing**
+
+```typescript
+// Bad: Prop drilling
+<DashboardHeader hasExport={hasExport} hasSummary={hasSummary} />
+```
+
+**Problems**: Props need to be passed through multiple levels, hard to maintain
+
+**❌ Feature-Based Themes**
+
+```typescript
+// Bad: Theme based on individual features
+const theme = hasExport ? premiumTheme : basicTheme;
+```
+
+**Problems**: Inconsistent visual experience, complex theme logic
+
+**✅ Database + Context + Tier Themes**
+**Benefits**: Flexible, maintainable, consistent, performant
 
 ---
 

@@ -7,27 +7,74 @@ A multi-tenant dashboard builder that tracks GitHub activity across users and re
 ### Client Tier System
 
 **Basic Tier Dashboard**
-![Basic Tier Dashboard](docs/images/basic-dashboard.png)
+![Basic Tier Dashboard](../../docs/images/basic-dashboard.png)
 _Coral orange theme with core dashboard functionality_
 
 **Premium Tier Dashboard**
-![Premium Tier Dashboard](docs/images/premium-dashboard.png)
+![Premium Tier Dashboard](../../docs/images/premium-dashboard.png)
 _Dracula dark theme with exclusive features_
 
 ### Premium Features
 
 **🎨 Dynamic Theme Switching**
-![Theme Switching Demo](docs/videos/theme-switching.gif)
+![Theme Switching Demo](../../docs/videos/theme-switching.gif)
 _Seamless theme transitions between Basic and Premium tiers_
 
 **📊 Dynamic Layout Switching**
-![Layout Switching Demo](docs/videos/layout-switching.gif)
+![Layout Switching Demo](../../docs/videos/layout-switching.gif)
 _Three dashboard layouts: User Activity, Team Overview, Project Focus_
 
 **📈 Summary Bar & Export**
 
 - Aggregated team statistics
 - CSV download functionality
+
+### Feature Flag System
+
+The application uses a **database-driven feature flag system** where:
+
+- **Backend stores features** in `feature` and `tier_type_feature` tables
+- **Frontend uses React Context** (`ClientContext`) to check feature availability
+- **Three premium features** are controlled via feature flags:
+  - `export` - CSV export functionality
+  - `summary` - Summary statistics bar
+  - `type_chips` - Dashboard type selection in configure modal
+
+```typescript
+// Feature checking in components
+const { hasFeature } = useClientContext();
+{
+  hasFeature('export') && <ExportButton />;
+}
+{
+  hasFeature('summary') && <SummaryBar />;
+}
+{
+  hasFeature('type_chips') && <DashboardTypeSection />;
+}
+```
+
+### Client Experience Architecture
+
+**Backend (Database-Driven)**
+
+- Client tiers stored in `tier_type` table (basic/premium)
+- Features stored in `feature` table with codes: `export`, `summary`, `type_chips`
+- Feature entitlements mapped in `tier_type_feature` table
+- Premium tier gets all features, basic tier gets none
+
+**Frontend (Context-Driven)**
+
+- `ClientContext` fetches client data and features via GraphQL
+- `hasFeature(featureCode)` function checks feature availability
+- Theme determined by tier: Basic (coral) vs Premium (dracula)
+- Components conditionally render based on feature flags
+
+**No Authentication Required**
+
+- Demo uses "Active Client" selector for tenant simulation
+- Backend receives `X-Demo-Client-Id` header for multi-tenancy
+- Perfect for showcasing tier-based experiences
 
 ### Core Functionality
 

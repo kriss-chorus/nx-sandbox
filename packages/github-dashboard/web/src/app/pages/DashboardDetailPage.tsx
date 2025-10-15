@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { ActivitySettings } from '../components/Activity';
-import { DashboardConfigModal, DashboardHeader, DashboardLayouts, DashboardNotFound, DashboardTypeChips, SummaryBar } from '../components/Dashboard';
+import { DashboardConfigModal, DashboardHeader, DashboardLayouts, DashboardNotFound, SummaryBar } from '../components/Dashboard';
 import { useClientContext } from '../context/ClientContext';
 import { useDashboardConfigHandler, useDashboardData, useUserActivityManager } from '../hooks';
 
@@ -18,7 +18,7 @@ const DashboardContainer = styled(Box)`
 export function DashboardDetailPage() {
   const { dashboardSlug } = useParams<{ dashboardSlug: string }>();
   const navigate = useNavigate();
-  const { activeClient, isPremium } = useClientContext();
+  const { activeClient, hasFeature } = useClientContext();
 
   const {
     dashboard: postgraphileDashboard,
@@ -86,6 +86,15 @@ export function DashboardDetailPage() {
     refetch
   });
 
+  // Enhanced config save handler that also updates local dashboard type state
+  const handleConfigSaveWithTypeUpdate = async (config: any) => {
+    await handleConfigSave(config);
+    // Update local dashboard type state if it changed
+    if (config.dashboardTypeCode && config.dashboardTypeCode !== dashboardTypeCode) {
+      setDashboardTypeCode(config.dashboardTypeCode);
+    }
+  };
+
 
   // Set default date range (last 30 days)
   useEffect(() => {
@@ -146,17 +155,9 @@ export function DashboardDetailPage() {
         onConfigureClick={openConfigModal}
       />
 
-      {/* Premium: Dashboard Type Chips */}
-      {isPremium && (
-        <DashboardTypeChips
-          dashboardId={selectedDashboard.id}
-          currentTypeCode={dashboardTypeCode}
-          onTypeChange={setDashboardTypeCode}
-        />
-      )}
 
       {/* Premium: Summary Bar */}
-      {isPremium && (
+      {hasFeature('summary') && (
         <SummaryBar userActivities={userActivities} />
       )}
 
@@ -183,11 +184,12 @@ export function DashboardDetailPage() {
       <DashboardConfigModal
         open={configModalOpen}
         onClose={() => setConfigModalOpen(false)}
-        onSave={handleConfigSave}
+        onSave={handleConfigSaveWithTypeUpdate}
         initialRepositories={currentRepositories}
         initialUsers={currentUsers}
         initialActivityConfig={currentActivityConfig}
         initialIsPublic={selectedDashboard?.isPublic ?? true}
+        initialDashboardTypeCode={dashboardTypeCode}
       />
     </DashboardContainer>
   );

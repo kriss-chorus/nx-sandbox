@@ -1,6 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import { executeGraphQL } from '../api/postgraphile-client';
+
+interface Feature {
+  id: string;
+  code: string;
+  name: string;
+}
 
 interface Client {
   id: string;
@@ -9,6 +15,11 @@ interface Client {
     id: string;
     code: string;
     name: string;
+    tierTypeFeaturesByTierTypeId: {
+      nodes: Array<{
+        featureByFeatureId: Feature;
+      }>;
+    };
   };
   logoUrl?: string;
 }
@@ -32,6 +43,15 @@ const CLIENTS_QUERY = `
           id
           code
           name
+          tierTypeFeaturesByTierTypeId {
+            nodes {
+              featureByFeatureId {
+                id
+                code
+                name
+              }
+            }
+          }
         }
       }
     }
