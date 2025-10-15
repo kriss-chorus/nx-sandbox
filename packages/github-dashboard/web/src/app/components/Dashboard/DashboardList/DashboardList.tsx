@@ -1,8 +1,8 @@
 import { Add, Business, Star, Visibility } from '@mui/icons-material';
 import { Box, Button, CardActions, CardContent, Chip, Grid, Typography } from '@mui/material';
 
-import { Dashboard as DashboardType } from '../../types/dashboard';
-import { GradientCard } from '../common/GradientCard';
+import { Dashboard as DashboardType } from '../../../types/dashboard';
+import { GradientCard } from '../../common';
 
 interface DashboardListProps {
   dashboards: DashboardType[];

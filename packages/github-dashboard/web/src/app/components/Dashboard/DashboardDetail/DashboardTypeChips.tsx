@@ -1,7 +1,7 @@
 import { Box, Chip, Typography } from '@mui/material';
 import React, { useState } from 'react';
 
-import { executeGraphQL } from '../../api/postgraphile-client';
+import { executeGraphQL } from '../../../api/postgraphile-client';
 
 interface DashboardTypeChipsProps {
   dashboardId: string;

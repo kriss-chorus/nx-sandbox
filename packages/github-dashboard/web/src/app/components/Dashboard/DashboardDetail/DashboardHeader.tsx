@@ -6,8 +6,9 @@ import {
     Typography
 } from '@mui/material';
 import React from 'react';
+
 import { useClientContext } from '../../../context/ClientContext';
-import { ExportButton } from '../ExportButton';
+import { ExportButton } from '../PremiumFeatures';
 
 interface DashboardHeaderProps {
   dashboardName: string;

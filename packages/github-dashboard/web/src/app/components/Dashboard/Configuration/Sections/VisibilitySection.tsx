@@ -37,8 +37,8 @@ export function VisibilitySection({
           
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
             {isPublic 
-              ? "This dashboard will be visible to all users" 
-              : "This dashboard will only be visible to you"}
+              ? "This Dashboard will be visible to all users"
+              : "This Dashboard will only be visible to you"}
           </Typography>
         </CardContent>
       </Card>

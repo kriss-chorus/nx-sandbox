@@ -13,7 +13,8 @@ import {
 import { useEffect, useRef, useState } from 'react';
 
 import { GitHubUser } from '../../../../types/github';
-import { ActivityConfigSection, RepositorySection, UserSection, VisibilitySection } from './sections';
+
+import { ActivityConfigSection, RepositorySection, UserSection, VisibilitySection } from './Sections';
 
 interface DashboardConfigModalProps {
   open: boolean;
@@ -83,7 +84,7 @@ export function DashboardConfigModal({
       });
       onClose();
     } catch (e) {
-      console.error('Failed to save dashboard configuration', e);
+      console.error('Failed to save Dashboard Configuration', e);
     } finally {
       setSaving(false);
     }
