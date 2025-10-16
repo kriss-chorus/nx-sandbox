@@ -120,13 +120,13 @@ GITHUB_TOKEN=ghp_xxx   # Optional: for GitHub API access
 - **Backend**: NestJS + PostGraphile + PostgreSQL
 - **Database**: PostgreSQL with Drizzle ORM
 - **GraphQL**: PostGraphile auto-generated API
-- **Theming**: Dynamic theme system with tier-based styling
+- **Theming**: MUI theme system with tier-based styling (Basic: coral, Premium: dracula)
 
 ### Key Components
 
 - **ClientContext**: Global state management for client selection and premium features
 - **DashboardLayouts**: Dynamic layout switching based on dashboard type
-- **ThemeFactory**: Modular theme system (neutral, basic, premium)
+- **ThemeFactory**: MUI theme factory with tier-based themes (neutral, basic, premium)
 - **ActivityConfigs**: Configurable activity tracking (PRs created, reviewed, merged)
 
 ## Testing
