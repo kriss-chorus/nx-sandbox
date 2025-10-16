@@ -40,6 +40,8 @@ The application uses a **database-driven feature flag system** where:
   - `summary` - Summary statistics bar
   - `type_chips` - Dashboard type selection in configure modal
 
+> **Note**: This is a demo approach. In production, applications typically use separate premium pages/routes with proper subscription validation, backend authorization, and upgrade prompts rather than simple frontend feature toggles.
+
 ```typescript
 // Feature checking in components
 const { hasFeature } = useClientContext();
@@ -72,9 +74,9 @@ const { hasFeature } = useClientContext();
 
 **No Authentication Required**
 
-- Demo uses "Active Client" selector for tenant simulation
-- Backend receives `X-Demo-Client-Id` header for multi-tenancy
-- Perfect for showcasing tier-based experiences
+- Demo uses "Active Client" selector for frontend-only tenant simulation
+- Two demo clients seeded in database: "Candy Corn Labs" (Basic) and "Haunted Hollow" (Premium)
+- Client context stored in React Context and localStorage
 
 ### Core Functionality
 

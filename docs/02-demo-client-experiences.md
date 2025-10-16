@@ -14,7 +14,7 @@ Purpose: Implement and demo two distinct client experiences (frontend + backend)
 
 ## Key Decisions
 
-- No auth: UI uses an "Active Client" selector; backend receives X-Demo-Client-Id to simulate tenancy
+- No auth: UI uses an "Active Client" selector; client context stored in React Context and localStorage
 - **Feature entitlements live on client tier** (NOT on dashboard type) - stored in `tier_type_feature` table
 - Dashboard type changes layout/UX only
 - **Frontend Context pattern** for feature checking and theme determination
