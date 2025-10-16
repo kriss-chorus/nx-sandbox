@@ -14,11 +14,11 @@ _Coral orange theme with core dashboard functionality_
 ![Premium Tier Dashboard](../../docs/images/premium-dashboard.png)
 _Dracula dark theme with exclusive features_
 
-### Premium Features
-
 **🎨 Dynamic Theme Switching**
 ![Theme Switching Demo](../../docs/videos/theme-switching.gif)
 _Theme transitions between Basic and Premium tiers_
+
+### Premium Features
 
 **📊 Dynamic Layout Switching**
 ![Layout Switching Demo](../../docs/videos/layout-switching.gif)
