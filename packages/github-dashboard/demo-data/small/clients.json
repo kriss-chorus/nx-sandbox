@@ -1,0 +1,18 @@
+[
+  {
+    "id": "2667d6c1-89e6-4848-8e12-03cefeeec0c8",
+    "name": "Candy Corn Labs",
+    "tierTypeId": "f2932a37-d4a4-4047-9b0f-c22ba27a2b4e",
+    "logoUrl": "https://cdn-icons-png.flaticon.com/512/3277/3277218.png",
+    "createdAt": "2025-10-08 17:38:18.491243",
+    "updatedAt": "2025-10-08 17:38:18.491243"
+  },
+  {
+    "id": "0da1c95b-ac37-4f19-a907-041a458c8e11",
+    "name": "Haunted Hollow",
+    "tierTypeId": "f2a19665-9ead-4147-96e0-7230802df0bc",
+    "logoUrl": "https://cdn-icons-png.flaticon.com/512/685/685859.png",
+    "createdAt": "2025-10-08 17:40:13.396876",
+    "updatedAt": "2025-10-08 17:40:13.396876"
+  }
+]

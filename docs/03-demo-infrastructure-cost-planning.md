@@ -37,8 +37,8 @@ Purpose: Build Terraform infrastructure for github-dashboard app with cost optim
 - [x] Create demo data generator (`generate-demo-data.js`)
 - [x] Create comprehensive demo plan and task delegation
 - [x] Update documentation format to match consistent pattern across all demos
-- [ ] Run performance tests to get realistic estimates
-- [ ] Generate demo data for storage estimates
+- [x] Run performance tests to get realistic estimates
+- [x] Generate demo data for storage estimates
 - [ ] Complete Terraform configuration (outputs, tfvars, validation)
 - [ ] Add `outputs.tf` with key infrastructure outputs
 - [ ] Add `terraform.tfvars` files for different scenarios
@@ -250,11 +250,186 @@ terraform plan
 - [x] Infrastructure analysis and planning
 - [x] Initial Terraform configuration
 - [x] Performance testing setup
+- [x] Resolve GraphQL mutation schema issues
+- [x] Identify frontend load testing challenges
 - [ ] Cost analysis and optimization
 - [ ] Terraform validation and testing
 - [ ] Demo preparation and practice
 - [ ] Final cost analysis and documentation
 - [ ] Teachback materials preparation
+
+## 🚧 Challenges & Solutions
+
+### Challenge 1: GraphQL Mutation Schema Mismatch
+
+**Problem**: k6 load tests were failing with 4 GraphQL errors when trying to create dashboards
+
+```
+4 error(s) in 2.38ms :: mutation CreateDashboard($input: CreateDashboardInput!)
+```
+
+**Root Cause**: The mutation expected a nested `dashboard` object, not flat fields
+
+```javascript
+// ❌ Wrong structure
+input: {
+  name: "Test Dashboard",
+  slug: "test-dashboard",
+  clientId: "2667d6c1-89e6-4848-8e12-03cefeeec0c8"
+}
+
+// ✅ Correct structure
+input: {
+  dashboard: {
+    name: "Test Dashboard",
+    slug: "test-dashboard",
+    clientId: "2667d6c1-89e6-4848-8e12-03cefeeec0c8"
+  }
+}
+```
+
+**Solution**: Used GraphQL introspection to discover the correct schema structure
+
+```bash
+curl -X POST http://localhost:3001/graphql -H "Content-Type: application/json" \
+  -d '{"query": "mutation { createDashboard(input: { dashboard: { ... } }) { ... } }"}'
+```
+
+**Learning**: Always validate GraphQL schemas before writing load tests. PostGraphile generates complex nested input types that aren't immediately obvious.
+
+### Challenge 2: Frontend IPv6 Binding Issue (Reoccurring)
+
+**Problem**: Frontend accessible in browser but k6 gets "connection refused" errors
+
+```
+time="2025-10-21T20:23:31-07:00" level=warning msg="Request Failed"
+error="Get \"http://localhost:4202/\": dial tcp 127.0.0.1:4202: connect: connection refused"
+```
+
+**Root Cause**: Frontend service is bound to IPv6 only (`::1:4202`), not IPv4 (`127.0.0.1:4202`)
+
+```bash
+# Frontend binding (IPv6 only)
+tcp6       0      0  ::1.4202               *.*                    LISTEN
+
+# k6 tries IPv4 first, then fails
+* Host localhost:4202 was resolved.
+* IPv6: ::1
+* IPv4: 127.0.0.1
+```
+
+**Investigation Steps**:
+
+1. ✅ Confirmed frontend runs on port 4202: `lsof -i :4202`
+2. ✅ Verified single requests work: `curl http://localhost:4202/` returns 200
+3. ❌ k6 fails because it tries IPv4 (127.0.0.1) first, but service only bound to IPv6 (::1)
+4. ✅ Solution: Use IPv6 address directly in k6 test
+
+**Solution**: Use IPv6 address directly in k6 test
+
+```javascript
+// ❌ Fails - localhost resolves to 127.0.0.1 first
+const homepage = http.get('http://localhost:4202/');
+
+// ✅ Works - direct IPv6 address
+const homepage = http.get('http://[::1]:4202/');
+```
+
+**Learning**: This is a recurring issue that was supposedly fixed but persists. Local development environments often have IPv6/IPv4 binding inconsistencies that don't reflect production behavior. Always check actual network binding with `netstat -an` when debugging connection issues.
+
+### Challenge 3: Data Generation Script Resumability
+
+**Problem**: Running data generation multiple times created duplicate data and errors
+
+```
+error: duplicate key value violates unique constraint "github_user_github_user_id_unique"
+```
+
+**Root Cause**: Script didn't check for existing data before generating new records
+
+**Solution**: Implemented resumable data generation
+
+```javascript
+// Check existing count before generating
+const existingCount = await this.client.query(
+  "SELECT COUNT(*) FROM github_user WHERE github_username LIKE 'github_user%'"
+);
+const currentCount = parseInt(existingCount.rows[0].count);
+
+if (currentCount >= count) {
+  console.log(`Already have ${currentCount} GitHub users, skipping generation`);
+  // Load existing data for relationships
+  const existingUsers = await this.client.query(
+    "SELECT id FROM github_user WHERE github_username LIKE 'github_user%'"
+  );
+  this.githubUsers = existingUsers.rows;
+  return;
+}
+```
+
+**Learning**: Always design data generation scripts to be idempotent and resumable. Production data migration scripts should follow the same pattern.
+
+### Challenge 4: Database Schema Understanding
+
+**Problem**: Initial data generation used wrong column names and table relationships
+
+```
+error: column "username" of relation "github_user" does not exist
+error: column "slug" of relation "dashboard" does not exist
+```
+
+**Root Cause**: Assumed schema structure instead of reading actual entity definitions
+
+**Solution**: Read actual Drizzle entity files to understand correct schema
+
+```typescript
+// github-user.entity.ts
+export const githubUser = pgTable('github_user', {
+  githubUserId: varchar('github_user_id', { length: 50 }).notNull().unique(),
+  githubUsername: varchar('github_username', { length: 255 }).notNull(),
+  // ...
+});
+```
+
+**Learning**: Always read the actual schema definitions rather than making assumptions. This is especially important with ORMs like Drizzle that have their own naming conventions.
+
+## 🎓 Key DevOps Insights
+
+### 1. Load Testing Reveals Hidden Constraints
+
+The frontend connection issue under load is actually valuable data for infrastructure planning. It shows that:
+
+- Local development has different capacity limits than production
+- We need to consider connection pooling and load balancing
+- Single-instance deployments won't scale
+
+### 2. GraphQL Schema Complexity
+
+PostGraphile generates complex nested input types that require careful validation:
+
+- Always use GraphQL introspection to understand schemas
+- Test mutations manually before writing load tests
+- Consider schema documentation for team knowledge sharing
+
+### 3. Data Generation Strategy
+
+Resumable data generation is crucial for:
+
+- Performance testing iterations
+- Development environment setup
+- Production data migrations
+- CI/CD pipeline reliability
+
+### 4. Local vs Production Differences
+
+Local development environments often hide production concerns:
+
+- Resource constraints (connection limits, memory, CPU)
+- Network latency and timeouts
+- Concurrent user behavior patterns
+- Database connection pooling
+
+This is why load testing is essential - it reveals these hidden constraints before production deployment.
 
 ---
 

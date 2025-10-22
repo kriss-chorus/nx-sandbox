@@ -8,11 +8,52 @@ Purpose: Document performance testing execution and results to inform infrastruc
 
 ## 🎯 Testing Strategy
 
+### Performance Thresholds
+
+All load tests use the following performance thresholds defined in `packages/tools/load-testing/k6/load-test.js`:
+
+| Metric                  | Threshold | Description                                       |
+| ----------------------- | --------- | ------------------------------------------------- |
+| **Response Time (p95)** | < 800ms   | 95th percentile response time must be under 800ms |
+| **Error Rate**          | < 1%      | Failed request rate must be under 1%              |
+
+**Threshold Definition:**
+
+```javascript
+thresholds: {
+  http_req_duration: ['p(95)<800'],
+  http_req_failed: ['rate<0.01']
+}
+```
+
+**Test Status:**
+
+- ✅ **PASSED**: All thresholds met
+- ❌ **FAILED**: One or more thresholds exceeded
+
 ### Test Approach
 
-- **Page Load Testing**: Simulate real user behavior visiting dashboard pages
-- **Client-Specific Testing**: Test both Candy Corn Labs (basic) and Haunted Hollow (premium) dashboards
+- **GraphQL Queries**: Test read operations (allDashboards, allClients)
+- **GraphQL Mutations**: Test write operations (createDashboard) - 1/3 of VUs
+- **Mixed Workload**: Each test includes GraphQL queries, mutations, AND page loads (homepage + dashboard pages)
+- **Data Cleanup**: Clean test data between runs to avoid conflicts
 - **Incremental Data**: Start with seeded data, then scale up for realistic scenarios
+
+### Data Seeding Strategy
+
+| Load Testing  | Current Seed                     | +1K Data                    | +10K Data                    |
+| ------------- | -------------------------------- | --------------------------- | ---------------------------- |
+| **20 VUs**    | Test current seed with 20 VUs    | Test 1K data with 20 VUs    | Test 10K data with 20 VUs    |
+| **150 VUs**   | Test current seed with 150 VUs   | Test 1K data with 150 VUs   | Test 10K data with 150 VUs   |
+| **1,500 VUs** | Test current seed with 1,500 VUs | Test 1K data with 1,500 VUs | Test 10K data with 1,500 VUs |
+
+**Data Generation Process:**
+
+1. **Keep existing clients** (Candy Corn Labs, Haunted Hollow)
+2. **Generate GitHub users** based on scenario scale
+3. **Create dashboards** linked to existing clients
+4. **Generate activities** to simulate real usage patterns
+5. **Run performance tests** with realistic data volumes
 
 ### Test Scenarios
 
@@ -79,69 +120,60 @@ Purpose: Document performance testing execution and results to inform infrastruc
 | **Throughput (RPS)**     | > 50            | > 200           | > 500            | TBD            |
 | **Database Connections** | < 10            | < 50            | < 100            | TBD            |
 
-### Infrastructure Sizing Insights
-
-| Scenario      | Compute Needs        | Database Needs       | Storage Needs | Network Needs  |
-| ------------- | -------------------- | -------------------- | ------------- | -------------- |
-| **Baseline**  | 1 small instance     | 1 small DB           | Minimal       | Basic          |
-| **1K Users**  | 2-3 medium instances | 1 medium DB          | Moderate      | Standard       |
-| **10K Users** | 5-10 large instances | 1 large DB + replica | High          | High bandwidth |
-
-## 🚀 Execution Commands
-
-### Run Tests
+## 🚀 Commands Used
 
 ```bash
-# Baseline testing
-pnpm nx run load-testing:k6
+# Seed data, run test, clean up
 
-# 1K users scenario
-pnpm nx run load-testing:k6:1k
-
-# 10K users scenario
-pnpm nx run load-testing:k6:10k
-```
-
-### Generate Test Data
-
-```bash
-# Generate data for 1K users scenario
-cd packages/github-dashboard
-node generate-demo-data.js --scenario=1k
-
-# Generate data for 10K users scenario
-node generate-demo-data.js --scenario=10k
+node generate-demo-data.js [small|large]
+pnpm nx run load-testing:k6[:1k|:10k]
+node cleanup-test-data.js
 ```
 
 ## 📋 Test Results Template
 
 ### Test Execution Log
 
-| Test ID | Start Time | End Time | Duration | Status     | Notes                     |
-| ------- | ---------- | -------- | -------- | ---------- | ------------------------- |
-| B1      | TBD        | TBD      | TBD      | ⏳ Pending | Baseline dashboard loads  |
-| B2      | TBD        | TBD      | TBD      | ⏳ Pending | Homepage + navigation     |
-| 1K-1    | TBD        | TBD      | TBD      | ⏳ Pending | 1K users dashboard loads  |
-| 10K-1   | TBD        | TBD      | TBD      | ⏳ Pending | 10K users dashboard loads |
+| Test ID | Duration | Status       | Notes                                                  |
+| ------- | -------- | ------------ | ------------------------------------------------------ |
+| B1      | 60s      | ✅ Completed | Baseline test (20 VUs, current seed data)              |
+| 1K-1    | 180s     | ✅ Completed | 1K users test (150 VUs, current seed data)             |
+| 10K-1   | 300s     | ❌ Failed    | 10K users test (1,500 VUs, current seed data)          |
+| B1-S    | 60s      | ✅ Completed | Baseline test (20 VUs, small dataset: 100 users)       |
+| 1K-S    | 180s     | ✅ Completed | 1K users test (150 VUs, small dataset: 100 users)      |
+| 10K-S   | 300s     | ❌ Failed    | 10K users test (1,500 VUs, small dataset: 100 users)   |
+| B1-L    | 60s      | ✅ Completed | Baseline test (20 VUs, large dataset: 1,000 users)     |
+| 1K-L    | 180s     | ✅ Completed | 1K users test (150 VUs, large dataset: 1,000 users)    |
+| 10K-L   | 300s     | ❌ Failed    | 10K users test (1,500 VUs, large dataset: 1,000 users) |
 
 ### Performance Results
 
-| Test ID | p50 (ms) | p95 (ms) | p99 (ms) | Error Rate | RPS | Notes                |
-| ------- | -------- | -------- | -------- | ---------- | --- | -------------------- |
-| B1      | TBD      | TBD      | TBD      | TBD        | TBD | Baseline performance |
-| B2      | TBD      | TBD      | TBD      | TBD        | TBD | Navigation testing   |
-| 1K-1    | TBD      | TBD      | TBD      | TBD        | TBD | Moderate load        |
-| 10K-1   | TBD      | TBD      | TBD      | TBD        | TBD | High load            |
+| Test ID | p50 (ms) | p95 (ms) | p99 (ms) | Error Rate | RPS   | Notes                                                           |
+| ------- | -------- | -------- | -------- | ---------- | ----- | --------------------------------------------------------------- |
+| B1      | 5.27     | 13.99    | ~35      | 0.00%      | 43.8  | Baseline test (20 VUs, current seed data)                       |
+| 1K-1    | 28.86    | 323.96   | ~910     | 0.00%      | 282.9 | 1K users test (150 VUs, current seed data)                      |
+| 10K-1   | 2.74s    | 10.19s   | ~13.8s   | 0.10%      | 350.9 | 10K users test (1,500 VUs, current seed data) - FAILED          |
+| B1-S    | 5.66     | 16.38    | ~41      | 0.00%      | 43.3  | Baseline test (20 VUs, small dataset: 100 users)                |
+| 1K-S    | 27.91    | 325.96   | ~830     | 0.00%      | 281.9 | 1K users test (150 VUs, small dataset: 100 users)               |
+| 10K-S   | 2.70s    | 10.58s   | ~13.0s   | 0.13%      | 341.1 | 10K users test (1,500 VUs, small dataset: 100 users) - FAILED   |
+| B1-L    | 5.90     | 20.34    | ~36      | 0.00%      | 43.5  | Baseline test (20 VUs, large dataset: 1,000 users)              |
+| 1K-L    | 31.19    | 354.71   | ~835     | 0.00%      | 280.1 | 1K users test (150 VUs, large dataset: 1,000 users)             |
+| 10K-L   | 2.77s    | 11.11s   | ~15.3s   | 0.14%      | 334.8 | 10K users test (1,500 VUs, large dataset: 1,000 users) - FAILED |
 
-## 🎯 Next Steps
+## 📊 Test Results Summary
 
-1. **Run baseline tests** with current seeded data
-2. **Generate test data** for 1K and 10K scenarios
-3. **Execute load tests** for each scenario
-4. **Analyze results** and document infrastructure needs
-5. **Update Terraform** configuration based on findings
-6. **Calculate costs** using AWS Calculator
+### ✅ PASSED Tests
 
----
+- **B1, B1-S, B1-L**: Baseline tests (20 VUs) - All passed across all data volumes
+- **1K-1, 1K-S, 1K-L**: 1K user tests (150 VUs) - All passed across all data volumes
 
-**Note**: This document will be updated as tests are executed and results are collected. Each test should be documented with actual performance metrics and infrastructure recommendations.
+### ❌ FAILED Tests
+
+- **10K-1, 10K-S, 10K-L**: 10K user tests (1,500 VUs) - All failed across all data volumes
+
+### Key Observations
+
+- **150 VUs**: Consistently passes performance thresholds
+- **1,500 VUs**: Consistently fails performance thresholds
+- **Data volume**: Minimal impact on 10K user test performance
+- **Error patterns**: All 10K failures show similar p95 latency (~10-11s) and low error rates (0.10-0.14%)
