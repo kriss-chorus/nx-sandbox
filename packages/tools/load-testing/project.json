@@ -1,0 +1,36 @@
+{
+  "name": "load-testing",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/tools/load-testing",
+  "projectType": "application",
+  "targets": {
+    "k6": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "k6 run k6/load-test.js",
+        "cwd": "packages/tools/load-testing"
+      }
+    },
+    "k6:1k": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "VUS=150 DURATION=180s k6 run k6/load-test.js",
+        "cwd": "packages/tools/load-testing"
+      }
+    },
+    "k6:10k": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "VUS=1500 DURATION=300s k6 run k6/load-test.js",
+        "cwd": "packages/tools/load-testing"
+      }
+    },
+    "artillery": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx artillery run artillery/load-test.yml",
+        "cwd": "packages/tools/load-testing"
+      }
+    }
+  }
+}

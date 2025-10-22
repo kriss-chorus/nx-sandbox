@@ -1,0 +1,14 @@
+{
+  "name": "@tools/load-testing",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Load and performance testing tools for github-dashboard",
+  "scripts": {
+    "k6": "k6 run k6/load-test.js --summary-export ../../github-dashboard/perf-results/k6-latest.json",
+    "k6:1k": "VUS=150 DURATION=180s k6 run k6/load-test.js --summary-export ../../github-dashboard/perf-results/k6-1k-latest.json",
+    "k6:10k": "VUS=1500 DURATION=300s k6 run k6/load-test.js --summary-export ../../github-dashboard/perf-results/k6-10k-latest.json",
+    "artillery": "npx artillery run artillery/load-test.yml -o ../../github-dashboard/perf-results/artillery-latest.json"
+  }
+}
+
+
