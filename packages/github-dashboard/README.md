@@ -131,6 +131,12 @@ GITHUB_TOKEN=ghp_xxx   # Optional: for GitHub API access
 - **ThemeFactory**: MUI theme factory with tier-based themes (neutral, basic, premium)
 - **ActivityConfigs**: Configurable activity tracking (PRs created, reviewed, merged)
 
+### Improvements for Production
+
+Looking for how this would work in a real app? See:
+
+- Client Experiences Guide → Production notes: ../../docs/02-demo-client-experiences.md#production-notes
+
 ## Testing
 
 ### E2E Tests

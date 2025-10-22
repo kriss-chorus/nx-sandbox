@@ -1,5 +1,86 @@
 # Demo 2: Client Experiences - Basic vs Premium
 
+## Production notes
+
+This repo shows a simple demo. For a real app, keep it straightforward and safe:
+
+- Plans and add‑ons: store what a customer gets, and load that on login.
+- Access control: build permissions from the plan (CASL works well), use them in the UI and on the API.
+- Separate pages: premium/enterprise pages get their own routes with clear upgrade prompts.
+- Backend checks: the API must also verify the plan before serving premium features.
+- Upgrade flow: one consistent prompt/CTA that connects to billing.
+- Measure usage: track what features people use by plan.
+- Cache carefully: cache entitlements briefly; refresh when the subscription changes.
+- Words matter: call these "entitlements/permissions," and use "feature flags" only for rollouts/tests.
+- Real multi‑tenancy (optional): enforce data isolation in the DB (e.g., RLS) and at the API.
+
+## Key Learning: TypeScript/JSX Typing Issues
+
+The biggest pain point was TypeScript being picky about JSX component return types, especially with Emotion styled components:
+
+**The Problem:**
+
+```typescript
+// This error:
+'DashboardNotFound' cannot be used as a JSX component. Its type '({ onBackClick }: DashboardNotFoundProps) => Element' is not a valid JSX element type.
+
+// Emotion styled components also caused issues:
+const StyledComponent = styled(Paper)<{ isPremium: boolean }>`
+  // React doesn't recognize 'isPremium' as a valid DOM prop
+`;
+```
+
+**The Solutions:**
+
+```typescript
+// 1. Explicit return type casting for Context providers
+return (
+  <ClientContext.Provider value={contextValue}>
+    {children}
+  </ClientContext.Provider>
+) as React.ReactElement;
+
+// 2. Filter custom props in styled components
+const ClientCard = styled(Paper, {
+  shouldForwardProp: (prop) => prop !== 'isPremium',
+})<{ isPremium: boolean }>`
+  // Now React won't complain about isPremium
+`;
+```
+
+**Why This Happens:**
+
+- React 18+ has stricter JSX typing
+- Emotion passes props to DOM elements by default
+- Context providers need explicit return type casting
+- PostGraphile auto-generated types don't always match expectations
+
+## Best Practices Learned
+
+**1. Database-Driven Configuration**
+
+- Store feature entitlements in database tables, not hardcoded flags
+- Use proper relational design with junction tables
+- Make systems data-driven rather than code-driven
+
+**2. Context-Based State Management**
+
+- Centralize client/feature logic in React Context
+- Single source of truth for feature checking
+- Clean separation between data fetching and UI logic
+
+**3. Self-Regulating Components**
+
+- Components check their own feature requirements
+- No prop drilling for feature flags
+- Clean separation of concerns
+
+**4. Type Safety First**
+
+- Proper TypeScript interfaces for all data structures
+- Explicit return type casting when needed
+- Filter custom props in styled components
+
 Purpose: Implement and demo two distinct client experiences (frontend + backend) without auth, using a multi-tenant model (clients) and tier-based entitlements.
 
 > **📖 See the [GitHub Dashboard README](../packages/github-dashboard/README.md) for current implementation status and features.**

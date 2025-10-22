@@ -1,8 +1,6 @@
 # Demo 1: Full Stack App - GitHub Dashboard
 
-> **About This Document:** This is my journey building a modern full-stack application using LLM/Cursor AI assistance. It documents both the technical implementation and the meta-learning about building with AI tools. The goal is to understand the stack deeply, not just make it work.
->
-> **📖 See the [GitHub Dashboard README](../packages/github-dashboard/README.md) for current project status and features.**
+> **📖 See the [GitHub Dashboard README](../packages/github-dashboard/README.md) for current implementation status and features.**
 
 ---
 
