@@ -7,16 +7,19 @@ export const options = {
   thresholds: { http_req_duration: ['p(95)<800'], http_req_failed: ['rate<0.01'] }
 };
 
-const GRAPHQL = __ENV.GRAPHQL_URL || 'http://localhost:3001/graphql';
-const API = __ENV.API_URL || 'http://localhost:3001/api/health';
+const WEB_URL = __ENV.WEB_URL || 'http://localhost:8080';
 
 export default function () {
-  const gql = JSON.stringify({ query: '{ allDashboards { nodes { id name } } }' });
-  const r1 = http.post(GRAPHQL, gql, { headers: { 'Content-Type': 'application/json' } });
-  check(r1, { 'graphql 200': (r) => r.status === 200 });
+  // Test dashboard page loads (simulating real user behavior)
+  const dashboard1 = http.get(`${WEB_URL}/dashboard/22fdda0c-3224-4153-bb5c-edb0b7e7a821`); // First Candy Corn Dashboard
+  check(dashboard1, { 'dashboard1 200': (r) => r.status === 200 });
 
-  const r2 = http.get(API);
-  check(r2, { 'api 200': (r) => r.status === 200 });
+  const dashboard2 = http.get(`${WEB_URL}/dashboard/97e807a7-7c24-45df-9ba6-3c58f36d7c51`); // Haunted Board
+  check(dashboard2, { 'dashboard2 200': (r) => r.status === 200 });
+
+  // Test homepage/landing page
+  const homepage = http.get(`${WEB_URL}/`);
+  check(homepage, { 'homepage 200': (r) => r.status === 200 });
 
   sleep(1);
 }
