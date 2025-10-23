@@ -1,0 +1,108 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: github-dashboard-web
+  namespace: github-dashboard
+  labels:
+    app: github-dashboard-web
+    component: web
+    environment: ${ENVIRONMENT}
+    managed-by: terraform
+  annotations:
+    internal:cost-allocation:Application: github-dashboard
+    internal:cost-allocation:Project: GitHub Dashboard Demo
+    internal:cost-allocation:Client: Internal
+    internal:cost-allocation:Owner: Engineering
+    internal:operations:Environment: ${ENVIRONMENT}
+    internal:operations:ManagedBy: Terraform
+    internal:operations:Owner: DevOps
+    internal:operations:Project: internal/platform
+    internal:data:Classification: Private
+    internal:compliance:Framework: SOC2
+spec:
+  replicas: ${WEB_REPLICAS}
+  selector:
+    matchLabels:
+      app: github-dashboard-web
+  template:
+    metadata:
+      labels:
+        app: github-dashboard-web
+        component: web
+        environment: ${ENVIRONMENT}
+      annotations:
+        internal:cost-allocation:Application: github-dashboard
+        internal:cost-allocation:Project: GitHub Dashboard Demo
+        internal:cost-allocation:Client: Internal
+        internal:cost-allocation:Owner: Engineering
+        internal:operations:Environment: ${ENVIRONMENT}
+        internal:operations:ManagedBy: Terraform
+        internal:operations:Owner: DevOps
+        internal:operations:Project: internal/platform
+        internal:data:Classification: Private
+        internal:compliance:Framework: SOC2
+    spec:
+      serviceAccountName: github-dashboard-web
+      containers:
+      - name: web
+        image: github-dashboard-web:latest
+        ports:
+        - containerPort: 3000
+          name: http
+        env:
+        - name: NODE_ENV
+          value: ${NODE_ENV}
+        - name: API_URL
+          value: "http://github-dashboard-api:3000"
+        - name: GITHUB_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: github-credentials
+              key: client-id
+        - name: GITHUB_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: github-credentials
+              key: client-secret
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+      securityContext:
+        fsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+      nodeSelector:
+        kubernetes.io/os: linux
+      tolerations:
+      - key: "node.kubernetes.io/not-ready"
+        operator: "Exists"
+        effect: "NoExecute"
+        tolerationSeconds: 300
+      - key: "node.kubernetes.io/unreachable"
+        operator: "Exists"
+        effect: "NoExecute"
+        tolerationSeconds: 300

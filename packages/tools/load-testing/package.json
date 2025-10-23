@@ -10,5 +10,3 @@
     "artillery": "npx artillery run artillery/load-test.yml -o ../../github-dashboard/perf-results/artillery-latest.json"
   }
 }
-
-

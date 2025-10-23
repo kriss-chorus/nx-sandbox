@@ -12,9 +12,3 @@ scenarios:
             query: "{ allDashboards { nodes { id name } } }"
       - get:
           url: "/api/health"
-
-
-
-
-
-

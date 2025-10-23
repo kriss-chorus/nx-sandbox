@@ -1,12 +1,13 @@
-# GitHub Dashboard - Infrastructure Variables
+# GitHub Dashboard Infrastructure Variables
+# Following platform patterns from agent_context/devops/
 
 variable "environment" {
-  description = "The environment name (staging, production)"
+  description = "The environment name (1k-users, 10k-users)"
   type        = string
 
   validation {
-    condition     = contains(["staging", "production"], var.environment)
-    error_message = "Environment must be one of: staging, production."
+    condition     = contains(["1k-users", "10k-users"], var.environment)
+    error_message = "Environment must be one of: 1k-users, 10k-users."
   }
 }
 
@@ -22,101 +23,120 @@ variable "vpc_cidr" {
   default     = "10.0.0.0/16"
 }
 
-# Cost optimization variables
+# Cost Optimization Variables
 variable "enable_spot_instances" {
   description = "Enable Spot instances for cost optimization"
   type        = bool
   default     = true
 }
 
-variable "enable_aurora_serverless" {
-  description = "Enable Aurora Serverless v2 for cost optimization"
-  type        = bool
-  default     = false
-}
-
-variable "enable_cloudfront" {
-  description = "Enable CloudFront CDN for performance and cost optimization"
+variable "enable_cost_optimization" {
+  description = "Enable cost optimization features"
   type        = bool
   default     = true
 }
 
-# Scaling variables
+# Scaling Variables
 variable "min_capacity" {
   description = "Minimum number of instances"
   type        = number
-  default     = null
+  default     = 1
 }
 
 variable "max_capacity" {
   description = "Maximum number of instances"
   type        = number
-  default     = null
+  default     = 10
 }
 
-variable "desired_capacity" {
-  description = "Desired number of instances"
-  type        = number
-  default     = null
-}
-
-# Database variables
-variable "db_instance_class" {
-  description = "Database instance class"
+# Database Variables
+variable "database_engine" {
+  description = "Database engine"
   type        = string
-  default     = null
+  default     = "aurora-postgresql"
+}
+
+variable "database_version" {
+  description = "Database version"
+  type        = string
+  default     = "15.4"
 }
 
 variable "backup_retention_period" {
   description = "Number of days to retain database backups"
   type        = number
-  default     = null
+  default     = 7
+
+  validation {
+    condition     = var.backup_retention_period >= 1 && var.backup_retention_period <= 35
+    error_message = "Backup retention must be between 1 and 35 days."
+  }
 }
 
-# Monitoring variables
-variable "enable_detailed_monitoring" {
-  description = "Enable detailed monitoring for cost tracking"
+# Monitoring Variables
+variable "enable_monitoring" {
+  description = "Enable CloudWatch monitoring"
   type        = bool
   default     = true
 }
 
 variable "log_retention_days" {
-  description = "Number of days to retain CloudWatch logs"
+  description = "Number of days to retain logs"
   type        = number
-  default     = null
+  default     = 30
+
+  validation {
+    condition     = var.log_retention_days >= 1 && var.log_retention_days <= 3653
+    error_message = "Log retention must be between 1 and 3653 days."
+  }
 }
 
-# Cost allocation variables
-variable "cost_center" {
-  description = "Cost center for budget allocation"
-  type        = string
-  default     = "Engineering"
-}
-
-variable "project_name" {
-  description = "Project name for cost tracking"
-  type        = string
-  default     = "GitHub Dashboard Demo"
-}
-
-# Security variables
-variable "enable_deletion_protection" {
-  description = "Enable deletion protection for production resources"
+# Security Variables
+variable "enable_encryption" {
+  description = "Enable encryption for all resources"
   type        = bool
-  default     = null
+  default     = true
 }
 
 variable "data_classification" {
   description = "Data classification level"
   type        = string
   default     = "Private"
+
+  validation {
+    condition     = contains(["Public", "Private", "Confidential", "Restricted"], var.data_classification)
+    error_message = "Data classification must be one of: Public, Private, Confidential, Restricted."
+  }
 }
 
-variable "compliance_framework" {
-  description = "Compliance framework"
+# Performance Testing Variables
+variable "performance_testing_enabled" {
+  description = "Enable performance testing configuration"
+  type        = bool
+  default     = false
+}
+
+variable "expected_user_load" {
+  description = "Expected user load for infrastructure sizing"
+  type        = number
+  default     = 1000
+}
+
+# Cost Analysis Variables
+variable "cost_optimization_strategy" {
+  description = "Cost optimization strategy to apply"
   type        = string
-  default     = "SOC2"
+  default     = "balanced"
+
+  validation {
+    condition     = contains(["cost-focused", "balanced", "performance-focused"], var.cost_optimization_strategy)
+    error_message = "Cost optimization strategy must be one of: cost-focused, balanced, performance-focused."
+  }
 }
 
-
-
+# Additional Tags
+variable "additional_tags" {
+  description = "Additional tags to apply to all resources"
+  type        = map(string)
+  default     = {}
+}

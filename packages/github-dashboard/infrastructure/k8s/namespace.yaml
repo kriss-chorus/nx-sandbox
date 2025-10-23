@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: github-dashboard
+  labels:
+    app: github-dashboard
+    environment: ${ENVIRONMENT}
+    managed-by: terraform
+  annotations:
+    internal:cost-allocation:Application: github-dashboard
+    internal:cost-allocation:Project: GitHub Dashboard Demo
+    internal:cost-allocation:Client: Internal
+    internal:cost-allocation:Owner: Engineering
+    internal:operations:Environment: ${ENVIRONMENT}
+    internal:operations:ManagedBy: Terraform
+    internal:operations:Owner: DevOps
+    internal:operations:Project: internal/platform
+    internal:data:Classification: Private
+    internal:compliance:Framework: SOC2
