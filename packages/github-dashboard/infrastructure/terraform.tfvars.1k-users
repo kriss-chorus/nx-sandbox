@@ -1,0 +1,40 @@
+# GitHub Dashboard Infrastructure - 1K Users Configuration
+# Cost-optimized configuration for 1,000 users/month
+
+environment = "1k-users"
+aws_region = "us-west-2"
+vpc_cidr = "10.0.0.0/16"
+
+# Cost Optimization
+enable_spot_instances = true
+enable_cost_optimization = true
+cost_optimization_strategy = "cost-focused"
+
+# Scaling Configuration
+min_capacity = 1
+max_capacity = 3
+expected_user_load = 1000
+
+# Database Configuration
+database_engine = "aurora-postgresql"
+database_version = "15.4"
+backup_retention_period = 7
+
+# Monitoring Configuration
+enable_monitoring = true
+log_retention_days = 30
+
+# Security Configuration
+enable_encryption = true
+data_classification = "Private"
+
+# Performance Testing
+performance_testing_enabled = false
+
+# Additional Tags
+additional_tags = {
+  "internal:cost-allocation:Application" = "github-dashboard"
+  "internal:cost-allocation:Project" = "GitHub Dashboard Demo"
+  "internal:cost-allocation:Client" = "Internal"
+  "internal:cost-allocation:Owner" = "Engineering"
+}

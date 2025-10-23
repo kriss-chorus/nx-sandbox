@@ -1,0 +1,111 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: github-dashboard-api
+  namespace: github-dashboard
+  labels:
+    app: github-dashboard-api
+    component: api
+    environment: ${ENVIRONMENT}
+    managed-by: terraform
+  annotations:
+    internal:cost-allocation:Application: github-dashboard
+    internal:cost-allocation:Project: GitHub Dashboard Demo
+    internal:cost-allocation:Client: Internal
+    internal:cost-allocation:Owner: Engineering
+    internal:operations:Environment: ${ENVIRONMENT}
+    internal:operations:ManagedBy: Terraform
+    internal:operations:Owner: DevOps
+    internal:operations:Project: internal/platform
+    internal:data:Classification: Private
+    internal:compliance:Framework: SOC2
+spec:
+  replicas: ${API_REPLICAS}
+  selector:
+    matchLabels:
+      app: github-dashboard-api
+  template:
+    metadata:
+      labels:
+        app: github-dashboard-api
+        component: api
+        environment: ${ENVIRONMENT}
+      annotations:
+        internal:cost-allocation:Application: github-dashboard
+        internal:cost-allocation:Project: GitHub Dashboard Demo
+        internal:cost-allocation:Client: Internal
+        internal:cost-allocation:Owner: Engineering
+        internal:operations:Environment: ${ENVIRONMENT}
+        internal:operations:ManagedBy: Terraform
+        internal:operations:Owner: DevOps
+        internal:operations:Project: internal/platform
+        internal:data:Classification: Private
+        internal:compliance:Framework: SOC2
+    spec:
+      serviceAccountName: github-dashboard-api
+      containers:
+      - name: api
+        image: github-dashboard-api:latest
+        ports:
+        - containerPort: 3000
+          name: http
+        env:
+        - name: NODE_ENV
+          value: ${NODE_ENV}
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: database-credentials
+              key: url
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: database-credentials
+              key: password
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: github-credentials
+              key: token
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+      securityContext:
+        fsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+      nodeSelector:
+        kubernetes.io/os: linux
+      tolerations:
+      - key: "node.kubernetes.io/not-ready"
+        operator: "Exists"
+        effect: "NoExecute"
+        tolerationSeconds: 300
+      - key: "node.kubernetes.io/unreachable"
+        operator: "Exists"
+        effect: "NoExecute"
+        tolerationSeconds: 300

@@ -1,0 +1,92 @@
+# GitHub Dashboard - Local Development Infrastructure
+# Terraform configuration for local testing and cost analysis
+
+terraform {
+  required_version = ">= 1.0"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.84"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = ">= 2.0"
+    }
+  }
+
+  # Local backend for testing
+  backend "local" {
+    path = "terraform.tfstate"
+  }
+}
+
+# Provider configuration
+provider "aws" {
+  region = var.aws_region
+
+  default_tags {
+    tags = local.common_tags
+  }
+}
+
+# Data sources
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+# Local values for computed configurations
+locals {
+  # Common tags following platform patterns
+  common_tags = {
+    # Cost Allocation
+    "internal:cost-allocation:Application" = "github-dashboard"
+    "internal:cost-allocation:Project"     = "Demo Infrastructure"
+    "internal:cost-allocation:Client"      = "Internal"
+    "internal:cost-allocation:Owner"       = "Engineering"
+
+    # Operations
+    "internal:operations:Environment"      = var.environment
+    "internal:operations:ManagedBy"        = "Terraform"
+    "internal:operations:MaintenanceWindow" = "sun-2am-sun-4am"
+    "internal:operations:BackupWindow"     = "daily-3am"
+    "internal:operations:Lifecycle"        = "long-lived"
+    "internal:operations:Owner"            = "DevOps"
+    "internal:operations:Project"          = "internal/platform"
+
+    # Data Classification
+    "internal:data:Classification"         = "Private"
+
+    # Compliance
+    "internal:compliance:Framework"        = "SOC2"
+  }
+
+  # Environment-specific configuration
+  environment_config = {
+    production = {
+      # 10K users scenario
+      instance_count = 3
+      instance_type  = "t3.medium"
+      db_instance_class = "db.t3.medium"
+      min_capacity = 2
+      max_capacity = 10
+    }
+    staging = {
+      # 1K users scenario  
+      instance_count = 2
+      instance_type  = "t3.small"
+      db_instance_class = "db.t3.small"
+      min_capacity = 1
+      max_capacity = 5
+    }
+  }
+
+  # Computed values
+  current_config = local.environment_config[var.environment]
+  
+  # Naming convention
+  name_prefix = "${var.environment}-github-dashboard"
+}
+

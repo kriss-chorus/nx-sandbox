@@ -1,0 +1,16 @@
+{
+  "generated_at": "2025-10-16T04:07:07.256Z",
+  "counts": {
+    "clients": 2,
+    "githubUsers": 1000,
+    "dashboards": 5,
+    "activities": 181
+  },
+  "storage": {
+    "totalClientStorage": 544,
+    "totalGitHubUserStorage": 293000,
+    "totalDashboardStorage": 1955,
+    "totalActivityStorage": 56472,
+    "totalStorage": 351971
+  }
+}

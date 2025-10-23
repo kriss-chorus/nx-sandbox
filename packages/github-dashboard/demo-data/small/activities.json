@@ -1,0 +1,2717 @@
+[
+  {
+    "id": "activity-1",
+    "dashboard_id": "dashboard-1",
+    "type": "pull_request_reviewed",
+    "repository": "dev-tools",
+    "title": "General activity",
+    "description": "Fixed critical bug affecting user experience",
+    "created_at": "2025-09-14T09:12:30.139Z",
+    "metadata": {
+      "lines_added": 384,
+      "lines_removed": 44,
+      "files_changed": 6,
+      "commits": 4
+    }
+  },
+  {
+    "id": "activity-2",
+    "dashboard_id": "dashboard-1",
+    "type": "issue_created",
+    "repository": "backend-api",
+    "title": "General activity",
+    "description": "Added performance optimizations",
+    "created_at": "2025-07-29T19:30:52.337Z",
+    "metadata": {
+      "lines_added": 162,
+      "lines_removed": 189,
+      "files_changed": 13,
+      "commits": 6
+    }
+  },
+  {
+    "id": "activity-3",
+    "dashboard_id": "dashboard-1",
+    "type": "pull_request_opened",
+    "repository": "frontend-app",
+    "title": "Update dependencies",
+    "description": "Updated UI components and styling",
+    "created_at": "2025-09-05T22:15:57.814Z",
+    "metadata": {
+      "lines_added": 372,
+      "lines_removed": 89,
+      "files_changed": 10,
+      "commits": 8
+    }
+  },
+  {
+    "id": "activity-4",
+    "dashboard_id": "dashboard-1",
+    "type": "issue_created",
+    "repository": "testing-suite",
+    "title": "Update dependencies",
+    "description": "Updated documentation and code comments",
+    "created_at": "2025-08-15T13:58:12.280Z",
+    "metadata": {
+      "lines_added": 234,
+      "lines_removed": 174,
+      "files_changed": 6,
+      "commits": 7
+    }
+  },
+  {
+    "id": "activity-5",
+    "dashboard_id": "dashboard-1",
+    "type": "pull_request_reviewed",
+    "repository": "frontend-app",
+    "title": "Fix typo in README",
+    "description": "Fixed critical bug affecting user experience",
+    "created_at": "2025-09-08T00:46:37.460Z",
+    "metadata": {
+      "lines_added": 387,
+      "lines_removed": 82,
+      "files_changed": 16,
+      "commits": 8
+    }
+  },
+  {
+    "id": "activity-6",
+    "dashboard_id": "dashboard-1",
+    "type": "pull_request_merged",
+    "repository": "infrastructure",
+    "title": "Optimize performance",
+    "description": "Added new API endpoints",
+    "created_at": "2025-10-13T23:30:27.421Z",
+    "metadata": {
+      "lines_added": 69,
+      "lines_removed": 91,
+      "files_changed": 15,
+      "commits": 4
+    }
+  },
+  {
+    "id": "activity-7",
+    "dashboard_id": "dashboard-1",
+    "type": "branch_created",
+    "repository": "documentation",
+    "title": "Integrate payment processing",
+    "description": "Refactored code for better maintainability",
+    "created_at": "2025-09-21T09:49:22.313Z",
+    "metadata": {
+      "lines_added": 403,
+      "lines_removed": 22,
+      "files_changed": 6,
+      "commits": 9
+    }
+  },
+  {
+    "id": "activity-8",
+    "dashboard_id": "dashboard-1",
+    "type": "issue_closed",
+    "repository": "infrastructure",
+    "title": "General activity",
+    "description": "Refactored code for better maintainability",
+    "created_at": "2025-09-25T02:50:08.806Z",
+    "metadata": {
+      "lines_added": 35,
+      "lines_removed": 49,
+      "files_changed": 18,
+      "commits": 2
+    }
+  },
+  {
+    "id": "activity-9",
+    "dashboard_id": "dashboard-1",
+    "type": "pull_request_merged",
+    "repository": "testing-suite",
+    "title": "General activity",
+    "description": "Added new API endpoints",
+    "created_at": "2025-08-27T12:15:29.754Z",
+    "metadata": {
+      "lines_added": 393,
+      "lines_removed": 126,
+      "files_changed": 16,
+      "commits": 9
+    }
+  },
+  {
+    "id": "activity-10",
+    "dashboard_id": "dashboard-1",
+    "type": "pull_request_merged",
+    "repository": "testing-suite",
+    "title": "General activity",
+    "description": "Fixed critical bug affecting user experience",
+    "created_at": "2025-08-28T22:27:53.411Z",
+    "metadata": {
+      "lines_added": 154,
+      "lines_removed": 162,
+      "files_changed": 19,
+      "commits": 6
+    }
+  },
+  {
+    "id": "activity-11",
+    "dashboard_id": "dashboard-1",
+    "type": "branch_created",
+    "repository": "infrastructure",
+    "title": "Update dependencies",
+    "description": "Added new API endpoints",
+    "created_at": "2025-07-21T00:41:25.842Z",
+    "metadata": {
+      "lines_added": 247,
+      "lines_removed": 67,
+      "files_changed": 18,
+      "commits": 6
+    }
+  },
+  {
+    "id": "activity-12",
+    "dashboard_id": "dashboard-1",
+    "type": "branch_created",
+    "repository": "documentation",
+    "title": "General activity",
+    "description": "Fixed critical bug affecting user experience",
+    "created_at": "2025-10-02T00:19:23.928Z",
+    "metadata": {
+      "lines_added": 62,
+      "lines_removed": 78,
+      "files_changed": 1,
+      "commits": 5
+    }
+  },
+  {
+    "id": "activity-13",
+    "dashboard_id": "dashboard-1",
+    "type": "release_created",
+    "repository": "infrastructure",
+    "title": "Feature: Add dark mode support",
+    "description": "Updated UI components and styling",
+    "created_at": "2025-09-16T00:08:10.489Z",
+    "metadata": {
+      "lines_added": 77,
+      "lines_removed": 183,
+      "files_changed": 18,
+      "commits": 1
+    }
+  },
+  {
+    "id": "activity-14",
+    "dashboard_id": "dashboard-1",
+    "type": "pull_request_opened",
+    "repository": "documentation",
+    "title": "General activity",
+    "description": "Updated UI components and styling",
+    "created_at": "2025-09-24T23:36:47.294Z",
+    "metadata": {
+      "lines_added": 419,
+      "lines_removed": 136,
+      "files_changed": 6,
+      "commits": 2
+    }
+  },
+  {
+    "id": "activity-15",
+    "dashboard_id": "dashboard-1",
+    "type": "release_created",
+    "repository": "infrastructure",
+    "title": "General activity",
+    "description": "Refactored code for better maintainability",
+    "created_at": "2025-09-15T18:25:38.426Z",
+    "metadata": {
+      "lines_added": 189,
+      "lines_removed": 104,
+      "files_changed": 2,
+      "commits": 4
+    }
+  },
+  {
+    "id": "activity-16",
+    "dashboard_id": "dashboard-1",
+    "type": "branch_created",
+    "repository": "dev-tools",
+    "title": "General activity",
+    "description": "Added new API endpoints",
+    "created_at": "2025-08-24T17:29:24.952Z",
+    "metadata": {
+      "lines_added": 338,
+      "lines_removed": 48,
+      "files_changed": 14,
+      "commits": 8
+    }
+  },
+  {
+    "id": "activity-17",
+    "dashboard_id": "dashboard-1",
+    "type": "issue_created",
+    "repository": "data-pipeline",
+    "title": "General activity",
+    "description": "Added performance optimizations",
+    "created_at": "2025-10-06T09:39:31.676Z",
+    "metadata": {
+      "lines_added": 168,
+      "lines_removed": 132,
+      "files_changed": 10,
+      "commits": 10
+    }
+  },
+  {
+    "id": "activity-18",
+    "dashboard_id": "dashboard-1",
+    "type": "pull_request_opened",
+    "repository": "testing-suite",
+    "title": "General activity",
+    "description": "Implemented new feature with comprehensive testing",
+    "created_at": "2025-10-10T08:22:10.851Z",
+    "metadata": {
+      "lines_added": 64,
+      "lines_removed": 111,
+      "files_changed": 4,
+      "commits": 10
+    }
+  },
+  {
+    "id": "activity-19",
+    "dashboard_id": "dashboard-1",
+    "type": "issue_closed",
+    "repository": "testing-suite",
+    "title": "General activity",
+    "description": "Improved error handling and logging",
+    "created_at": "2025-08-15T06:23:31.166Z",
+    "metadata": {
+      "lines_added": 327,
+      "lines_removed": 179,
+      "files_changed": 19,
+      "commits": 3
+    }
+  },
+  {
+    "id": "activity-20",
+    "dashboard_id": "dashboard-1",
+    "type": "pull_request_reviewed",
+    "repository": "data-pipeline",
+    "title": "Add user authentication feature",
+    "description": "Updated documentation and code comments",
+    "created_at": "2025-09-22T20:00:15.746Z",
+    "metadata": {
+      "lines_added": 285,
+      "lines_removed": 131,
+      "files_changed": 14,
+      "commits": 2
+    }
+  },
+  {
+    "id": "activity-21",
+    "dashboard_id": "dashboard-1",
+    "type": "release_created",
+    "repository": "data-pipeline",
+    "title": "General activity",
+    "description": "Updated documentation and code comments",
+    "created_at": "2025-09-22T05:29:06.662Z",
+    "metadata": {
+      "lines_added": 32,
+      "lines_removed": 38,
+      "files_changed": 19,
+      "commits": 9
+    }
+  },
+  {
+    "id": "activity-22",
+    "dashboard_id": "dashboard-1",
+    "type": "issue_closed",
+    "repository": "dev-tools",
+    "title": "Deploy new monitoring system",
+    "description": "Updated UI components and styling",
+    "created_at": "2025-07-24T12:54:58.180Z",
+    "metadata": {
+      "lines_added": 104,
+      "lines_removed": 48,
+      "files_changed": 13,
+      "commits": 7
+    }
+  },
+  {
+    "id": "activity-23",
+    "dashboard_id": "dashboard-2",
+    "type": "release_created",
+    "repository": "dev-tools",
+    "title": "General activity",
+    "description": "Updated UI components and styling",
+    "created_at": "2025-08-26T21:52:01.525Z",
+    "metadata": {
+      "lines_added": 204,
+      "lines_removed": 90,
+      "files_changed": 15,
+      "commits": 5
+    }
+  },
+  {
+    "id": "activity-24",
+    "dashboard_id": "dashboard-2",
+    "type": "pull_request_reviewed",
+    "repository": "mobile-app",
+    "title": "Refactor database queries",
+    "description": "Updated documentation and code comments",
+    "created_at": "2025-10-11T06:30:23.251Z",
+    "metadata": {
+      "lines_added": 162,
+      "lines_removed": 58,
+      "files_changed": 16,
+      "commits": 4
+    }
+  },
+  {
+    "id": "activity-25",
+    "dashboard_id": "dashboard-2",
+    "type": "pull_request_reviewed",
+    "repository": "documentation",
+    "title": "Integrate payment processing",
+    "description": "Added performance optimizations",
+    "created_at": "2025-09-13T09:08:53.248Z",
+    "metadata": {
+      "lines_added": 171,
+      "lines_removed": 74,
+      "files_changed": 16,
+      "commits": 4
+    }
+  },
+  {
+    "id": "activity-26",
+    "dashboard_id": "dashboard-2",
+    "type": "release_created",
+    "repository": "frontend-app",
+    "title": "Bug: Data not syncing properly",
+    "description": "Refactored code for better maintainability",
+    "created_at": "2025-10-05T12:02:21.045Z",
+    "metadata": {
+      "lines_added": 453,
+      "lines_removed": 133,
+      "files_changed": 2,
+      "commits": 2
+    }
+  },
+  {
+    "id": "activity-27",
+    "dashboard_id": "dashboard-2",
+    "type": "commit_pushed",
+    "repository": "dev-tools",
+    "title": "Optimize performance",
+    "description": "Refactored code for better maintainability",
+    "created_at": "2025-09-17T16:36:57.670Z",
+    "metadata": {
+      "lines_added": 398,
+      "lines_removed": 104,
+      "files_changed": 8,
+      "commits": 4
+    }
+  },
+  {
+    "id": "activity-28",
+    "dashboard_id": "dashboard-2",
+    "type": "issue_closed",
+    "repository": "backend-api",
+    "title": "Complete user profile updates",
+    "description": "Improved error handling and logging",
+    "created_at": "2025-09-06T10:01:58.753Z",
+    "metadata": {
+      "lines_added": 225,
+      "lines_removed": 84,
+      "files_changed": 1,
+      "commits": 9
+    }
+  },
+  {
+    "id": "activity-29",
+    "dashboard_id": "dashboard-2",
+    "type": "commit_pushed",
+    "repository": "mobile-app",
+    "title": "Feature: Add export functionality",
+    "description": "Implemented new feature with comprehensive testing",
+    "created_at": "2025-09-04T12:28:26.631Z",
+    "metadata": {
+      "lines_added": 189,
+      "lines_removed": 50,
+      "files_changed": 9,
+      "commits": 6
+    }
+  },
+  {
+    "id": "activity-30",
+    "dashboard_id": "dashboard-2",
+    "type": "pull_request_merged",
+    "repository": "testing-suite",
+    "title": "Refactor database queries",
+    "description": "Improved error handling and logging",
+    "created_at": "2025-08-06T20:16:28.982Z",
+    "metadata": {
+      "lines_added": 450,
+      "lines_removed": 25,
+      "files_changed": 10,
+      "commits": 8
+    }
+  },
+  {
+    "id": "activity-31",
+    "dashboard_id": "dashboard-2",
+    "type": "branch_created",
+    "repository": "data-pipeline",
+    "title": "General activity",
+    "description": "Updated UI components and styling",
+    "created_at": "2025-08-03T01:31:10.797Z",
+    "metadata": {
+      "lines_added": 410,
+      "lines_removed": 192,
+      "files_changed": 13,
+      "commits": 2
+    }
+  },
+  {
+    "id": "activity-32",
+    "dashboard_id": "dashboard-2",
+    "type": "commit_pushed",
+    "repository": "frontend-app",
+    "title": "General activity",
+    "description": "Added performance optimizations",
+    "created_at": "2025-08-12T19:30:58.825Z",
+    "metadata": {
+      "lines_added": 65,
+      "lines_removed": 67,
+      "files_changed": 6,
+      "commits": 5
+    }
+  },
+  {
+    "id": "activity-33",
+    "dashboard_id": "dashboard-2",
+    "type": "branch_created",
+    "repository": "dev-tools",
+    "title": "General activity",
+    "description": "Updated UI components and styling",
+    "created_at": "2025-08-31T03:01:01.651Z",
+    "metadata": {
+      "lines_added": 127,
+      "lines_removed": 41,
+      "files_changed": 12,
+      "commits": 5
+    }
+  },
+  {
+    "id": "activity-34",
+    "dashboard_id": "dashboard-2",
+    "type": "release_created",
+    "repository": "infrastructure",
+    "title": "General activity",
+    "description": "Updated UI components and styling",
+    "created_at": "2025-08-28T06:19:51.454Z",
+    "metadata": {
+      "lines_added": 317,
+      "lines_removed": 44,
+      "files_changed": 20,
+      "commits": 7
+    }
+  },
+  {
+    "id": "activity-35",
+    "dashboard_id": "dashboard-2",
+    "type": "issue_closed",
+    "repository": "dev-tools",
+    "title": "General activity",
+    "description": "Updated documentation and code comments",
+    "created_at": "2025-09-30T08:08:26.443Z",
+    "metadata": {
+      "lines_added": 189,
+      "lines_removed": 25,
+      "files_changed": 1,
+      "commits": 1
+    }
+  },
+  {
+    "id": "activity-36",
+    "dashboard_id": "dashboard-2",
+    "type": "branch_created",
+    "repository": "testing-suite",
+    "title": "Fix responsive design issues",
+    "description": "Fixed critical bug affecting user experience",
+    "created_at": "2025-08-11T10:35:46.351Z",
+    "metadata": {
+      "lines_added": 170,
+      "lines_removed": 110,
+      "files_changed": 9,
+      "commits": 6
+    }
+  },
+  {
+    "id": "activity-37",
+    "dashboard_id": "dashboard-2",
+    "type": "pull_request_reviewed",
+    "repository": "infrastructure",
+    "title": "Bug: Login not working on mobile",
+    "description": "Implemented new feature with comprehensive testing",
+    "created_at": "2025-08-28T02:33:03.273Z",
+    "metadata": {
+      "lines_added": 69,
+      "lines_removed": 145,
+      "files_changed": 5,
+      "commits": 10
+    }
+  },
+  {
+    "id": "activity-38",
+    "dashboard_id": "dashboard-2",
+    "type": "release_created",
+    "repository": "data-pipeline",
+    "title": "General activity",
+    "description": "Improved error handling and logging",
+    "created_at": "2025-10-09T14:29:43.141Z",
+    "metadata": {
+      "lines_added": 152,
+      "lines_removed": 188,
+      "files_changed": 7,
+      "commits": 5
+    }
+  },
+  {
+    "id": "activity-39",
+    "dashboard_id": "dashboard-2",
+    "type": "pull_request_opened",
+    "repository": "backend-api",
+    "title": "Bug: Data not syncing properly",
+    "description": "Added new API endpoints",
+    "created_at": "2025-08-15T05:39:55.613Z",
+    "metadata": {
+      "lines_added": 101,
+      "lines_removed": 56,
+      "files_changed": 14,
+      "commits": 4
+    }
+  },
+  {
+    "id": "activity-40",
+    "dashboard_id": "dashboard-2",
+    "type": "issue_closed",
+    "repository": "backend-api",
+    "title": "Feature: Add export functionality",
+    "description": "Updated documentation and code comments",
+    "created_at": "2025-08-23T06:27:02.441Z",
+    "metadata": {
+      "lines_added": 434,
+      "lines_removed": 163,
+      "files_changed": 1,
+      "commits": 10
+    }
+  },
+  {
+    "id": "activity-41",
+    "dashboard_id": "dashboard-2",
+    "type": "issue_created",
+    "repository": "backend-api",
+    "title": "Fix responsive design issues",
+    "description": "Implemented new feature with comprehensive testing",
+    "created_at": "2025-08-11T17:44:28.941Z",
+    "metadata": {
+      "lines_added": 408,
+      "lines_removed": 141,
+      "files_changed": 18,
+      "commits": 10
+    }
+  },
+  {
+    "id": "activity-42",
+    "dashboard_id": "dashboard-2",
+    "type": "commit_pushed",
+    "repository": "testing-suite",
+    "title": "General activity",
+    "description": "Updated documentation and code comments",
+    "created_at": "2025-10-04T05:25:26.952Z",
+    "metadata": {
+      "lines_added": 161,
+      "lines_removed": 52,
+      "files_changed": 6,
+      "commits": 3
+    }
+  },
+  {
+    "id": "activity-43",
+    "dashboard_id": "dashboard-2",
+    "type": "branch_created",
+    "repository": "mobile-app",
+    "title": "Deploy new monitoring system",
+    "description": "Implemented new feature with comprehensive testing",
+    "created_at": "2025-09-30T02:35:56.090Z",
+    "metadata": {
+      "lines_added": 200,
+      "lines_removed": 103,
+      "files_changed": 19,
+      "commits": 1
+    }
+  },
+  {
+    "id": "activity-44",
+    "dashboard_id": "dashboard-2",
+    "type": "issue_created",
+    "repository": "documentation",
+    "title": "Bug: Login not working on mobile",
+    "description": "Added performance optimizations",
+    "created_at": "2025-10-03T08:58:47.913Z",
+    "metadata": {
+      "lines_added": 150,
+      "lines_removed": 9,
+      "files_changed": 3,
+      "commits": 7
+    }
+  },
+  {
+    "id": "activity-45",
+    "dashboard_id": "dashboard-2",
+    "type": "pull_request_opened",
+    "repository": "documentation",
+    "title": "Update dependencies",
+    "description": "Refactored code for better maintainability",
+    "created_at": "2025-10-01T11:25:39.061Z",
+    "metadata": {
+      "lines_added": 470,
+      "lines_removed": 31,
+      "files_changed": 13,
+      "commits": 2
+    }
+  },
+  {
+    "id": "activity-46",
+    "dashboard_id": "dashboard-2",
+    "type": "commit_pushed",
+    "repository": "documentation",
+    "title": "General activity",
+    "description": "Added performance optimizations",
+    "created_at": "2025-08-28T18:28:02.913Z",
+    "metadata": {
+      "lines_added": 391,
+      "lines_removed": 194,
+      "files_changed": 10,
+      "commits": 3
+    }
+  },
+  {
+    "id": "activity-47",
+    "dashboard_id": "dashboard-2",
+    "type": "commit_pushed",
+    "repository": "frontend-app",
+    "title": "General activity",
+    "description": "Added performance optimizations",
+    "created_at": "2025-09-29T00:03:33.753Z",
+    "metadata": {
+      "lines_added": 133,
+      "lines_removed": 33,
+      "files_changed": 18,
+      "commits": 2
+    }
+  },
+  {
+    "id": "activity-48",
+    "dashboard_id": "dashboard-2",
+    "type": "pull_request_merged",
+    "repository": "documentation",
+    "title": "Enhancement: Improve loading times",
+    "description": "Updated documentation and code comments",
+    "created_at": "2025-09-13T09:29:58.430Z",
+    "metadata": {
+      "lines_added": 340,
+      "lines_removed": 42,
+      "files_changed": 10,
+      "commits": 7
+    }
+  },
+  {
+    "id": "activity-49",
+    "dashboard_id": "dashboard-2",
+    "type": "commit_pushed",
+    "repository": "documentation",
+    "title": "Implement new dashboard layout",
+    "description": "Updated documentation and code comments",
+    "created_at": "2025-07-19T21:37:35.114Z",
+    "metadata": {
+      "lines_added": 358,
+      "lines_removed": 151,
+      "files_changed": 14,
+      "commits": 3
+    }
+  },
+  {
+    "id": "activity-50",
+    "dashboard_id": "dashboard-2",
+    "type": "release_created",
+    "repository": "dev-tools",
+    "title": "Integrate payment processing",
+    "description": "Improved error handling and logging",
+    "created_at": "2025-08-27T06:43:27.209Z",
+    "metadata": {
+      "lines_added": 222,
+      "lines_removed": 52,
+      "files_changed": 10,
+      "commits": 7
+    }
+  },
+  {
+    "id": "activity-51",
+    "dashboard_id": "dashboard-2",
+    "type": "branch_created",
+    "repository": "testing-suite",
+    "title": "Refactor database queries",
+    "description": "Improved error handling and logging",
+    "created_at": "2025-08-23T04:23:02.129Z",
+    "metadata": {
+      "lines_added": 149,
+      "lines_removed": 106,
+      "files_changed": 3,
+      "commits": 5
+    }
+  },
+  {
+    "id": "activity-52",
+    "dashboard_id": "dashboard-2",
+    "type": "pull_request_opened",
+    "repository": "frontend-app",
+    "title": "Update API documentation",
+    "description": "Refactored code for better maintainability",
+    "created_at": "2025-09-29T08:29:43.313Z",
+    "metadata": {
+      "lines_added": 91,
+      "lines_removed": 162,
+      "files_changed": 18,
+      "commits": 5
+    }
+  },
+  {
+    "id": "activity-53",
+    "dashboard_id": "dashboard-2",
+    "type": "issue_created",
+    "repository": "backend-api",
+    "title": "General activity",
+    "description": "Fixed critical bug affecting user experience",
+    "created_at": "2025-09-30T13:24:30.803Z",
+    "metadata": {
+      "lines_added": 192,
+      "lines_removed": 19,
+      "files_changed": 17,
+      "commits": 4
+    }
+  },
+  {
+    "id": "activity-54",
+    "dashboard_id": "dashboard-2",
+    "type": "pull_request_merged",
+    "repository": "mobile-app",
+    "title": "Deploy new monitoring system",
+    "description": "Improved error handling and logging",
+    "created_at": "2025-09-05T00:55:52.051Z",
+    "metadata": {
+      "lines_added": 426,
+      "lines_removed": 35,
+      "files_changed": 20,
+      "commits": 3
+    }
+  },
+  {
+    "id": "activity-55",
+    "dashboard_id": "dashboard-2",
+    "type": "pull_request_opened",
+    "repository": "mobile-app",
+    "title": "Complete user profile updates",
+    "description": "Updated UI components and styling",
+    "created_at": "2025-09-29T02:32:29.771Z",
+    "metadata": {
+      "lines_added": 219,
+      "lines_removed": 167,
+      "files_changed": 9,
+      "commits": 4
+    }
+  },
+  {
+    "id": "activity-56",
+    "dashboard_id": "dashboard-2",
+    "type": "branch_created",
+    "repository": "documentation",
+    "title": "General activity",
+    "description": "Added new API endpoints",
+    "created_at": "2025-07-18T20:18:25.563Z",
+    "metadata": {
+      "lines_added": 33,
+      "lines_removed": 20,
+      "files_changed": 19,
+      "commits": 6
+    }
+  },
+  {
+    "id": "activity-57",
+    "dashboard_id": "dashboard-2",
+    "type": "release_created",
+    "repository": "documentation",
+    "title": "Fix responsive design issues",
+    "description": "Refactored code for better maintainability",
+    "created_at": "2025-07-30T22:19:21.280Z",
+    "metadata": {
+      "lines_added": 106,
+      "lines_removed": 60,
+      "files_changed": 5,
+      "commits": 10
+    }
+  },
+  {
+    "id": "activity-58",
+    "dashboard_id": "dashboard-2",
+    "type": "branch_created",
+    "repository": "mobile-app",
+    "title": "Update API documentation",
+    "description": "Improved error handling and logging",
+    "created_at": "2025-08-19T18:54:01.004Z",
+    "metadata": {
+      "lines_added": 314,
+      "lines_removed": 39,
+      "files_changed": 3,
+      "commits": 2
+    }
+  },
+  {
+    "id": "activity-59",
+    "dashboard_id": "dashboard-2",
+    "type": "pull_request_reviewed",
+    "repository": "testing-suite",
+    "title": "General activity",
+    "description": "Implemented new feature with comprehensive testing",
+    "created_at": "2025-07-20T05:30:35.671Z",
+    "metadata": {
+      "lines_added": 420,
+      "lines_removed": 91,
+      "files_changed": 6,
+      "commits": 8
+    }
+  },
+  {
+    "id": "activity-60",
+    "dashboard_id": "dashboard-2",
+    "type": "commit_pushed",
+    "repository": "dev-tools",
+    "title": "General activity",
+    "description": "Updated documentation and code comments",
+    "created_at": "2025-10-08T10:30:48.246Z",
+    "metadata": {
+      "lines_added": 329,
+      "lines_removed": 43,
+      "files_changed": 8,
+      "commits": 3
+    }
+  },
+  {
+    "id": "activity-61",
+    "dashboard_id": "dashboard-2",
+    "type": "issue_created",
+    "repository": "dev-tools",
+    "title": "Merge feature branch to main",
+    "description": "Refactored code for better maintainability",
+    "created_at": "2025-10-13T19:28:34.230Z",
+    "metadata": {
+      "lines_added": 109,
+      "lines_removed": 73,
+      "files_changed": 15,
+      "commits": 1
+    }
+  },
+  {
+    "id": "activity-62",
+    "dashboard_id": "dashboard-2",
+    "type": "issue_closed",
+    "repository": "documentation",
+    "title": "General activity",
+    "description": "Updated documentation and code comments",
+    "created_at": "2025-08-26T02:49:28.784Z",
+    "metadata": {
+      "lines_added": 183,
+      "lines_removed": 104,
+      "files_changed": 18,
+      "commits": 3
+    }
+  },
+  {
+    "id": "activity-63",
+    "dashboard_id": "dashboard-2",
+    "type": "commit_pushed",
+    "repository": "infrastructure",
+    "title": "Bug: Login not working on mobile",
+    "description": "Refactored code for better maintainability",
+    "created_at": "2025-09-13T16:45:49.099Z",
+    "metadata": {
+      "lines_added": 35,
+      "lines_removed": 165,
+      "files_changed": 15,
+      "commits": 4
+    }
+  },
+  {
+    "id": "activity-64",
+    "dashboard_id": "dashboard-2",
+    "type": "branch_created",
+    "repository": "dev-tools",
+    "title": "Feature: Add export functionality",
+    "description": "Improved error handling and logging",
+    "created_at": "2025-07-26T07:44:40.005Z",
+    "metadata": {
+      "lines_added": 472,
+      "lines_removed": 129,
+      "files_changed": 8,
+      "commits": 5
+    }
+  },
+  {
+    "id": "activity-65",
+    "dashboard_id": "dashboard-2",
+    "type": "pull_request_reviewed",
+    "repository": "data-pipeline",
+    "title": "Fix responsive design issues",
+    "description": "Fixed critical bug affecting user experience",
+    "created_at": "2025-07-27T12:30:47.682Z",
+    "metadata": {
+      "lines_added": 424,
+      "lines_removed": 156,
+      "files_changed": 1,
+      "commits": 7
+    }
+  },
+  {
+    "id": "activity-66",
+    "dashboard_id": "dashboard-2",
+    "type": "pull_request_reviewed",
+    "repository": "data-pipeline",
+    "title": "General activity",
+    "description": "Refactored code for better maintainability",
+    "created_at": "2025-09-17T05:05:34.010Z",
+    "metadata": {
+      "lines_added": 455,
+      "lines_removed": 126,
+      "files_changed": 5,
+      "commits": 3
+    }
+  },
+  {
+    "id": "activity-67",
+    "dashboard_id": "dashboard-2",
+    "type": "issue_closed",
+    "repository": "mobile-app",
+    "title": "General activity",
+    "description": "Implemented new feature with comprehensive testing",
+    "created_at": "2025-09-28T21:32:32.656Z",
+    "metadata": {
+      "lines_added": 397,
+      "lines_removed": 136,
+      "files_changed": 20,
+      "commits": 9
+    }
+  },
+  {
+    "id": "activity-68",
+    "dashboard_id": "dashboard-2",
+    "type": "pull_request_merged",
+    "repository": "frontend-app",
+    "title": "Bug: Data not syncing properly",
+    "description": "Added new API endpoints",
+    "created_at": "2025-08-14T16:49:40.610Z",
+    "metadata": {
+      "lines_added": 28,
+      "lines_removed": 114,
+      "files_changed": 14,
+      "commits": 9
+    }
+  },
+  {
+    "id": "activity-69",
+    "dashboard_id": "dashboard-2",
+    "type": "commit_pushed",
+    "repository": "backend-api",
+    "title": "General activity",
+    "description": "Fixed critical bug affecting user experience",
+    "created_at": "2025-10-12T07:26:03.676Z",
+    "metadata": {
+      "lines_added": 444,
+      "lines_removed": 187,
+      "files_changed": 20,
+      "commits": 10
+    }
+  },
+  {
+    "id": "activity-70",
+    "dashboard_id": "dashboard-2",
+    "type": "pull_request_reviewed",
+    "repository": "frontend-app",
+    "title": "General activity",
+    "description": "Added performance optimizations",
+    "created_at": "2025-09-11T06:45:03.189Z",
+    "metadata": {
+      "lines_added": 209,
+      "lines_removed": 85,
+      "files_changed": 10,
+      "commits": 8
+    }
+  },
+  {
+    "id": "activity-71",
+    "dashboard_id": "dashboard-2",
+    "type": "pull_request_merged",
+    "repository": "testing-suite",
+    "title": "General activity",
+    "description": "Fixed critical bug affecting user experience",
+    "created_at": "2025-08-17T10:29:20.975Z",
+    "metadata": {
+      "lines_added": 268,
+      "lines_removed": 59,
+      "files_changed": 17,
+      "commits": 9
+    }
+  },
+  {
+    "id": "activity-72",
+    "dashboard_id": "dashboard-3",
+    "type": "branch_created",
+    "repository": "dev-tools",
+    "title": "Fix typo in README",
+    "description": "Implemented new feature with comprehensive testing",
+    "created_at": "2025-08-14T17:13:23.663Z",
+    "metadata": {
+      "lines_added": 378,
+      "lines_removed": 0,
+      "files_changed": 18,
+      "commits": 2
+    }
+  },
+  {
+    "id": "activity-73",
+    "dashboard_id": "dashboard-3",
+    "type": "pull_request_reviewed",
+    "repository": "backend-api",
+    "title": "General activity",
+    "description": "Improved error handling and logging",
+    "created_at": "2025-09-25T00:38:12.111Z",
+    "metadata": {
+      "lines_added": 355,
+      "lines_removed": 104,
+      "files_changed": 16,
+      "commits": 1
+    }
+  },
+  {
+    "id": "activity-74",
+    "dashboard_id": "dashboard-3",
+    "type": "branch_created",
+    "repository": "testing-suite",
+    "title": "General activity",
+    "description": "Fixed critical bug affecting user experience",
+    "created_at": "2025-09-06T15:43:58.855Z",
+    "metadata": {
+      "lines_added": 96,
+      "lines_removed": 40,
+      "files_changed": 9,
+      "commits": 9
+    }
+  },
+  {
+    "id": "activity-75",
+    "dashboard_id": "dashboard-3",
+    "type": "pull_request_opened",
+    "repository": "dev-tools",
+    "title": "General activity",
+    "description": "Added performance optimizations",
+    "created_at": "2025-08-11T18:21:43.591Z",
+    "metadata": {
+      "lines_added": 456,
+      "lines_removed": 190,
+      "files_changed": 14,
+      "commits": 7
+    }
+  },
+  {
+    "id": "activity-76",
+    "dashboard_id": "dashboard-3",
+    "type": "issue_closed",
+    "repository": "backend-api",
+    "title": "Add error handling",
+    "description": "Implemented new feature with comprehensive testing",
+    "created_at": "2025-08-11T11:51:30.234Z",
+    "metadata": {
+      "lines_added": 112,
+      "lines_removed": 99,
+      "files_changed": 12,
+      "commits": 1
+    }
+  },
+  {
+    "id": "activity-77",
+    "dashboard_id": "dashboard-3",
+    "type": "issue_created",
+    "repository": "data-pipeline",
+    "title": "Optimize performance",
+    "description": "Improved error handling and logging",
+    "created_at": "2025-07-26T16:58:40.171Z",
+    "metadata": {
+      "lines_added": 229,
+      "lines_removed": 0,
+      "files_changed": 6,
+      "commits": 3
+    }
+  },
+  {
+    "id": "activity-78",
+    "dashboard_id": "dashboard-3",
+    "type": "issue_created",
+    "repository": "mobile-app",
+    "title": "General activity",
+    "description": "Refactored code for better maintainability",
+    "created_at": "2025-09-13T12:45:57.666Z",
+    "metadata": {
+      "lines_added": 315,
+      "lines_removed": 65,
+      "files_changed": 1,
+      "commits": 3
+    }
+  },
+  {
+    "id": "activity-79",
+    "dashboard_id": "dashboard-3",
+    "type": "release_created",
+    "repository": "frontend-app",
+    "title": "Complete user profile updates",
+    "description": "Updated UI components and styling",
+    "created_at": "2025-09-20T05:00:42.733Z",
+    "metadata": {
+      "lines_added": 347,
+      "lines_removed": 84,
+      "files_changed": 16,
+      "commits": 10
+    }
+  },
+  {
+    "id": "activity-80",
+    "dashboard_id": "dashboard-3",
+    "type": "issue_closed",
+    "repository": "frontend-app",
+    "title": "General activity",
+    "description": "Added new API endpoints",
+    "created_at": "2025-08-05T19:52:10.818Z",
+    "metadata": {
+      "lines_added": 131,
+      "lines_removed": 50,
+      "files_changed": 3,
+      "commits": 6
+    }
+  },
+  {
+    "id": "activity-81",
+    "dashboard_id": "dashboard-3",
+    "type": "pull_request_opened",
+    "repository": "testing-suite",
+    "title": "General activity",
+    "description": "Refactored code for better maintainability",
+    "created_at": "2025-09-15T02:13:30.947Z",
+    "metadata": {
+      "lines_added": 418,
+      "lines_removed": 8,
+      "files_changed": 12,
+      "commits": 10
+    }
+  },
+  {
+    "id": "activity-82",
+    "dashboard_id": "dashboard-3",
+    "type": "commit_pushed",
+    "repository": "infrastructure",
+    "title": "General activity",
+    "description": "Improved error handling and logging",
+    "created_at": "2025-10-02T01:02:05.743Z",
+    "metadata": {
+      "lines_added": 432,
+      "lines_removed": 109,
+      "files_changed": 12,
+      "commits": 5
+    }
+  },
+  {
+    "id": "activity-83",
+    "dashboard_id": "dashboard-3",
+    "type": "issue_closed",
+    "repository": "infrastructure",
+    "title": "General activity",
+    "description": "Updated UI components and styling",
+    "created_at": "2025-08-06T03:43:58.608Z",
+    "metadata": {
+      "lines_added": 155,
+      "lines_removed": 18,
+      "files_changed": 15,
+      "commits": 7
+    }
+  },
+  {
+    "id": "activity-84",
+    "dashboard_id": "dashboard-3",
+    "type": "release_created",
+    "repository": "dev-tools",
+    "title": "General activity",
+    "description": "Fixed critical bug affecting user experience",
+    "created_at": "2025-07-28T23:04:55.829Z",
+    "metadata": {
+      "lines_added": 113,
+      "lines_removed": 160,
+      "files_changed": 4,
+      "commits": 10
+    }
+  },
+  {
+    "id": "activity-85",
+    "dashboard_id": "dashboard-3",
+    "type": "pull_request_reviewed",
+    "repository": "dev-tools",
+    "title": "General activity",
+    "description": "Updated UI components and styling",
+    "created_at": "2025-10-10T10:32:45.912Z",
+    "metadata": {
+      "lines_added": 340,
+      "lines_removed": 53,
+      "files_changed": 3,
+      "commits": 10
+    }
+  },
+  {
+    "id": "activity-86",
+    "dashboard_id": "dashboard-3",
+    "type": "issue_created",
+    "repository": "mobile-app",
+    "title": "Integrate payment processing",
+    "description": "Updated UI components and styling",
+    "created_at": "2025-09-24T06:50:37.692Z",
+    "metadata": {
+      "lines_added": 206,
+      "lines_removed": 99,
+      "files_changed": 17,
+      "commits": 2
+    }
+  },
+  {
+    "id": "activity-87",
+    "dashboard_id": "dashboard-3",
+    "type": "commit_pushed",
+    "repository": "infrastructure",
+    "title": "General activity",
+    "description": "Added new API endpoints",
+    "created_at": "2025-09-03T11:31:09.182Z",
+    "metadata": {
+      "lines_added": 292,
+      "lines_removed": 17,
+      "files_changed": 19,
+      "commits": 7
+    }
+  },
+  {
+    "id": "activity-88",
+    "dashboard_id": "dashboard-3",
+    "type": "pull_request_merged",
+    "repository": "testing-suite",
+    "title": "Implement new dashboard layout",
+    "description": "Improved error handling and logging",
+    "created_at": "2025-10-04T05:36:58.047Z",
+    "metadata": {
+      "lines_added": 104,
+      "lines_removed": 3,
+      "files_changed": 8,
+      "commits": 2
+    }
+  },
+  {
+    "id": "activity-89",
+    "dashboard_id": "dashboard-3",
+    "type": "commit_pushed",
+    "repository": "mobile-app",
+    "title": "General activity",
+    "description": "Updated documentation and code comments",
+    "created_at": "2025-08-05T22:06:53.396Z",
+    "metadata": {
+      "lines_added": 246,
+      "lines_removed": 69,
+      "files_changed": 19,
+      "commits": 1
+    }
+  },
+  {
+    "id": "activity-90",
+    "dashboard_id": "dashboard-3",
+    "type": "release_created",
+    "repository": "mobile-app",
+    "title": "General activity",
+    "description": "Added new API endpoints",
+    "created_at": "2025-08-21T17:24:11.976Z",
+    "metadata": {
+      "lines_added": 360,
+      "lines_removed": 95,
+      "files_changed": 5,
+      "commits": 7
+    }
+  },
+  {
+    "id": "activity-91",
+    "dashboard_id": "dashboard-3",
+    "type": "issue_created",
+    "repository": "data-pipeline",
+    "title": "Deploy new monitoring system",
+    "description": "Implemented new feature with comprehensive testing",
+    "created_at": "2025-07-24T21:25:58.543Z",
+    "metadata": {
+      "lines_added": 372,
+      "lines_removed": 84,
+      "files_changed": 17,
+      "commits": 7
+    }
+  },
+  {
+    "id": "activity-92",
+    "dashboard_id": "dashboard-3",
+    "type": "pull_request_merged",
+    "repository": "data-pipeline",
+    "title": "General activity",
+    "description": "Implemented new feature with comprehensive testing",
+    "created_at": "2025-09-29T01:53:18.810Z",
+    "metadata": {
+      "lines_added": 456,
+      "lines_removed": 175,
+      "files_changed": 11,
+      "commits": 7
+    }
+  },
+  {
+    "id": "activity-93",
+    "dashboard_id": "dashboard-4",
+    "type": "release_created",
+    "repository": "data-pipeline",
+    "title": "Feature: Add dark mode support",
+    "description": "Added performance optimizations",
+    "created_at": "2025-08-21T14:02:18.539Z",
+    "metadata": {
+      "lines_added": 89,
+      "lines_removed": 66,
+      "files_changed": 20,
+      "commits": 4
+    }
+  },
+  {
+    "id": "activity-94",
+    "dashboard_id": "dashboard-4",
+    "type": "issue_created",
+    "repository": "frontend-app",
+    "title": "General activity",
+    "description": "Updated documentation and code comments",
+    "created_at": "2025-09-19T12:16:07.858Z",
+    "metadata": {
+      "lines_added": 220,
+      "lines_removed": 43,
+      "files_changed": 20,
+      "commits": 9
+    }
+  },
+  {
+    "id": "activity-95",
+    "dashboard_id": "dashboard-4",
+    "type": "issue_closed",
+    "repository": "frontend-app",
+    "title": "Update configuration",
+    "description": "Updated UI components and styling",
+    "created_at": "2025-10-02T03:51:24.895Z",
+    "metadata": {
+      "lines_added": 227,
+      "lines_removed": 52,
+      "files_changed": 11,
+      "commits": 6
+    }
+  },
+  {
+    "id": "activity-96",
+    "dashboard_id": "dashboard-4",
+    "type": "pull_request_merged",
+    "repository": "infrastructure",
+    "title": "General activity",
+    "description": "Improved error handling and logging",
+    "created_at": "2025-08-08T03:57:51.280Z",
+    "metadata": {
+      "lines_added": 279,
+      "lines_removed": 67,
+      "files_changed": 10,
+      "commits": 9
+    }
+  },
+  {
+    "id": "activity-97",
+    "dashboard_id": "dashboard-4",
+    "type": "branch_created",
+    "repository": "dev-tools",
+    "title": "Deploy new monitoring system",
+    "description": "Implemented new feature with comprehensive testing",
+    "created_at": "2025-09-27T21:55:29.188Z",
+    "metadata": {
+      "lines_added": 451,
+      "lines_removed": 99,
+      "files_changed": 13,
+      "commits": 3
+    }
+  },
+  {
+    "id": "activity-98",
+    "dashboard_id": "dashboard-4",
+    "type": "pull_request_merged",
+    "repository": "dev-tools",
+    "title": "Update dependencies",
+    "description": "Added performance optimizations",
+    "created_at": "2025-09-13T19:06:16.807Z",
+    "metadata": {
+      "lines_added": 160,
+      "lines_removed": 2,
+      "files_changed": 5,
+      "commits": 6
+    }
+  },
+  {
+    "id": "activity-99",
+    "dashboard_id": "dashboard-4",
+    "type": "pull_request_reviewed",
+    "repository": "testing-suite",
+    "title": "General activity",
+    "description": "Improved error handling and logging",
+    "created_at": "2025-08-23T04:39:41.946Z",
+    "metadata": {
+      "lines_added": 399,
+      "lines_removed": 37,
+      "files_changed": 8,
+      "commits": 1
+    }
+  },
+  {
+    "id": "activity-100",
+    "dashboard_id": "dashboard-4",
+    "type": "pull_request_opened",
+    "repository": "infrastructure",
+    "title": "Enhancement: Improve loading times",
+    "description": "Updated documentation and code comments",
+    "created_at": "2025-08-24T15:53:18.780Z",
+    "metadata": {
+      "lines_added": 239,
+      "lines_removed": 28,
+      "files_changed": 17,
+      "commits": 9
+    }
+  },
+  {
+    "id": "activity-101",
+    "dashboard_id": "dashboard-4",
+    "type": "branch_created",
+    "repository": "mobile-app",
+    "title": "Add automated testing",
+    "description": "Fixed critical bug affecting user experience",
+    "created_at": "2025-10-01T07:16:41.545Z",
+    "metadata": {
+      "lines_added": 281,
+      "lines_removed": 179,
+      "files_changed": 13,
+      "commits": 7
+    }
+  },
+  {
+    "id": "activity-102",
+    "dashboard_id": "dashboard-4",
+    "type": "issue_closed",
+    "repository": "documentation",
+    "title": "General activity",
+    "description": "Refactored code for better maintainability",
+    "created_at": "2025-07-31T23:25:48.528Z",
+    "metadata": {
+      "lines_added": 251,
+      "lines_removed": 118,
+      "files_changed": 17,
+      "commits": 1
+    }
+  },
+  {
+    "id": "activity-103",
+    "dashboard_id": "dashboard-4",
+    "type": "pull_request_opened",
+    "repository": "infrastructure",
+    "title": "General activity",
+    "description": "Added new API endpoints",
+    "created_at": "2025-08-19T07:46:05.867Z",
+    "metadata": {
+      "lines_added": 349,
+      "lines_removed": 29,
+      "files_changed": 13,
+      "commits": 5
+    }
+  },
+  {
+    "id": "activity-104",
+    "dashboard_id": "dashboard-4",
+    "type": "pull_request_merged",
+    "repository": "testing-suite",
+    "title": "Update configuration",
+    "description": "Refactored code for better maintainability",
+    "created_at": "2025-10-02T20:19:31.994Z",
+    "metadata": {
+      "lines_added": 453,
+      "lines_removed": 164,
+      "files_changed": 16,
+      "commits": 5
+    }
+  },
+  {
+    "id": "activity-105",
+    "dashboard_id": "dashboard-4",
+    "type": "release_created",
+    "repository": "documentation",
+    "title": "General activity",
+    "description": "Improved error handling and logging",
+    "created_at": "2025-08-28T06:16:35.987Z",
+    "metadata": {
+      "lines_added": 120,
+      "lines_removed": 157,
+      "files_changed": 9,
+      "commits": 10
+    }
+  },
+  {
+    "id": "activity-106",
+    "dashboard_id": "dashboard-4",
+    "type": "pull_request_opened",
+    "repository": "documentation",
+    "title": "General activity",
+    "description": "Implemented new feature with comprehensive testing",
+    "created_at": "2025-10-09T02:35:04.191Z",
+    "metadata": {
+      "lines_added": 143,
+      "lines_removed": 179,
+      "files_changed": 9,
+      "commits": 9
+    }
+  },
+  {
+    "id": "activity-107",
+    "dashboard_id": "dashboard-4",
+    "type": "release_created",
+    "repository": "backend-api",
+    "title": "General activity",
+    "description": "Refactored code for better maintainability",
+    "created_at": "2025-07-22T21:19:06.020Z",
+    "metadata": {
+      "lines_added": 204,
+      "lines_removed": 80,
+      "files_changed": 15,
+      "commits": 6
+    }
+  },
+  {
+    "id": "activity-108",
+    "dashboard_id": "dashboard-4",
+    "type": "pull_request_merged",
+    "repository": "backend-api",
+    "title": "Add automated testing",
+    "description": "Refactored code for better maintainability",
+    "created_at": "2025-10-13T00:42:31.174Z",
+    "metadata": {
+      "lines_added": 341,
+      "lines_removed": 179,
+      "files_changed": 14,
+      "commits": 2
+    }
+  },
+  {
+    "id": "activity-109",
+    "dashboard_id": "dashboard-4",
+    "type": "pull_request_merged",
+    "repository": "backend-api",
+    "title": "Add automated testing",
+    "description": "Refactored code for better maintainability",
+    "created_at": "2025-09-13T23:30:27.007Z",
+    "metadata": {
+      "lines_added": 302,
+      "lines_removed": 14,
+      "files_changed": 12,
+      "commits": 8
+    }
+  },
+  {
+    "id": "activity-110",
+    "dashboard_id": "dashboard-4",
+    "type": "branch_created",
+    "repository": "data-pipeline",
+    "title": "General activity",
+    "description": "Improved error handling and logging",
+    "created_at": "2025-09-27T05:25:48.803Z",
+    "metadata": {
+      "lines_added": 289,
+      "lines_removed": 89,
+      "files_changed": 3,
+      "commits": 1
+    }
+  },
+  {
+    "id": "activity-111",
+    "dashboard_id": "dashboard-4",
+    "type": "pull_request_merged",
+    "repository": "data-pipeline",
+    "title": "Add user authentication feature",
+    "description": "Improved error handling and logging",
+    "created_at": "2025-10-11T01:47:05.490Z",
+    "metadata": {
+      "lines_added": 296,
+      "lines_removed": 82,
+      "files_changed": 4,
+      "commits": 1
+    }
+  },
+  {
+    "id": "activity-112",
+    "dashboard_id": "dashboard-4",
+    "type": "branch_created",
+    "repository": "frontend-app",
+    "title": "General activity",
+    "description": "Added performance optimizations",
+    "created_at": "2025-08-05T14:38:02.058Z",
+    "metadata": {
+      "lines_added": 33,
+      "lines_removed": 108,
+      "files_changed": 13,
+      "commits": 4
+    }
+  },
+  {
+    "id": "activity-113",
+    "dashboard_id": "dashboard-4",
+    "type": "issue_closed",
+    "repository": "frontend-app",
+    "title": "General activity",
+    "description": "Fixed critical bug affecting user experience",
+    "created_at": "2025-09-28T12:32:51.979Z",
+    "metadata": {
+      "lines_added": 202,
+      "lines_removed": 191,
+      "files_changed": 9,
+      "commits": 9
+    }
+  },
+  {
+    "id": "activity-114",
+    "dashboard_id": "dashboard-4",
+    "type": "pull_request_opened",
+    "repository": "backend-api",
+    "title": "Optimize performance",
+    "description": "Updated UI components and styling",
+    "created_at": "2025-10-14T07:35:54.505Z",
+    "metadata": {
+      "lines_added": 393,
+      "lines_removed": 64,
+      "files_changed": 8,
+      "commits": 6
+    }
+  },
+  {
+    "id": "activity-115",
+    "dashboard_id": "dashboard-4",
+    "type": "issue_closed",
+    "repository": "infrastructure",
+    "title": "General activity",
+    "description": "Added new API endpoints",
+    "created_at": "2025-08-30T21:18:15.723Z",
+    "metadata": {
+      "lines_added": 38,
+      "lines_removed": 135,
+      "files_changed": 9,
+      "commits": 2
+    }
+  },
+  {
+    "id": "activity-116",
+    "dashboard_id": "dashboard-4",
+    "type": "pull_request_opened",
+    "repository": "testing-suite",
+    "title": "General activity",
+    "description": "Added performance optimizations",
+    "created_at": "2025-07-29T15:58:52.378Z",
+    "metadata": {
+      "lines_added": 73,
+      "lines_removed": 150,
+      "files_changed": 14,
+      "commits": 9
+    }
+  },
+  {
+    "id": "activity-117",
+    "dashboard_id": "dashboard-4",
+    "type": "commit_pushed",
+    "repository": "testing-suite",
+    "title": "General activity",
+    "description": "Refactored code for better maintainability",
+    "created_at": "2025-07-31T17:35:07.822Z",
+    "metadata": {
+      "lines_added": 269,
+      "lines_removed": 181,
+      "files_changed": 9,
+      "commits": 10
+    }
+  },
+  {
+    "id": "activity-118",
+    "dashboard_id": "dashboard-4",
+    "type": "pull_request_opened",
+    "repository": "frontend-app",
+    "title": "Add user authentication feature",
+    "description": "Refactored code for better maintainability",
+    "created_at": "2025-10-08T06:56:34.737Z",
+    "metadata": {
+      "lines_added": 109,
+      "lines_removed": 145,
+      "files_changed": 18,
+      "commits": 3
+    }
+  },
+  {
+    "id": "activity-119",
+    "dashboard_id": "dashboard-4",
+    "type": "commit_pushed",
+    "repository": "backend-api",
+    "title": "General activity",
+    "description": "Updated UI components and styling",
+    "created_at": "2025-08-22T05:25:20.829Z",
+    "metadata": {
+      "lines_added": 172,
+      "lines_removed": 6,
+      "files_changed": 8,
+      "commits": 5
+    }
+  },
+  {
+    "id": "activity-120",
+    "dashboard_id": "dashboard-4",
+    "type": "branch_created",
+    "repository": "dev-tools",
+    "title": "Add automated testing",
+    "description": "Added performance optimizations",
+    "created_at": "2025-10-03T15:31:42.571Z",
+    "metadata": {
+      "lines_added": 408,
+      "lines_removed": 26,
+      "files_changed": 5,
+      "commits": 7
+    }
+  },
+  {
+    "id": "activity-121",
+    "dashboard_id": "dashboard-4",
+    "type": "issue_closed",
+    "repository": "data-pipeline",
+    "title": "General activity",
+    "description": "Refactored code for better maintainability",
+    "created_at": "2025-08-23T09:30:07.437Z",
+    "metadata": {
+      "lines_added": 452,
+      "lines_removed": 45,
+      "files_changed": 9,
+      "commits": 9
+    }
+  },
+  {
+    "id": "activity-122",
+    "dashboard_id": "dashboard-4",
+    "type": "commit_pushed",
+    "repository": "backend-api",
+    "title": "Feature: Add export functionality",
+    "description": "Refactored code for better maintainability",
+    "created_at": "2025-09-15T20:01:07.941Z",
+    "metadata": {
+      "lines_added": 486,
+      "lines_removed": 194,
+      "files_changed": 16,
+      "commits": 3
+    }
+  },
+  {
+    "id": "activity-123",
+    "dashboard_id": "dashboard-4",
+    "type": "release_created",
+    "repository": "testing-suite",
+    "title": "General activity",
+    "description": "Fixed critical bug affecting user experience",
+    "created_at": "2025-09-28T17:09:56.379Z",
+    "metadata": {
+      "lines_added": 363,
+      "lines_removed": 2,
+      "files_changed": 4,
+      "commits": 2
+    }
+  },
+  {
+    "id": "activity-124",
+    "dashboard_id": "dashboard-4",
+    "type": "pull_request_reviewed",
+    "repository": "infrastructure",
+    "title": "General activity",
+    "description": "Fixed critical bug affecting user experience",
+    "created_at": "2025-10-06T17:40:53.886Z",
+    "metadata": {
+      "lines_added": 6,
+      "lines_removed": 18,
+      "files_changed": 8,
+      "commits": 4
+    }
+  },
+  {
+    "id": "activity-125",
+    "dashboard_id": "dashboard-4",
+    "type": "issue_created",
+    "repository": "backend-api",
+    "title": "General activity",
+    "description": "Implemented new feature with comprehensive testing",
+    "created_at": "2025-08-20T02:42:37.579Z",
+    "metadata": {
+      "lines_added": 208,
+      "lines_removed": 171,
+      "files_changed": 15,
+      "commits": 3
+    }
+  },
+  {
+    "id": "activity-126",
+    "dashboard_id": "dashboard-4",
+    "type": "issue_created",
+    "repository": "testing-suite",
+    "title": "Bug: Login not working on mobile",
+    "description": "Improved error handling and logging",
+    "created_at": "2025-08-28T15:14:51.607Z",
+    "metadata": {
+      "lines_added": 126,
+      "lines_removed": 5,
+      "files_changed": 17,
+      "commits": 6
+    }
+  },
+  {
+    "id": "activity-127",
+    "dashboard_id": "dashboard-4",
+    "type": "pull_request_reviewed",
+    "repository": "frontend-app",
+    "title": "Add error handling",
+    "description": "Implemented new feature with comprehensive testing",
+    "created_at": "2025-07-30T05:16:53.068Z",
+    "metadata": {
+      "lines_added": 230,
+      "lines_removed": 28,
+      "files_changed": 13,
+      "commits": 9
+    }
+  },
+  {
+    "id": "activity-128",
+    "dashboard_id": "dashboard-4",
+    "type": "pull_request_merged",
+    "repository": "infrastructure",
+    "title": "General activity",
+    "description": "Added new API endpoints",
+    "created_at": "2025-09-07T08:38:02.000Z",
+    "metadata": {
+      "lines_added": 7,
+      "lines_removed": 185,
+      "files_changed": 17,
+      "commits": 6
+    }
+  },
+  {
+    "id": "activity-129",
+    "dashboard_id": "dashboard-5",
+    "type": "branch_created",
+    "repository": "infrastructure",
+    "title": "Fix responsive design issues",
+    "description": "Improved error handling and logging",
+    "created_at": "2025-08-04T15:02:55.234Z",
+    "metadata": {
+      "lines_added": 340,
+      "lines_removed": 125,
+      "files_changed": 19,
+      "commits": 1
+    }
+  },
+  {
+    "id": "activity-130",
+    "dashboard_id": "dashboard-5",
+    "type": "issue_closed",
+    "repository": "infrastructure",
+    "title": "Optimize performance",
+    "description": "Refactored code for better maintainability",
+    "created_at": "2025-08-06T11:32:32.484Z",
+    "metadata": {
+      "lines_added": 318,
+      "lines_removed": 157,
+      "files_changed": 17,
+      "commits": 4
+    }
+  },
+  {
+    "id": "activity-131",
+    "dashboard_id": "dashboard-5",
+    "type": "pull_request_merged",
+    "repository": "frontend-app",
+    "title": "General activity",
+    "description": "Implemented new feature with comprehensive testing",
+    "created_at": "2025-09-18T18:34:50.991Z",
+    "metadata": {
+      "lines_added": 165,
+      "lines_removed": 93,
+      "files_changed": 9,
+      "commits": 2
+    }
+  },
+  {
+    "id": "activity-132",
+    "dashboard_id": "dashboard-5",
+    "type": "release_created",
+    "repository": "backend-api",
+    "title": "General activity",
+    "description": "Added new API endpoints",
+    "created_at": "2025-08-12T03:21:17.225Z",
+    "metadata": {
+      "lines_added": 18,
+      "lines_removed": 156,
+      "files_changed": 13,
+      "commits": 10
+    }
+  },
+  {
+    "id": "activity-133",
+    "dashboard_id": "dashboard-5",
+    "type": "pull_request_reviewed",
+    "repository": "mobile-app",
+    "title": "Feature: Add export functionality",
+    "description": "Implemented new feature with comprehensive testing",
+    "created_at": "2025-08-14T18:53:18.434Z",
+    "metadata": {
+      "lines_added": 194,
+      "lines_removed": 94,
+      "files_changed": 17,
+      "commits": 10
+    }
+  },
+  {
+    "id": "activity-134",
+    "dashboard_id": "dashboard-5",
+    "type": "pull_request_reviewed",
+    "repository": "dev-tools",
+    "title": "General activity",
+    "description": "Added performance optimizations",
+    "created_at": "2025-09-16T09:52:47.821Z",
+    "metadata": {
+      "lines_added": 58,
+      "lines_removed": 63,
+      "files_changed": 11,
+      "commits": 4
+    }
+  },
+  {
+    "id": "activity-135",
+    "dashboard_id": "dashboard-5",
+    "type": "release_created",
+    "repository": "backend-api",
+    "title": "Bug: Data not syncing properly",
+    "description": "Implemented new feature with comprehensive testing",
+    "created_at": "2025-10-01T18:47:04.396Z",
+    "metadata": {
+      "lines_added": 58,
+      "lines_removed": 109,
+      "files_changed": 3,
+      "commits": 10
+    }
+  },
+  {
+    "id": "activity-136",
+    "dashboard_id": "dashboard-5",
+    "type": "release_created",
+    "repository": "data-pipeline",
+    "title": "General activity",
+    "description": "Fixed critical bug affecting user experience",
+    "created_at": "2025-07-22T00:15:58.842Z",
+    "metadata": {
+      "lines_added": 319,
+      "lines_removed": 86,
+      "files_changed": 10,
+      "commits": 8
+    }
+  },
+  {
+    "id": "activity-137",
+    "dashboard_id": "dashboard-5",
+    "type": "pull_request_reviewed",
+    "repository": "dev-tools",
+    "title": "Add automated testing",
+    "description": "Added new API endpoints",
+    "created_at": "2025-08-29T18:29:02.355Z",
+    "metadata": {
+      "lines_added": 30,
+      "lines_removed": 198,
+      "files_changed": 11,
+      "commits": 8
+    }
+  },
+  {
+    "id": "activity-138",
+    "dashboard_id": "dashboard-5",
+    "type": "commit_pushed",
+    "repository": "dev-tools",
+    "title": "General activity",
+    "description": "Updated documentation and code comments",
+    "created_at": "2025-10-10T13:41:16.461Z",
+    "metadata": {
+      "lines_added": 70,
+      "lines_removed": 195,
+      "files_changed": 1,
+      "commits": 4
+    }
+  },
+  {
+    "id": "activity-139",
+    "dashboard_id": "dashboard-5",
+    "type": "pull_request_merged",
+    "repository": "data-pipeline",
+    "title": "Update dependencies",
+    "description": "Updated UI components and styling",
+    "created_at": "2025-07-27T04:28:16.342Z",
+    "metadata": {
+      "lines_added": 254,
+      "lines_removed": 85,
+      "files_changed": 2,
+      "commits": 4
+    }
+  },
+  {
+    "id": "activity-140",
+    "dashboard_id": "dashboard-5",
+    "type": "issue_closed",
+    "repository": "frontend-app",
+    "title": "General activity",
+    "description": "Fixed critical bug affecting user experience",
+    "created_at": "2025-09-19T10:56:53.869Z",
+    "metadata": {
+      "lines_added": 459,
+      "lines_removed": 17,
+      "files_changed": 18,
+      "commits": 9
+    }
+  },
+  {
+    "id": "activity-141",
+    "dashboard_id": "dashboard-5",
+    "type": "issue_closed",
+    "repository": "frontend-app",
+    "title": "Feature: Add dark mode support",
+    "description": "Refactored code for better maintainability",
+    "created_at": "2025-09-29T07:27:27.245Z",
+    "metadata": {
+      "lines_added": 37,
+      "lines_removed": 175,
+      "files_changed": 12,
+      "commits": 7
+    }
+  },
+  {
+    "id": "activity-142",
+    "dashboard_id": "dashboard-5",
+    "type": "commit_pushed",
+    "repository": "mobile-app",
+    "title": "General activity",
+    "description": "Added new API endpoints",
+    "created_at": "2025-09-12T14:11:06.073Z",
+    "metadata": {
+      "lines_added": 79,
+      "lines_removed": 149,
+      "files_changed": 13,
+      "commits": 8
+    }
+  },
+  {
+    "id": "activity-143",
+    "dashboard_id": "dashboard-5",
+    "type": "issue_created",
+    "repository": "mobile-app",
+    "title": "General activity",
+    "description": "Added performance optimizations",
+    "created_at": "2025-08-15T12:11:43.107Z",
+    "metadata": {
+      "lines_added": 390,
+      "lines_removed": 42,
+      "files_changed": 9,
+      "commits": 10
+    }
+  },
+  {
+    "id": "activity-144",
+    "dashboard_id": "dashboard-5",
+    "type": "pull_request_reviewed",
+    "repository": "testing-suite",
+    "title": "General activity",
+    "description": "Implemented new feature with comprehensive testing",
+    "created_at": "2025-10-12T04:54:51.961Z",
+    "metadata": {
+      "lines_added": 317,
+      "lines_removed": 190,
+      "files_changed": 19,
+      "commits": 1
+    }
+  },
+  {
+    "id": "activity-145",
+    "dashboard_id": "dashboard-5",
+    "type": "branch_created",
+    "repository": "infrastructure",
+    "title": "General activity",
+    "description": "Implemented new feature with comprehensive testing",
+    "created_at": "2025-07-21T17:03:38.346Z",
+    "metadata": {
+      "lines_added": 430,
+      "lines_removed": 57,
+      "files_changed": 11,
+      "commits": 6
+    }
+  },
+  {
+    "id": "activity-146",
+    "dashboard_id": "dashboard-5",
+    "type": "issue_created",
+    "repository": "data-pipeline",
+    "title": "Complete user profile updates",
+    "description": "Updated UI components and styling",
+    "created_at": "2025-09-19T16:05:12.782Z",
+    "metadata": {
+      "lines_added": 457,
+      "lines_removed": 117,
+      "files_changed": 15,
+      "commits": 4
+    }
+  },
+  {
+    "id": "activity-147",
+    "dashboard_id": "dashboard-5",
+    "type": "branch_created",
+    "repository": "data-pipeline",
+    "title": "General activity",
+    "description": "Implemented new feature with comprehensive testing",
+    "created_at": "2025-09-23T08:43:04.418Z",
+    "metadata": {
+      "lines_added": 376,
+      "lines_removed": 65,
+      "files_changed": 16,
+      "commits": 7
+    }
+  },
+  {
+    "id": "activity-148",
+    "dashboard_id": "dashboard-5",
+    "type": "pull_request_merged",
+    "repository": "infrastructure",
+    "title": "General activity",
+    "description": "Added new API endpoints",
+    "created_at": "2025-09-08T13:13:50.404Z",
+    "metadata": {
+      "lines_added": 77,
+      "lines_removed": 160,
+      "files_changed": 7,
+      "commits": 9
+    }
+  },
+  {
+    "id": "activity-149",
+    "dashboard_id": "dashboard-5",
+    "type": "pull_request_opened",
+    "repository": "frontend-app",
+    "title": "General activity",
+    "description": "Refactored code for better maintainability",
+    "created_at": "2025-10-02T23:01:39.496Z",
+    "metadata": {
+      "lines_added": 15,
+      "lines_removed": 198,
+      "files_changed": 4,
+      "commits": 5
+    }
+  },
+  {
+    "id": "activity-150",
+    "dashboard_id": "dashboard-5",
+    "type": "release_created",
+    "repository": "mobile-app",
+    "title": "Integrate payment processing",
+    "description": "Implemented new feature with comprehensive testing",
+    "created_at": "2025-08-27T06:14:13.106Z",
+    "metadata": {
+      "lines_added": 20,
+      "lines_removed": 7,
+      "files_changed": 19,
+      "commits": 2
+    }
+  },
+  {
+    "id": "activity-151",
+    "dashboard_id": "dashboard-5",
+    "type": "pull_request_reviewed",
+    "repository": "documentation",
+    "title": "Deploy new monitoring system",
+    "description": "Fixed critical bug affecting user experience",
+    "created_at": "2025-10-09T00:30:07.606Z",
+    "metadata": {
+      "lines_added": 288,
+      "lines_removed": 135,
+      "files_changed": 2,
+      "commits": 2
+    }
+  },
+  {
+    "id": "activity-152",
+    "dashboard_id": "dashboard-5",
+    "type": "issue_created",
+    "repository": "testing-suite",
+    "title": "General activity",
+    "description": "Updated documentation and code comments",
+    "created_at": "2025-10-12T03:01:05.404Z",
+    "metadata": {
+      "lines_added": 362,
+      "lines_removed": 51,
+      "files_changed": 20,
+      "commits": 9
+    }
+  },
+  {
+    "id": "activity-153",
+    "dashboard_id": "dashboard-5",
+    "type": "release_created",
+    "repository": "infrastructure",
+    "title": "General activity",
+    "description": "Fixed critical bug affecting user experience",
+    "created_at": "2025-10-03T17:15:25.729Z",
+    "metadata": {
+      "lines_added": 98,
+      "lines_removed": 89,
+      "files_changed": 16,
+      "commits": 7
+    }
+  },
+  {
+    "id": "activity-154",
+    "dashboard_id": "dashboard-5",
+    "type": "issue_created",
+    "repository": "backend-api",
+    "title": "Enhancement: Improve loading times",
+    "description": "Improved error handling and logging",
+    "created_at": "2025-09-20T04:55:10.740Z",
+    "metadata": {
+      "lines_added": 237,
+      "lines_removed": 118,
+      "files_changed": 17,
+      "commits": 10
+    }
+  },
+  {
+    "id": "activity-155",
+    "dashboard_id": "dashboard-5",
+    "type": "commit_pushed",
+    "repository": "dev-tools",
+    "title": "General activity",
+    "description": "Implemented new feature with comprehensive testing",
+    "created_at": "2025-08-24T20:35:53.691Z",
+    "metadata": {
+      "lines_added": 134,
+      "lines_removed": 183,
+      "files_changed": 1,
+      "commits": 6
+    }
+  },
+  {
+    "id": "activity-156",
+    "dashboard_id": "dashboard-5",
+    "type": "pull_request_reviewed",
+    "repository": "documentation",
+    "title": "General activity",
+    "description": "Added performance optimizations",
+    "created_at": "2025-09-01T09:34:22.812Z",
+    "metadata": {
+      "lines_added": 122,
+      "lines_removed": 164,
+      "files_changed": 13,
+      "commits": 1
+    }
+  },
+  {
+    "id": "activity-157",
+    "dashboard_id": "dashboard-5",
+    "type": "pull_request_opened",
+    "repository": "testing-suite",
+    "title": "General activity",
+    "description": "Improved error handling and logging",
+    "created_at": "2025-10-15T01:49:07.296Z",
+    "metadata": {
+      "lines_added": 183,
+      "lines_removed": 84,
+      "files_changed": 4,
+      "commits": 3
+    }
+  },
+  {
+    "id": "activity-158",
+    "dashboard_id": "dashboard-5",
+    "type": "release_created",
+    "repository": "documentation",
+    "title": "General activity",
+    "description": "Added performance optimizations",
+    "created_at": "2025-08-31T22:23:36.316Z",
+    "metadata": {
+      "lines_added": 298,
+      "lines_removed": 58,
+      "files_changed": 4,
+      "commits": 8
+    }
+  },
+  {
+    "id": "activity-159",
+    "dashboard_id": "dashboard-5",
+    "type": "pull_request_opened",
+    "repository": "backend-api",
+    "title": "General activity",
+    "description": "Improved error handling and logging",
+    "created_at": "2025-09-12T13:41:13.027Z",
+    "metadata": {
+      "lines_added": 186,
+      "lines_removed": 7,
+      "files_changed": 17,
+      "commits": 9
+    }
+  },
+  {
+    "id": "activity-160",
+    "dashboard_id": "dashboard-5",
+    "type": "branch_created",
+    "repository": "dev-tools",
+    "title": "General activity",
+    "description": "Added performance optimizations",
+    "created_at": "2025-08-06T02:38:47.668Z",
+    "metadata": {
+      "lines_added": 163,
+      "lines_removed": 185,
+      "files_changed": 1,
+      "commits": 4
+    }
+  },
+  {
+    "id": "activity-161",
+    "dashboard_id": "dashboard-5",
+    "type": "issue_closed",
+    "repository": "infrastructure",
+    "title": "General activity",
+    "description": "Fixed critical bug affecting user experience",
+    "created_at": "2025-07-19T00:59:27.206Z",
+    "metadata": {
+      "lines_added": 44,
+      "lines_removed": 189,
+      "files_changed": 15,
+      "commits": 10
+    }
+  },
+  {
+    "id": "activity-162",
+    "dashboard_id": "dashboard-5",
+    "type": "issue_created",
+    "repository": "documentation",
+    "title": "General activity",
+    "description": "Added performance optimizations",
+    "created_at": "2025-09-27T17:26:19.214Z",
+    "metadata": {
+      "lines_added": 224,
+      "lines_removed": 110,
+      "files_changed": 13,
+      "commits": 8
+    }
+  },
+  {
+    "id": "activity-163",
+    "dashboard_id": "dashboard-5",
+    "type": "branch_created",
+    "repository": "data-pipeline",
+    "title": "Optimize performance",
+    "description": "Added new API endpoints",
+    "created_at": "2025-07-24T23:05:23.664Z",
+    "metadata": {
+      "lines_added": 168,
+      "lines_removed": 193,
+      "files_changed": 12,
+      "commits": 3
+    }
+  },
+  {
+    "id": "activity-164",
+    "dashboard_id": "dashboard-5",
+    "type": "release_created",
+    "repository": "data-pipeline",
+    "title": "Fix typo in README",
+    "description": "Refactored code for better maintainability",
+    "created_at": "2025-10-04T01:11:41.698Z",
+    "metadata": {
+      "lines_added": 95,
+      "lines_removed": 82,
+      "files_changed": 20,
+      "commits": 4
+    }
+  },
+  {
+    "id": "activity-165",
+    "dashboard_id": "dashboard-5",
+    "type": "issue_created",
+    "repository": "infrastructure",
+    "title": "General activity",
+    "description": "Improved error handling and logging",
+    "created_at": "2025-08-23T17:10:18.125Z",
+    "metadata": {
+      "lines_added": 39,
+      "lines_removed": 48,
+      "files_changed": 7,
+      "commits": 6
+    }
+  },
+  {
+    "id": "activity-166",
+    "dashboard_id": "dashboard-5",
+    "type": "pull_request_reviewed",
+    "repository": "data-pipeline",
+    "title": "General activity",
+    "description": "Implemented new feature with comprehensive testing",
+    "created_at": "2025-10-07T09:05:34.830Z",
+    "metadata": {
+      "lines_added": 279,
+      "lines_removed": 106,
+      "files_changed": 13,
+      "commits": 5
+    }
+  },
+  {
+    "id": "activity-167",
+    "dashboard_id": "dashboard-5",
+    "type": "pull_request_opened",
+    "repository": "testing-suite",
+    "title": "Add error handling",
+    "description": "Added performance optimizations",
+    "created_at": "2025-07-21T19:10:38.892Z",
+    "metadata": {
+      "lines_added": 30,
+      "lines_removed": 81,
+      "files_changed": 17,
+      "commits": 5
+    }
+  },
+  {
+    "id": "activity-168",
+    "dashboard_id": "dashboard-5",
+    "type": "branch_created",
+    "repository": "documentation",
+    "title": "General activity",
+    "description": "Updated UI components and styling",
+    "created_at": "2025-10-05T13:58:45.682Z",
+    "metadata": {
+      "lines_added": 300,
+      "lines_removed": 199,
+      "files_changed": 10,
+      "commits": 9
+    }
+  },
+  {
+    "id": "activity-169",
+    "dashboard_id": "dashboard-5",
+    "type": "commit_pushed",
+    "repository": "frontend-app",
+    "title": "General activity",
+    "description": "Added performance optimizations",
+    "created_at": "2025-07-31T08:47:49.157Z",
+    "metadata": {
+      "lines_added": 248,
+      "lines_removed": 127,
+      "files_changed": 16,
+      "commits": 9
+    }
+  },
+  {
+    "id": "activity-170",
+    "dashboard_id": "dashboard-5",
+    "type": "branch_created",
+    "repository": "documentation",
+    "title": "Update configuration",
+    "description": "Added new API endpoints",
+    "created_at": "2025-08-23T02:15:29.920Z",
+    "metadata": {
+      "lines_added": 327,
+      "lines_removed": 46,
+      "files_changed": 13,
+      "commits": 10
+    }
+  },
+  {
+    "id": "activity-171",
+    "dashboard_id": "dashboard-5",
+    "type": "pull_request_opened",
+    "repository": "frontend-app",
+    "title": "General activity",
+    "description": "Updated UI components and styling",
+    "created_at": "2025-09-25T00:38:51.074Z",
+    "metadata": {
+      "lines_added": 54,
+      "lines_removed": 127,
+      "files_changed": 2,
+      "commits": 2
+    }
+  },
+  {
+    "id": "activity-172",
+    "dashboard_id": "dashboard-5",
+    "type": "branch_created",
+    "repository": "infrastructure",
+    "title": "Refactor database queries",
+    "description": "Improved error handling and logging",
+    "created_at": "2025-10-03T13:16:45.950Z",
+    "metadata": {
+      "lines_added": 473,
+      "lines_removed": 45,
+      "files_changed": 16,
+      "commits": 9
+    }
+  },
+  {
+    "id": "activity-173",
+    "dashboard_id": "dashboard-5",
+    "type": "issue_closed",
+    "repository": "dev-tools",
+    "title": "Update API documentation",
+    "description": "Refactored code for better maintainability",
+    "created_at": "2025-08-06T16:00:23.348Z",
+    "metadata": {
+      "lines_added": 403,
+      "lines_removed": 24,
+      "files_changed": 10,
+      "commits": 5
+    }
+  },
+  {
+    "id": "activity-174",
+    "dashboard_id": "dashboard-5",
+    "type": "issue_created",
+    "repository": "infrastructure",
+    "title": "Add automated testing",
+    "description": "Updated documentation and code comments",
+    "created_at": "2025-09-27T07:00:16.503Z",
+    "metadata": {
+      "lines_added": 75,
+      "lines_removed": 19,
+      "files_changed": 6,
+      "commits": 1
+    }
+  },
+  {
+    "id": "activity-175",
+    "dashboard_id": "dashboard-5",
+    "type": "pull_request_opened",
+    "repository": "mobile-app",
+    "title": "Integrate payment processing",
+    "description": "Updated documentation and code comments",
+    "created_at": "2025-09-06T07:15:31.971Z",
+    "metadata": {
+      "lines_added": 138,
+      "lines_removed": 132,
+      "files_changed": 16,
+      "commits": 3
+    }
+  },
+  {
+    "id": "activity-176",
+    "dashboard_id": "dashboard-5",
+    "type": "branch_created",
+    "repository": "dev-tools",
+    "title": "Fix responsive design issues",
+    "description": "Added performance optimizations",
+    "created_at": "2025-09-22T16:53:49.085Z",
+    "metadata": {
+      "lines_added": 42,
+      "lines_removed": 183,
+      "files_changed": 19,
+      "commits": 1
+    }
+  },
+  {
+    "id": "activity-177",
+    "dashboard_id": "dashboard-5",
+    "type": "branch_created",
+    "repository": "dev-tools",
+    "title": "General activity",
+    "description": "Refactored code for better maintainability",
+    "created_at": "2025-09-24T10:43:42.176Z",
+    "metadata": {
+      "lines_added": 80,
+      "lines_removed": 144,
+      "files_changed": 11,
+      "commits": 7
+    }
+  },
+  {
+    "id": "activity-178",
+    "dashboard_id": "dashboard-5",
+    "type": "branch_created",
+    "repository": "testing-suite",
+    "title": "Integrate payment processing",
+    "description": "Added performance optimizations",
+    "created_at": "2025-08-19T04:42:21.255Z",
+    "metadata": {
+      "lines_added": 319,
+      "lines_removed": 62,
+      "files_changed": 15,
+      "commits": 10
+    }
+  },
+  {
+    "id": "activity-179",
+    "dashboard_id": "dashboard-5",
+    "type": "branch_created",
+    "repository": "testing-suite",
+    "title": "General activity",
+    "description": "Added new API endpoints",
+    "created_at": "2025-09-12T19:29:09.913Z",
+    "metadata": {
+      "lines_added": 495,
+      "lines_removed": 96,
+      "files_changed": 6,
+      "commits": 1
+    }
+  },
+  {
+    "id": "activity-180",
+    "dashboard_id": "dashboard-5",
+    "type": "release_created",
+    "repository": "infrastructure",
+    "title": "General activity",
+    "description": "Added new API endpoints",
+    "created_at": "2025-10-14T16:24:22.052Z",
+    "metadata": {
+      "lines_added": 202,
+      "lines_removed": 155,
+      "files_changed": 12,
+      "commits": 10
+    }
+  },
+  {
+    "id": "activity-181",
+    "dashboard_id": "dashboard-5",
+    "type": "issue_created",
+    "repository": "documentation",
+    "title": "Add error handling",
+    "description": "Updated documentation and code comments",
+    "created_at": "2025-08-08T05:46:56.367Z",
+    "metadata": {
+      "lines_added": 200,
+      "lines_removed": 20,
+      "files_changed": 2,
+      "commits": 5
+    }
+  }
+]

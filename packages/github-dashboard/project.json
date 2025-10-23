@@ -1,0 +1,149 @@
+{
+  "name": "github-dashboard",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/github-dashboard",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nx/webpack:webpack",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "dist/packages/github-dashboard",
+        "main": "packages/github-dashboard/main.ts",
+        "tsConfig": "packages/github-dashboard/tsconfig.app.json",
+        "assets": ["packages/github-dashboard/favicon.ico", "packages/github-dashboard/assets"]
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "outputHashing": "all",
+          "sourceMap": false,
+          "namedChunks": false,
+          "extractLicenses": true,
+          "vendorChunk": false
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nx/webpack:dev-server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "github-dashboard:build",
+        "hmr": true
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "github-dashboard:build:development"
+        },
+        "production": {
+          "buildTarget": "github-dashboard:build:production",
+          "hmr": false
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "packages/github-dashboard/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "terraform:init": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "terraform init",
+        "cwd": "packages/github-dashboard/infrastructure"
+      }
+    },
+    "terraform:validate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "terraform validate",
+        "cwd": "packages/github-dashboard/infrastructure"
+      },
+      "dependsOn": ["terraform:init"]
+    },
+    "terraform:plan": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "terraform plan -var-file=terraform.tfvars.1k-users",
+        "cwd": "packages/github-dashboard/infrastructure"
+      },
+      "dependsOn": ["terraform:validate"]
+    },
+    "terraform:plan:1k-users": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "terraform plan -var-file=terraform.tfvars.1k-users",
+        "cwd": "packages/github-dashboard/infrastructure"
+      },
+      "dependsOn": ["terraform:validate"]
+    },
+    "terraform:plan:10k-users": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "terraform plan -var-file=terraform.tfvars.10k-users",
+        "cwd": "packages/github-dashboard/infrastructure"
+      },
+      "dependsOn": ["terraform:validate"]
+    },
+    "terraform:demo": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "terraform init -backend-config=terraform.tf.local",
+          "terraform validate",
+          "terraform plan -var-file=terraform.tfvars.1k-users"
+        ],
+        "cwd": "packages/github-dashboard/infrastructure",
+        "parallel": false
+      }
+    },
+    "terraform:demo:local": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "cp terraform.tf.local main.tf.backup",
+          "cp terraform.tf.local main.tf",
+          "terraform init -no-color",
+          "terraform validate", 
+          "terraform plan -var-file=terraform.tfvars.1k-users -no-color",
+          "mv main.tf.backup main.tf"
+        ],
+        "cwd": "packages/github-dashboard/infrastructure",
+        "parallel": false
+      }
+    },
+    "terraform:quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "terraform init -no-color",
+          "terraform validate"
+        ],
+        "cwd": "packages/github-dashboard/infrastructure",
+        "parallel": false
+      }
+    },
+    "terraform:init-only": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "terraform init -no-color",
+        "cwd": "packages/github-dashboard/infrastructure"
+      }
+    },
+    "terraform:validate-only": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "terraform validate",
+        "cwd": "packages/github-dashboard/infrastructure"
+      }
+    }
+  },
+  "tags": ["type:app", "scope:github-dashboard"]
+}

@@ -38,6 +38,9 @@ importers:
       express:
         specifier: ^4.21.2
         version: 4.21.2
+      pg:
+        specifier: ^8.16.3
+        version: 8.16.3
       postgraphile:
         specifier: ^4.14.1
         version: 4.14.1
@@ -296,6 +299,8 @@ importers:
       axios:
         specifier: ^1.6.0
         version: 1.12.2
+
+  packages/perf-tests: {}
 
 packages:
 

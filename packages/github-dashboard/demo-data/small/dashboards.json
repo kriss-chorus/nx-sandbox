@@ -1,0 +1,57 @@
+[
+  {
+    "id": "dashboard-1",
+    "name": "Candy Corn Labs - Project Progress Tracker",
+    "slug": "candy-corn-labs-project-progress-tracker-1",
+    "description": "Project Progress Tracker for Candy Corn Labs team",
+    "isPublic": true,
+    "clientId": "2667d6c1-89e6-4848-8e12-03cefeeec0c8",
+    "dashboardTypeId": "79e67172-ff4b-4237-906f-14e7a6c7deb0",
+    "createdAt": "2025-05-07T19:13:54.089Z",
+    "updatedAt": "2025-09-24T23:54:03.881Z"
+  },
+  {
+    "id": "dashboard-2",
+    "name": "Candy Corn Labs - Project Progress Tracker",
+    "slug": "candy-corn-labs-project-progress-tracker-2",
+    "description": "Project Progress Tracker for Candy Corn Labs team",
+    "isPublic": true,
+    "clientId": "2667d6c1-89e6-4848-8e12-03cefeeec0c8",
+    "dashboardTypeId": "91fc99b6-05d0-4dad-bba2-2f82ff912f1d",
+    "createdAt": "2025-09-25T08:20:55.461Z",
+    "updatedAt": "2025-09-19T00:28:34.586Z"
+  },
+  {
+    "id": "dashboard-3",
+    "name": "Haunted Hollow - Sprint Performance",
+    "slug": "haunted-hollow-sprint-performance-3",
+    "description": "Sprint Performance for Haunted Hollow team",
+    "isPublic": true,
+    "clientId": "0da1c95b-ac37-4f19-a907-041a458c8e11",
+    "dashboardTypeId": "48bfc042-81aa-4814-9d56-4d0f841bcb92",
+    "createdAt": "2025-06-17T21:57:59.482Z",
+    "updatedAt": "2025-09-27T09:36:50.205Z"
+  },
+  {
+    "id": "dashboard-4",
+    "name": "Haunted Hollow - Development Team Dashboard",
+    "slug": "haunted-hollow-development-team-dashboard-4",
+    "description": "Development Team Dashboard for Haunted Hollow team",
+    "isPublic": true,
+    "clientId": "0da1c95b-ac37-4f19-a907-041a458c8e11",
+    "dashboardTypeId": "48bfc042-81aa-4814-9d56-4d0f841bcb92",
+    "createdAt": "2025-08-27T02:50:25.418Z",
+    "updatedAt": "2025-09-29T06:43:45.480Z"
+  },
+  {
+    "id": "dashboard-5",
+    "name": "Haunted Hollow - Release Metrics",
+    "slug": "haunted-hollow-release-metrics-5",
+    "description": "Release Metrics for Haunted Hollow team",
+    "isPublic": true,
+    "clientId": "0da1c95b-ac37-4f19-a907-041a458c8e11",
+    "dashboardTypeId": "48bfc042-81aa-4814-9d56-4d0f841bcb92",
+    "createdAt": "2025-08-17T22:39:22.340Z",
+    "updatedAt": "2025-10-04T09:57:35.398Z"
+  }
+]

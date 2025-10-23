@@ -1,0 +1,14 @@
+config:
+  target: "http://localhost:3001"
+  phases:
+    - duration: 60
+      arrivalRate: 50
+scenarios:
+  - name: GraphQL + API
+    flow:
+      - post:
+          url: "/graphql"
+          json:
+            query: "{ allDashboards { nodes { id name } } }"
+      - get:
+          url: "/api/health"
