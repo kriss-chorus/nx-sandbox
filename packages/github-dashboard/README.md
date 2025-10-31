@@ -161,7 +161,40 @@ pnpm nx run-many --target=e2e --projects=api-e2e,web-e2e
 - Responsive design and UI interactions
 - Full stack integration workflows
 
+## Terraform Infrastructure
+
+### NX Commands
+
+From the nx-sandbox repo root:
+
+```bash
+# Initialize Terraform
+pnpm nx run github-dashboard:terraform:init
+
+# Validate configuration
+pnpm nx run github-dashboard:terraform:validate
+
+# Plan for 1K users scenario
+pnpm nx run github-dashboard:terraform:plan:1k-users
+
+# Plan for 10K users scenario
+pnpm nx run github-dashboard:terraform:plan:10k-users
+
+# Demo without AWS (uses local backend)
+pnpm nx run github-dashboard:terraform:demo:local
+
+# Quick validation (init + validate only)
+pnpm nx run github-dashboard:terraform:quick
+
+# Granular control
+pnpm nx run github-dashboard:terraform:init-only
+pnpm nx run github-dashboard:terraform:validate-only
+```
+
+See [Infrastructure Cost Planning](../../docs/03-demo-infrastructure-cost-planning.md) for details.
+
 ## Documentation
 
 - **[Client Experiences Guide](../../docs/02-demo-client-experiences.md)** - Complete implementation details
 - **[Database Schema](../../docs/architecture-database-schema.md)** - Data model and relationships
+- **[Infrastructure Cost Planning](../../docs/03-demo-infrastructure-cost-planning.md)** - Terraform infrastructure and cost analysis

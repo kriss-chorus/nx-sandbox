@@ -51,7 +51,7 @@ vitest.config.*.timestamp*
 .env
 
 # Terraform
-.terraform/
 *.tfstate
 *.tfstate.*
+.terraform/
 .terraform.lock.hcl
